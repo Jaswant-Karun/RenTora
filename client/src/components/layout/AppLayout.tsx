@@ -12,7 +12,17 @@ interface AppLayoutProps {
 export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const { user } = useAuth();
   const location = useLocation();
+  const isIntroRoute = location.pathname === '/' || location.pathname === '/intro';
   const isDashboardRoute = location.pathname.startsWith('/dashboard');
+
+  // Fullscreen container for intro sequence without distraction
+  if (isIntroRoute) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-brand-500 selection:text-white">
+        <main className="w-full">{children}</main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-brand-500 selection:text-white">

@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AppLayout } from './components/layout/AppLayout';
+import { IntroScreen } from './pages/IntroScreen';
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
@@ -15,7 +16,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   if (loading) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center">
-        <LoadingSpinner message="Verifying institutional security credentials..." size="lg" />
+        <LoadingSpinner message="Verifying secure institutional session..." size="lg" />
       </div>
     );
   }
@@ -33,7 +34,7 @@ const PublicOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) 
   if (loading) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center">
-        <LoadingSpinner message="Loading RENTORA platform..." size="md" />
+        <LoadingSpinner message="Loading RENTORA gateway..." size="md" />
       </div>
     );
   }
@@ -51,7 +52,14 @@ export const App: React.FC = () => {
       <AuthProvider>
         <AppLayout>
           <Routes>
-            <Route path="/" element={<LandingPage />} />
+            {/* First Screen: Animated Introduction Screen */}
+            <Route path="/" element={<IntroScreen />} />
+            <Route path="/intro" element={<IntroScreen />} />
+
+            {/* Platform Overview */}
+            <Route path="/explore" element={<LandingPage />} />
+
+            {/* Authentication Gateway */}
             <Route
               path="/login"
               element={
@@ -68,6 +76,8 @@ export const App: React.FC = () => {
                 </PublicOnlyRoute>
               }
             />
+
+            {/* Protected Console */}
             <Route
               path="/dashboard/*"
               element={
@@ -76,6 +86,7 @@ export const App: React.FC = () => {
                 </ProtectedRoute>
               }
             />
+
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </AppLayout>
