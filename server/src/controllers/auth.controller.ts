@@ -157,7 +157,7 @@ export const getDemoAccounts = (_req: Request, res: Response): void => {
         roleLabel: 'Platform Administrator',
         email: 'admin@rentora.edu',
         password: 'Password123!',
-        name: 'Jaswant Karun (Lead Admin)',
+        name: 'Central Platform Administrator',
         institution: 'RENTORA Central Network',
       },
     ],
