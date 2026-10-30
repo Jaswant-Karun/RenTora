@@ -70,8 +70,9 @@ export const LandingPage: React.FC = () => {
           </div>
 
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-xs text-slate-300">
-            <span className="font-semibold text-slate-100">Team: Storm Breakerz</span>
-            <span>• Lead: Jaswant Karun S A</span>
+            <span className="font-semibold text-slate-100">Smart Campus Federation</span>
+            <span className="text-slate-500">•</span>
+            <span className="text-slate-400">Inter-Departmental Pool</span>
           </div>
 
           {/* Real Backend / MongoDB Connection Indicator */}

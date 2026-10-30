@@ -31,14 +31,14 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             <span>Smart Institutional Resource Sharing & Management Platform</span>
           </div>
 
-          <div className="flex items-center space-x-4">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-brand-500/10 text-brand-400 border border-brand-500/20 font-medium">
-              <Sparkles className="w-3.5 h-3.5" />
-              Team: Storm Breakerz
+          <div className="flex items-center space-x-3">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-900 text-slate-400 border border-slate-800 font-medium">
+              <Shield className="w-3.5 h-3.5 text-brand-400" />
+              Institutional Resource Federation
             </span>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-800 text-slate-300 border border-slate-700 font-medium">
-              <Shield className="w-3.5 h-3.5 text-emerald-400" />
-              Lead: Jaswant Karun S A
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-900 text-slate-400 border border-slate-800 font-medium">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              Smart Sharing Protocol
             </span>
           </div>
         </div>
