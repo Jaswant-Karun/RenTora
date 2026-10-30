@@ -130,6 +130,7 @@ Rentora/
 ## ⚡ Getting Started (Running Frontend & Backend)
 
 ### Prerequisites
+
 - **Node.js**: v18.0.0 or later (v22.x recommended)
 - **npm**: v9.0.0 or later
 - **MongoDB**: MongoDB Atlas connection string OR local MongoDB instance running on port `27017`
@@ -156,8 +157,10 @@ npm install
 
 ### Step 2: Configure Environment Variables
 
-#### Backend (`server/.env`):
+#### Backend (`server/.env`)
+
 Create `server/.env` (a pre-configured `.env.example` is provided):
+
 ```env
 PORT=5000
 NODE_ENV=development
@@ -166,10 +169,13 @@ JWT_SECRET=rentora_dev_jwt_secret_token_key_778899_xyz
 JWT_EXPIRES_IN=7d
 CLIENT_URL=http://localhost:5173
 ```
+
 > **Note for MongoDB Atlas:** Replace `MONGODB_URI` with your Atlas connection string (e.g. `mongodb+srv://<user>:<password>@cluster0.mongodb.net/rentora?retryWrites=true&w=majority`).
 
-#### Frontend (`client/.env`):
+#### Frontend (`client/.env`)
+
 Create `client/.env`:
+
 ```env
 VITE_API_URL=http://localhost:5000/api
 ```
@@ -189,21 +195,27 @@ npm run seed
 
 ### Step 4: Run the Backend & Frontend Separately
 
-#### Running the Backend API:
+#### Running the Backend API
+
 Open a terminal and run:
+
 ```bash
 cd server
 npm run dev
 ```
+
 - **Backend URL:** `http://localhost:5000`
 - **Health Check:** `http://localhost:5000/api/health`
 
-#### Running the Frontend Client:
+#### Running the Frontend Client
+
 Open a second terminal and run:
+
 ```bash
 cd client
 npm run dev
 ```
+
 - **Frontend App:** `http://localhost:5173`
 
 ---
@@ -224,10 +236,12 @@ You can sign in directly using the **"Demo Roles"** dropdown in the navigation b
 ## 📡 Core API Endpoints
 
 ### System & Telemetry
+
 - `GET /api/health` — Checks backend status, team metadata, and MongoDB connection health.
 - `GET /api/db-status` — Returns database connection state, host, and database name.
 
 ### Authentication & Profiles
+
 - `POST /api/auth/register` — Validates inputs with Zod, checks email uniqueness, hashes password, saves to MongoDB, issues JWT.
 - `POST /api/auth/login` — Authenticates credentials with bcrypt, returns JWT token and user profile.
 - `GET /api/auth/me` — Protected route returning authenticated user details.
