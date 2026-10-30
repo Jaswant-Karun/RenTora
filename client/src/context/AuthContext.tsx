@@ -1,15 +1,23 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole, DemoAccount } from '../types/auth';
-import { getMeApi, loginApi, registerApi, getDemoAccountsApi } from '../api/auth';
+import {
+  getMeApi,
+  loginApi,
+  registerApi,
+  logoutApi,
+  forgotPasswordApi,
+  getDemoAccountsApi,
+} from '../api/auth';
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
   loading: boolean;
   demoAccounts: DemoAccount[];
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
   register: (userData: any) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
+  forgotPassword: (email: string) => Promise<string>;
   switchDemoRole: (role: UserRole) => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -22,7 +30,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState<boolean>(true);
   const [demoAccounts, setDemoAccounts] = useState<DemoAccount[]>([]);
 
-  // Fetch demo accounts for one-click demo login in hackathon
+  // Fetch demo accounts for fast evaluative testing
   useEffect(() => {
     const fetchDemos = async () => {
       try {
@@ -31,33 +39,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setDemoAccounts(res.data);
         }
       } catch (err) {
-        console.warn('Could not load demo accounts yet (server may be offline):', err);
+        console.warn('Could not load demo accounts:', err);
       }
     };
     fetchDemos();
   }, []);
 
-  // Check auth session on startup via backend API
+  // Check auth session on startup via backend API (supports both httpOnly cookie and Bearer token)
   const refreshProfile = async () => {
-    const storedToken = localStorage.getItem('rentora_auth_token');
-    if (!storedToken) {
-      setUser(null);
-      setLoading(false);
-      return;
-    }
-
     try {
       setLoading(true);
       const res = await getMeApi();
       if (res.success && res.data.user) {
         setUser(res.data.user);
-        setToken(storedToken);
       } else {
-        logout();
+        setUser(null);
       }
-    } catch (err) {
-      console.error('Failed to authenticate session:', err);
-      logout();
+    } catch {
+      // Unauthenticated session
+      setUser(null);
+      localStorage.removeItem('rentora_auth_token');
     } finally {
       setLoading(false);
     }
@@ -67,13 +68,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     refreshProfile();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, rememberMe?: boolean) => {
     setLoading(true);
     try {
-      const res = await loginApi({ email, password });
-      if (res.success && res.data.token) {
-        localStorage.setItem('rentora_auth_token', res.data.token);
-        setToken(res.data.token);
+      const res = await loginApi({ email, password, rememberMe });
+      if (res.success && res.data) {
+        if (res.data.token) {
+          localStorage.setItem('rentora_auth_token', res.data.token);
+          setToken(res.data.token);
+        }
         setUser(res.data.user);
       }
     } finally {
@@ -85,9 +88,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     try {
       const res = await registerApi(userData);
-      if (res.success && res.data.token) {
-        localStorage.setItem('rentora_auth_token', res.data.token);
-        setToken(res.data.token);
+      if (res.success && res.data) {
+        if (res.data.token) {
+          localStorage.setItem('rentora_auth_token', res.data.token);
+          setToken(res.data.token);
+        }
         setUser(res.data.user);
       }
     } finally {
@@ -95,10 +100,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('rentora_auth_token');
-    setToken(null);
-    setUser(null);
+  const logout = async () => {
+    try {
+      await logoutApi();
+    } catch (err) {
+      console.warn('Logout API call finished with:', err);
+    } finally {
+      localStorage.removeItem('rentora_auth_token');
+      setToken(null);
+      setUser(null);
+    }
+  };
+
+  const forgotPassword = async (email: string): Promise<string> => {
+    const res = await forgotPasswordApi(email);
+    return res.message;
   };
 
   const switchDemoRole = async (targetRole: UserRole) => {
@@ -119,6 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         register,
         logout,
+        forgotPassword,
         switchDemoRole,
         refreshProfile,
       }}

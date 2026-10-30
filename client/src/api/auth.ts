@@ -1,7 +1,11 @@
 import apiClient from './client';
 import { AuthResponse, DemoAccount, User } from '../types/auth';
 
-export const loginApi = async (credentials: { email: string; password: string }): Promise<AuthResponse> => {
+export const loginApi = async (credentials: {
+  email: string;
+  password: string;
+  rememberMe?: boolean;
+}): Promise<AuthResponse> => {
   const response = await apiClient.post<AuthResponse>('/auth/login', credentials);
   return response.data;
 };
@@ -10,12 +14,24 @@ export const registerApi = async (userData: {
   name: string;
   email: string;
   password: string;
-  role: string;
+  confirmPassword: string;
+  role: 'student' | 'owner';
   institution: string;
-  department?: string;
-  phone?: string;
+  department: string;
+  phone: string;
+  agreeTerms: boolean;
 }): Promise<AuthResponse> => {
   const response = await apiClient.post<AuthResponse>('/auth/register', userData);
+  return response.data;
+};
+
+export const logoutApi = async (): Promise<{ success: boolean; message: string }> => {
+  const response = await apiClient.post('/auth/logout');
+  return response.data;
+};
+
+export const forgotPasswordApi = async (email: string): Promise<{ success: boolean; message: string }> => {
+  const response = await apiClient.post('/auth/forgot-password', { email });
   return response.data;
 };
 

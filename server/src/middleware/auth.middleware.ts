@@ -13,23 +13,36 @@ export const authenticate = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    let token: string | undefined;
+
+    // 1. Try extracting from secure httpOnly cookie
+    if (req.cookies && req.cookies.rentora_token) {
+      token = req.cookies.rentora_token;
+    }
+
+    // 2. Fallback to Authorization Bearer header
+    if (!token) {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.split(' ')[1];
+      }
+    }
+
+    if (!token) {
       res.status(401).json({
         success: false,
-        message: 'Authentication required. No token provided.',
+        message: 'Authentication required. Please sign in to access this resource.',
       });
       return;
     }
 
-    const token = authHeader.split(' ')[1];
     const decoded = verifyToken(token);
 
     const user = await User.findById(decoded.userId);
     if (!user) {
       res.status(401).json({
         success: false,
-        message: 'User belonging to this token no longer exists.',
+        message: 'The user session is no longer active or the user has been removed.',
       });
       return;
     }
@@ -40,7 +53,7 @@ export const authenticate = async (
   } catch (error: any) {
     res.status(401).json({
       success: false,
-      message: 'Invalid or expired authentication token.',
+      message: 'Invalid or expired session. Please sign in again.',
       error: error.message,
     });
   }

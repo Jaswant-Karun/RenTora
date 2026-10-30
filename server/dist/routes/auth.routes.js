@@ -6,6 +6,8 @@ const auth_middleware_js_1 = require("../middleware/auth.middleware.js");
 const router = (0, express_1.Router)();
 router.post('/register', auth_controller_js_1.register);
 router.post('/login', auth_controller_js_1.login);
+router.post('/logout', auth_controller_js_1.logout);
+router.post('/forgot-password', auth_controller_js_1.forgotPassword);
 router.get('/me', auth_middleware_js_1.authenticate, auth_controller_js_1.getMe);
 router.get('/demo-accounts', auth_controller_js_1.getDemoAccounts);
 exports.default = router;
