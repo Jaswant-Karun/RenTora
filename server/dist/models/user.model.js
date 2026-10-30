@@ -1,0 +1,79 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.User = void 0;
+const mongoose_1 = require("mongoose");
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const userSchema = new mongoose_1.Schema({
+    name: {
+        type: String,
+        required: [true, 'Full name is required'],
+        trim: true,
+        minlength: 2,
+        maxlength: 60,
+    },
+    email: {
+        type: String,
+        required: [true, 'Email address is required'],
+        unique: true,
+        trim: true,
+        lowercase: true,
+        match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email address'],
+    },
+    password: {
+        type: String,
+        required: [true, 'Password is required'],
+        minlength: 6,
+        select: false, // Never return password by default
+    },
+    role: {
+        type: String,
+        enum: ['student', 'owner', 'manager', 'admin'],
+        default: 'student',
+        required: true,
+    },
+    institution: {
+        type: String,
+        required: [true, 'Institution/College name is required'],
+        trim: true,
+    },
+    department: {
+        type: String,
+        trim: true,
+        default: 'General',
+    },
+    phone: {
+        type: String,
+        trim: true,
+    },
+    avatar: {
+        type: String,
+        default: '',
+    },
+    isVerified: {
+        type: Boolean,
+        default: true,
+    },
+}, {
+    timestamps: true,
+});
+// Hash password before saving
+userSchema.pre('save', async function (next) {
+    if (!this.isModified('password'))
+        return next();
+    try {
+        const salt = await bcryptjs_1.default.genSalt(10);
+        this.password = await bcryptjs_1.default.hash(this.password, salt);
+        next();
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// Instance method to compare password
+userSchema.methods.comparePassword = async function (candidatePassword) {
+    return bcryptjs_1.default.compare(candidatePassword, this.password);
+};
+exports.User = (0, mongoose_1.model)('User', userSchema);
