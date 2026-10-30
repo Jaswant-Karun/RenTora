@@ -1,0 +1,15 @@
+{
+  "name": "rentora-platform",
+  "version": "1.0.0",
+  "description": "RENTORA - Smart Institutional Resource Sharing & Management Platform (Team Storm Breakerz)",
+  "scripts": {
+    "server:install": "cd server && npm install",
+    "client:install": "cd client && npm install",
+    "install:all": "npm run server:install && npm run client:install",
+    "server:dev": "cd server && npm run dev",
+    "client:dev": "cd client && npm run dev",
+    "seed": "cd server && npm run seed"
+  },
+  "author": "Storm Breakerz (Jaswant Karun S A)",
+  "license": "MIT"
+}

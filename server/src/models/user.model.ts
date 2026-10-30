@@ -1,0 +1,95 @@
+import { Schema, model, Document } from 'mongoose';
+import bcrypt from 'bcryptjs';
+
+export type UserRole = 'student' | 'owner' | 'manager' | 'admin';
+
+export interface IUser extends Document {
+  name: string;
+  email: string;
+  password: string;
+  role: UserRole;
+  institution: string;
+  department?: string;
+  phone?: string;
+  avatar?: string;
+  isVerified: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  comparePassword(candidatePassword: string): Promise<boolean>;
+}
+
+const userSchema = new Schema<IUser>(
+  {
+    name: {
+      type: String,
+      required: [true, 'Full name is required'],
+      trim: true,
+      minlength: 2,
+      maxlength: 60,
+    },
+    email: {
+      type: String,
+      required: [true, 'Email address is required'],
+      unique: true,
+      trim: true,
+      lowercase: true,
+      match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email address'],
+    },
+    password: {
+      type: String,
+      required: [true, 'Password is required'],
+      minlength: 6,
+      select: false, // Never return password by default
+    },
+    role: {
+      type: String,
+      enum: ['student', 'owner', 'manager', 'admin'],
+      default: 'student',
+      required: true,
+    },
+    institution: {
+      type: String,
+      required: [true, 'Institution/College name is required'],
+      trim: true,
+    },
+    department: {
+      type: String,
+      trim: true,
+      default: 'General',
+    },
+    phone: {
+      type: String,
+      trim: true,
+    },
+    avatar: {
+      type: String,
+      default: '',
+    },
+    isVerified: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+// Hash password before saving
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (err: any) {
+    next(err);
+  }
+});
+
+// Instance method to compare password
+userSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
+  return bcrypt.compare(candidatePassword, this.password);
+};
+
+export const User = model<IUser>('User', userSchema);
