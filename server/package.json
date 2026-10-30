@@ -10,7 +10,6 @@
     "seed": "tsx src/utils/seed.ts"
   },
   "keywords": ["rentora", "resource-sharing", "equipment", "institutions", "smart-campus"],
-  "author": "Storm Breakerz (Jaswant Karun S A)",
   "license": "MIT",
   "dependencies": {
     "bcryptjs": "^2.4.3",
