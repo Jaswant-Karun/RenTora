@@ -9,8 +9,8 @@ router.get('/health', (_req, res) => {
   res.status(200).json({
     success: true,
     platform: 'RENTORA - Smart Institutional Resource Sharing Platform',
-    team: 'Storm Breakerz',
-    lead: 'Jaswant Karun S A',
+    version: '1.0.0',
+    system: 'Operational',
     timestamp: new Date().toISOString(),
     status: 'ONLINE',
     database: getDBStatus(),
