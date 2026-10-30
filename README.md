@@ -1,8 +1,6 @@
 # 🏛️ RENTORA — Smart Institutional Resource Sharing & Management Platform
 
 > **Problem Statement:** Unlock Underused Equipment and Spaces  
-> **Team:** Storm Breakerz  
-> **Team Leader:** Jaswant Karun S A  
 > **Platform Version:** 1.0 (Hackathon Production-Ready Baseline)
 
 ---
@@ -246,10 +244,4 @@ You can sign in directly using the **"Demo Roles"** dropdown in the navigation b
 - **Graceful Error Handling**: Centralized error middleware handling Zod validation errors, duplicate keys, and invalid ObjectIds.
 - **No Mock Persistence**: Real MongoDB database backing all user and session data.
 
----
 
-## 👥 Hackathon Team Credits
-
-- **Project:** RENTORA — Smart Institutional Resource Sharing & Management Platform
-- **Team Name:** Storm Breakerz
-- **Team Leader:** Jaswant Karun S A
