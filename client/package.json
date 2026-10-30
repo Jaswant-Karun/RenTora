@@ -9,7 +9,23 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@types/node": "^26.6.6",
+    "autoprefixer": "^10.6.2",
+    "postcss": "^8.5.32",
+    "tailwindcss": "^3.4.19",
     "typescript": "~7.0.2",
     "vite": "^8.3.5"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^6.0.2",
+    "axios": "^1.21.0",
+    "clsx": "^2.1.1",
+    "framer-motion": "^14.9.0",
+    "lucide-react": "^1.65.0",
+    "react-hook-form": "^7.91.0",
+    "react-router-dom": "^7.18.5",
+    "recharts": "^3.10.1",
+    "tailwind-merge": "^3.7.0",
+    "zod": "^4.6.7"
   }
 }
