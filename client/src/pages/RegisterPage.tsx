@@ -31,9 +31,7 @@ const registerFormSchema = z
     email: z.string().email('Please enter a valid institutional email address'),
     password: z.string().min(6, 'Password must be at least 6 characters long'),
     confirmPassword: z.string().min(6, 'Please confirm your password'),
-    role: z.enum(['student', 'owner'], {
-      errorMap: () => ({ message: 'Please select a permitted registration role' }),
-    }),
+    role: z.enum(['student', 'owner'] as const),
     institution: z.string().min(2, 'Institution name is required'),
     department: z.string().min(2, 'Department name is required'),
     phone: z.string().min(10, 'Please enter a valid phone number (at least 10 digits)'),
