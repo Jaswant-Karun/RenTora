@@ -243,5 +243,3 @@ You can sign in directly using the **"Demo Roles"** dropdown in the navigation b
 - **Bearer Token Auth**: Authorization header format `Bearer <token>` verified on all protected routes.
 - **Graceful Error Handling**: Centralized error middleware handling Zod validation errors, duplicate keys, and invalid ObjectIds.
 - **No Mock Persistence**: Real MongoDB database backing all user and session data.
-
-
