@@ -54,7 +54,6 @@ const startServer = async () => {
 =====================================================
 🚀 RENTORA Backend API is live!
 🏛️ Smart Institutional Resource Sharing Platform
-👥 Team: Storm Breakerz | Lead: Jaswant Karun S A
 📡 URL: http://localhost:${PORT}
 🩺 Health Check: http://localhost:${PORT}/api/health
 =====================================================
