@@ -24,6 +24,7 @@ interface IncidentReportModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  booking?: any;
   defaultBookingId?: string;
   defaultBookingRef?: string;
   defaultResourceId?: string;
@@ -34,6 +35,7 @@ export const IncidentReportModal: React.FC<IncidentReportModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
+  booking,
   defaultBookingId,
   defaultBookingRef,
   defaultResourceId,
@@ -43,8 +45,12 @@ export const IncidentReportModal: React.FC<IncidentReportModalProps> = ({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [severity, setSeverity] = useState<'low' | 'medium' | 'high' | 'critical'>('medium');
-  const [bookingRef, setBookingRef] = useState(defaultBookingRef || '');
-  const [resourceName, setResourceName] = useState(defaultResourceName || '');
+  const [bookingRef, setBookingRef] = useState(
+    defaultBookingRef || (booking ? booking._id?.slice(-8).toUpperCase() : '')
+  );
+  const [resourceName, setResourceName] = useState(
+    defaultResourceName || (booking ? (booking.resourceName || booking.resource?.name || '') : '')
+  );
   const [evidence, setEvidence] = useState<string[]>([
     'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=600&q=80',
   ]);
