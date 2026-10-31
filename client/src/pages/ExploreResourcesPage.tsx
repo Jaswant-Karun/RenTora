@@ -17,6 +17,12 @@ import {
   SlidersHorizontal,
   CheckCircle2,
   Clock,
+  MapPin,
+  ShieldCheck,
+  Award,
+  ChevronDown,
+  X,
+  ArrowUpDown,
 } from 'lucide-react';
 
 export const ALL_CATEGORIES: ResourceCategory[] = [
@@ -43,9 +49,16 @@ export const ExploreResourcesPage: React.FC = () => {
   // Filters state
   const selectedCategory = searchParams.get('category') || 'All';
   const selectedInstitution = searchParams.get('institution') || 'All';
+  const selectedLocation = searchParams.get('location') || 'All';
   const selectedAvailability = searchParams.get('availability') || 'All';
+  const selectedResourceType = searchParams.get('resourceType') || 'All';
+  const selectedEligibility = searchParams.get('eligibility') || 'All';
+  const selectedTraining = searchParams.get('training') || 'All';
   const selectedDate = searchParams.get('date') || '';
-  const selectedSort = searchParams.get('sort') || 'name_asc';
+  const selectedSort = searchParams.get('sort') || 'relevance';
+
+  // Toggle advanced filter panel
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Data states
   const [resources, setResources] = useState<Resource[]>([]);
@@ -55,7 +68,15 @@ export const ExploreResourcesPage: React.FC = () => {
     institutions: string[];
     locations: string[];
     categories: string[];
-  }>({ institutions: [], locations: [], categories: [] });
+    resourceTypes?: string[];
+    eligibilities?: string[];
+  }>({
+    institutions: [],
+    locations: [],
+    categories: [],
+    resourceTypes: [],
+    eligibilities: [],
+  });
 
   // Booking modal & AI Smart Matcher modal
   const [selectedForBooking, setSelectedForBooking] = useState<Resource | null>(null);
@@ -85,20 +106,18 @@ export const ExploreResourcesPage: React.FC = () => {
           search: debouncedSearch || undefined,
           category: selectedCategory !== 'All' ? selectedCategory : undefined,
           institution: selectedInstitution !== 'All' ? selectedInstitution : undefined,
+          location: selectedLocation !== 'All' ? selectedLocation : undefined,
           availability: selectedAvailability !== 'All' ? selectedAvailability : undefined,
+          resourceType: selectedResourceType !== 'All' ? selectedResourceType : undefined,
+          eligibility: selectedEligibility !== 'All' ? selectedEligibility : undefined,
+          training: selectedTraining !== 'All' ? selectedTraining : undefined,
           date: selectedDate || undefined,
-          limit: 32,
+          sort: selectedSort,
+          limit: 36,
         });
 
         if (res.success) {
-          let items = res.data;
-          // Apply client sorting if needed
-          if (selectedSort === 'name_asc') {
-            items = [...items].sort((a, b) => a.name.localeCompare(b.name));
-          } else if (selectedSort === 'name_desc') {
-            items = [...items].sort((a, b) => b.name.localeCompare(a.name));
-          }
-          setResources(items);
+          setResources(res.data);
           setTotalCount(res.meta.total);
           if (res.meta.filterOptions) {
             setFilterOptions(res.meta.filterOptions);
@@ -116,7 +135,11 @@ export const ExploreResourcesPage: React.FC = () => {
     debouncedSearch,
     selectedCategory,
     selectedInstitution,
+    selectedLocation,
     selectedAvailability,
+    selectedResourceType,
+    selectedEligibility,
+    selectedTraining,
     selectedDate,
     selectedSort,
   ]);
@@ -136,10 +159,24 @@ export const ExploreResourcesPage: React.FC = () => {
     setSearchParams({}, { replace: true });
   };
 
+  const activeAdvancedCount = useMemo(() => {
+    let count = 0;
+    if (selectedLocation !== 'All') count++;
+    if (selectedResourceType !== 'All') count++;
+    if (selectedEligibility !== 'All') count++;
+    if (selectedTraining !== 'All') count++;
+    if (selectedDate) count++;
+    return count;
+  }, [selectedLocation, selectedResourceType, selectedEligibility, selectedTraining, selectedDate]);
+
   const hasActiveFilters =
     selectedCategory !== 'All' ||
     selectedInstitution !== 'All' ||
+    selectedLocation !== 'All' ||
     selectedAvailability !== 'All' ||
+    selectedResourceType !== 'All' ||
+    selectedEligibility !== 'All' ||
+    selectedTraining !== 'All' ||
     Boolean(selectedDate) ||
     Boolean(debouncedSearch);
 
@@ -149,45 +186,54 @@ export const ExploreResourcesPage: React.FC = () => {
       <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-[#172033] tracking-tight">
-            Resource Marketplace
+            Institutional Resource Marketplace
           </h1>
           <p className="text-xs text-[#64748B] mt-0.5">
-            Discover, check availability, and schedule specialized institutional equipment across partner universities.
+            Discover, filter by eligibility and availability, and schedule state-of-the-art laboratory apparatus across partner universities.
           </p>
         </div>
 
         <button
           type="button"
           onClick={() => setIsSmartMatcherOpen(true)}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#EFF6FF] hover:bg-blue-100 text-[#1769D2] text-xs font-semibold border border-blue-200 shadow-xs transition-colors shrink-0"
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#EFF6FF] hover:bg-blue-100 text-[#1769D2] text-xs font-semibold border border-blue-200 shadow-xs transition-colors shrink-0 cursor-pointer"
         >
           <Sparkles className="w-3.5 h-3.5" />
           <span>AI Smart Matcher</span>
         </button>
       </div>
 
-      {/* 2. Search & Filter Bar */}
-      <div className="bg-white border border-[#E2E8F0] rounded-xl p-4 shadow-sm space-y-3">
-        {/* Search Input & Select Dropdowns */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
-          {/* Text Search */}
-          <div className="lg:col-span-2 relative">
+      {/* 2. Main Search & Filter Console */}
+      <div className="bg-white border border-[#E2E8F0] rounded-xl p-4 shadow-sm space-y-3.5">
+        {/* Primary Row: Search Input & Core Select Dropdowns */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5">
+          {/* Text Search (5 cols) */}
+          <div className="lg:col-span-5 relative">
             <Search className="w-4 h-4 text-[#64748B] absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Search by equipment name, specification, tag..."
-              className="w-full bg-[#F8FAFC] text-[#172033] placeholder-[#94A3B8] text-xs rounded-lg pl-9 pr-3 py-2 border border-[#E2E8F0] focus:bg-white focus:outline-none focus:border-[#1769D2] focus:ring-1 focus:ring-[#1769D2] transition-colors"
+              placeholder="Search by equipment name, specification, tag, model..."
+              className="w-full bg-[#F8FAFC] text-[#172033] placeholder-[#94A3B8] text-xs rounded-lg pl-9 pr-8 py-2.5 border border-[#E2E8F0] focus:bg-white focus:outline-none focus:border-[#1769D2] focus:ring-1 focus:ring-[#1769D2] transition-colors"
             />
+            {searchInput && (
+              <button
+                type="button"
+                onClick={() => setSearchInput('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
 
-          {/* Institution Filter */}
-          <div>
+          {/* Institution Filter (2 cols) */}
+          <div className="lg:col-span-2">
             <select
               value={selectedInstitution}
               onChange={(e) => updateFilter('institution', e.target.value)}
-              className="w-full bg-[#F8FAFC] text-[#172033] text-xs rounded-lg px-2.5 py-2 border border-[#E2E8F0] focus:bg-white focus:outline-none focus:border-[#1769D2]"
+              className="w-full bg-[#F8FAFC] text-[#172033] text-xs rounded-lg px-2.5 py-2.5 border border-[#E2E8F0] focus:bg-white focus:outline-none focus:border-[#1769D2]"
             >
               <option value="All">All Institutions</option>
               {filterOptions.institutions.map((inst) => (
@@ -198,12 +244,12 @@ export const ExploreResourcesPage: React.FC = () => {
             </select>
           </div>
 
-          {/* Availability Filter */}
-          <div>
+          {/* Availability Filter (2 cols) */}
+          <div className="lg:col-span-2">
             <select
               value={selectedAvailability}
               onChange={(e) => updateFilter('availability', e.target.value)}
-              className="w-full bg-[#F8FAFC] text-[#172033] text-xs rounded-lg px-2.5 py-2 border border-[#E2E8F0] focus:bg-white focus:outline-none focus:border-[#1769D2]"
+              className="w-full bg-[#F8FAFC] text-[#172033] text-xs rounded-lg px-2.5 py-2.5 border border-[#E2E8F0] focus:bg-white focus:outline-none focus:border-[#1769D2]"
             >
               <option value="All">All Statuses</option>
               <option value="available">Available Now</option>
@@ -212,24 +258,50 @@ export const ExploreResourcesPage: React.FC = () => {
             </select>
           </div>
 
-          {/* Date Filter */}
-          <div>
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => updateFilter('date', e.target.value)}
-              className="w-full bg-[#F8FAFC] text-[#172033] text-xs rounded-lg px-2.5 py-1.5 border border-[#E2E8F0] focus:bg-white focus:outline-none focus:border-[#1769D2]"
-              title="Filter by required date"
-            />
+          {/* Sort By Filter (2 cols) */}
+          <div className="lg:col-span-2">
+            <select
+              value={selectedSort}
+              onChange={(e) => updateFilter('sort', e.target.value)}
+              className="w-full bg-[#F8FAFC] text-[#172033] text-xs rounded-lg px-2.5 py-2.5 border border-[#E2E8F0] focus:bg-white focus:outline-none focus:border-[#1769D2]"
+            >
+              <option value="relevance">Sort: Relevance</option>
+              <option value="popular">Sort: Popularity</option>
+              <option value="availability">Sort: Available First</option>
+              <option value="rating">Sort: Highest Rated</option>
+              <option value="name_asc">Sort: Name (A - Z)</option>
+              <option value="name_desc">Sort: Name (Z - A)</option>
+            </select>
+          </div>
+
+          {/* Advanced Filter Toggle Button (1 col) */}
+          <div className="lg:col-span-1">
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className={`w-full h-full py-2 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-colors border ${
+                showAdvanced || activeAdvancedCount > 0
+                  ? 'bg-[#EFF6FF] border-blue-300 text-[#1769D2]'
+                  : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#64748B] hover:text-[#172033]'
+              }`}
+              title="Toggle Advanced Filters"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              {activeAdvancedCount > 0 && (
+                <span className="w-4 h-4 rounded-full bg-[#1769D2] text-white text-[10px] flex items-center justify-center">
+                  {activeAdvancedCount}
+                </span>
+              )}
+            </button>
           </div>
         </div>
 
         {/* Horizontal Category Pills */}
-        <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 pt-1 scrollbar-none text-xs">
+        <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none text-xs">
           <button
             type="button"
             onClick={() => updateFilter('category', 'All')}
-            className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+            className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
               selectedCategory === 'All'
                 ? 'bg-[#1769D2] text-white shadow-xs'
                 : 'bg-[#F8FAFC] text-[#64748B] hover:text-[#172033] border border-[#E2E8F0]'
@@ -242,7 +314,7 @@ export const ExploreResourcesPage: React.FC = () => {
               key={cat}
               type="button"
               onClick={() => updateFilter('category', cat)}
-              className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+              className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
                 selectedCategory === cat
                   ? 'bg-[#1769D2] text-white shadow-xs'
                   : 'bg-[#F8FAFC] text-[#64748B] hover:text-[#172033] border border-[#E2E8F0]'
@@ -253,21 +325,159 @@ export const ExploreResourcesPage: React.FC = () => {
           ))}
         </div>
 
-        {/* Filter Summary & Reset */}
-        <div className="flex items-center justify-between pt-2 border-t border-[#E2E8F0] text-xs text-[#64748B]">
-          <span>
-            Showing <strong className="text-[#172033]">{resources.length}</strong> of{' '}
-            <strong className="text-[#172033]">{totalCount}</strong> assets
-          </span>
+        {/* Collapsible Advanced Filters Drawer */}
+        {showAdvanced && (
+          <div className="pt-3 pb-1 border-t border-[#E2E8F0] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 bg-slate-50/70 p-3.5 rounded-xl">
+            {/* Campus / Lab Location */}
+            <div>
+              <label className="block text-[11px] font-semibold text-[#64748B] mb-1">
+                Campus Location
+              </label>
+              <select
+                value={selectedLocation}
+                onChange={(e) => updateFilter('location', e.target.value)}
+                className="w-full bg-white text-[#172033] text-xs rounded-lg px-2.5 py-1.5 border border-[#E2E8F0] focus:outline-none focus:border-[#1769D2]"
+              >
+                <option value="All">All Locations</option>
+                {filterOptions.locations.map((loc) => (
+                  <option key={loc} value={loc}>
+                    {loc}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Resource Type */}
+            <div>
+              <label className="block text-[11px] font-semibold text-[#64748B] mb-1">
+                Resource Type
+              </label>
+              <select
+                value={selectedResourceType}
+                onChange={(e) => updateFilter('resourceType', e.target.value)}
+                className="w-full bg-white text-[#172033] text-xs rounded-lg px-2.5 py-1.5 border border-[#E2E8F0] focus:outline-none focus:border-[#1769D2]"
+              >
+                <option value="All">All Types</option>
+                <option value="Laboratory">Laboratory Facility</option>
+                <option value="Equipment">Analytical Equipment</option>
+                <option value="Computational">Computational Cluster</option>
+                <option value="Testing">Testing Instruments</option>
+                <option value="Space">Research Space</option>
+              </select>
+            </div>
+
+            {/* Borrower Eligibility */}
+            <div>
+              <label className="block text-[11px] font-semibold text-[#64748B] mb-1">
+                Borrower Eligibility
+              </label>
+              <select
+                value={selectedEligibility}
+                onChange={(e) => updateFilter('eligibility', e.target.value)}
+                className="w-full bg-white text-[#172033] text-xs rounded-lg px-2.5 py-1.5 border border-[#E2E8F0] focus:outline-none focus:border-[#1769D2]"
+              >
+                <option value="All">All Academic Levels</option>
+                <option value="Undergraduate">Undergraduate Students</option>
+                <option value="Graduate">Postgraduate / Masters</option>
+                <option value="PhD Scholar">PhD Scholars & Researchers</option>
+                <option value="Faculty">Faculty & Staff</option>
+              </select>
+            </div>
+
+            {/* Training / Certification Requirements */}
+            <div>
+              <label className="block text-[11px] font-semibold text-[#64748B] mb-1">
+                Training Requirements
+              </label>
+              <select
+                value={selectedTraining}
+                onChange={(e) => updateFilter('training', e.target.value)}
+                className="w-full bg-white text-[#172033] text-xs rounded-lg px-2.5 py-1.5 border border-[#E2E8F0] focus:outline-none focus:border-[#1769D2]"
+              >
+                <option value="All">All Conditions</option>
+                <option value="none">No Training Required</option>
+                <option value="required">Certification / SOP Required</option>
+              </select>
+            </div>
+
+            {/* Required Date */}
+            <div>
+              <label className="block text-[11px] font-semibold text-[#64748B] mb-1">
+                Target Reservation Date
+              </label>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => updateFilter('date', e.target.value)}
+                className="w-full bg-white text-[#172033] text-xs rounded-lg px-2.5 py-1.5 border border-[#E2E8F0] focus:outline-none focus:border-[#1769D2]"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Filter Summary & Active Badges */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#E2E8F0] text-xs text-[#64748B]">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span>
+              Showing <strong className="text-[#172033]">{resources.length}</strong> of{' '}
+              <strong className="text-[#172033]">{totalCount}</strong> assets
+            </span>
+
+            {/* Active Pill Badges */}
+            {selectedCategory !== 'All' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#EFF6FF] text-[#1769D2] border border-blue-200 text-[11px]">
+                Category: {selectedCategory}
+                <button type="button" onClick={() => updateFilter('category', 'All')} className="hover:text-blue-800">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+
+            {selectedInstitution !== 'All' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#EFF6FF] text-[#1769D2] border border-blue-200 text-[11px]">
+                {selectedInstitution}
+                <button type="button" onClick={() => updateFilter('institution', 'All')} className="hover:text-blue-800">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+
+            {selectedAvailability !== 'All' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-[#16834A] border border-emerald-200 text-[11px]">
+                {selectedAvailability}
+                <button type="button" onClick={() => updateFilter('availability', 'All')} className="hover:text-emerald-800">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+
+            {selectedTraining !== 'All' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-[#D97706] border border-amber-200 text-[11px]">
+                Training: {selectedTraining}
+                <button type="button" onClick={() => updateFilter('training', 'All')} className="hover:text-amber-800">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+
+            {selectedDate && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-[#172033] border border-slate-300 text-[11px]">
+                Date: {selectedDate}
+                <button type="button" onClick={() => updateFilter('date', '')} className="hover:text-black">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+          </div>
 
           {hasActiveFilters && (
             <button
               type="button"
               onClick={handleResetFilters}
-              className="inline-flex items-center gap-1 text-xs text-[#DC2626] hover:underline"
+              className="inline-flex items-center gap-1 text-xs text-[#DC2626] hover:underline cursor-pointer"
             >
               <RotateCcw className="w-3 h-3" />
-              <span>Reset Filters</span>
+              <span>Reset All Filters</span>
             </button>
           )}
         </div>
@@ -282,8 +492,8 @@ export const ExploreResourcesPage: React.FC = () => {
         </div>
       ) : resources.length === 0 ? (
         <EmptyState
-          title="No resources matched your search"
-          description="Try broadening your category filters, clearing the date requirement, or searching for a different apparatus."
+          title="No resources matched your filter parameters"
+          description="Try broadening your category filters, clearing the target date, or searching for a different apparatus."
           actionLabel="Clear all filters"
           onAction={handleResetFilters}
         />

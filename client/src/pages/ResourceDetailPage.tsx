@@ -44,6 +44,14 @@ export const ResourceDetailPage: React.FC = () => {
         const res = await getResourceByIdApi(id);
         if (res.success && res.data) {
           setResource(res.data);
+          try {
+            const raw = localStorage.getItem('rentora_recently_viewed');
+            let list: Resource[] = raw ? JSON.parse(raw) : [];
+            list = [res.data, ...list.filter((r) => r._id !== res.data._id)].slice(0, 8);
+            localStorage.setItem('rentora_recently_viewed', JSON.stringify(list));
+          } catch {
+            // Ignore
+          }
         }
       } catch (err) {
         console.error('Error fetching resource details:', err);
