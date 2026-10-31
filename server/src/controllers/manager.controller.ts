@@ -7,6 +7,7 @@ import { Incident } from '../models/incident.model.js';
 import { Dispute } from '../models/dispute.model.js';
 import { FairAllocation } from '../models/fairAllocation.model.js';
 import { Notification } from '../models/notification.model.js';
+import { recordAuditLog } from '../utils/auditLogger.js';
 
 // 1. Institution-wide Resource Statistics
 export const getManagerStats = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
@@ -111,6 +112,19 @@ export const updateResourceApproval = async (req: AuthenticatedRequest, res: Res
       return;
     }
 
+    await recordAuditLog({
+      action: 'MANAGER_DECISION',
+      entityType: 'Resource',
+      entityId: resource._id,
+      entityTitle: resource.name,
+      actorId: req.user?._id,
+      actorName: req.user?.name || 'Manager',
+      actorEmail: req.user?.email,
+      actorRole: req.user?.role || 'manager',
+      details: { approvalStatus },
+      reason: `Resource listing ${approvalStatus} by institutional manager.`,
+    });
+
     res.status(200).json({
       success: true,
       message: `Resource "${resource.name}" has been marked as ${approvalStatus}.`,
@@ -136,11 +150,28 @@ export const toggleUserVerification = async (req: AuthenticatedRequest, res: Res
     const { id } = req.params;
     const { isVerified } = req.body;
 
-    const user = await User.findByIdAndUpdate(id, { isVerified }, { new: true }).select('-password');
+    const user = await User.findByIdAndUpdate(
+      id,
+      { isVerified, institutionMembershipVerified: isVerified },
+      { new: true }
+    ).select('-password');
     if (!user) {
       res.status(404).json({ success: false, message: 'User not found' });
       return;
     }
+
+    await recordAuditLog({
+      action: 'MANAGER_DECISION',
+      entityType: 'User',
+      entityId: user._id,
+      entityTitle: user.name,
+      actorId: req.user?._id,
+      actorName: req.user?.name || 'Manager',
+      actorEmail: req.user?.email,
+      actorRole: req.user?.role || 'manager',
+      details: { isVerified },
+      reason: `User membership verification set to ${isVerified}`,
+    });
 
     res.status(200).json({
       success: true,
@@ -300,6 +331,19 @@ export const updateFairAllocationSettings = async (req: AuthenticatedRequest, re
       new: true,
       upsert: true,
     });
+
+    await recordAuditLog({
+      action: 'MANAGER_DECISION',
+      entityType: 'Policy',
+      entityTitle: `Fair Allocation Policy (${institution})`,
+      actorId: req.user?._id,
+      actorName: req.user?.name || 'Manager',
+      actorEmail: req.user?.email,
+      actorRole: req.user?.role || 'manager',
+      details: req.body,
+      reason: 'Fair allocation parameters updated by institutional manager.',
+    });
+
     res.status(200).json({
       success: true,
       message: 'Institution fair allocation policies updated.',

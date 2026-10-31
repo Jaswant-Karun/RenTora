@@ -6,6 +6,8 @@ import dashboardRoutes from './dashboard.routes.js';
 import notificationRoutes from './notification.routes.js';
 import ownerRoutes from './owner.routes.js';
 import managerRoutes from './manager.routes.js';
+import incidentRoutes from './incident.routes.js';
+import auditLogRoutes from './auditLog.routes.js';
 import { getDBStatus } from '../config/db.js';
 
 const router = Router();
@@ -39,5 +41,7 @@ router.use('/dashboard', dashboardRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/owner', ownerRoutes);
 router.use('/manager', managerRoutes);
+router.use('/incidents', incidentRoutes);
+router.use('/audit-logs', auditLogRoutes);
 
 export default router;

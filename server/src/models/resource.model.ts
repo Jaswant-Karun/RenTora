@@ -31,6 +31,10 @@ export interface IResource extends Document {
   availabilityText: string;
   availableDates?: string[];
   eligibility: string;
+  isRestricted: boolean;
+  requiredQualification: string;
+  requiredCertifications: string[];
+  conditionPhotosConfigured: boolean;
   approvalRequired: boolean;
   approvalStatus: 'approved' | 'pending_manager' | 'rejected';
   availabilitySchedule?: string;
@@ -144,6 +148,23 @@ const resourceSchema = new Schema<IResource>(
       type: String,
       default: 'All Enrolled Students & Faculty',
       index: true,
+    },
+    isRestricted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    requiredQualification: {
+      type: String,
+      default: 'None',
+    },
+    requiredCertifications: {
+      type: [String],
+      default: [],
+    },
+    conditionPhotosConfigured: {
+      type: Boolean,
+      default: true,
     },
     approvalRequired: {
       type: Boolean,

@@ -10,9 +10,17 @@ export interface IConditionReport extends Document {
   operationalStatus: 'optimal' | 'minor_wear' | 'damaged' | 'offline';
   cleanliness: 'passed' | 'needs_cleaning';
   meterReading?: string;
+  conditionNotes: string;
   observations: string;
+  photos: string[];
+  timestamp: Date;
+  userConfirmation: boolean;
+  userConfirmedAt?: Date;
+  ownerConfirmation: boolean;
+  ownerConfirmedAt?: Date;
   signoffConfirmed: boolean;
   createdAt: Date;
+  updatedAt: Date;
 }
 
 const conditionReportSchema = new Schema<IConditionReport>(
@@ -30,6 +38,7 @@ const conditionReportSchema = new Schema<IConditionReport>(
     bookingId: {
       type: Schema.Types.ObjectId,
       ref: 'Booking',
+      index: true,
     },
     inspectorName: {
       type: String,
@@ -43,6 +52,7 @@ const conditionReportSchema = new Schema<IConditionReport>(
       type: String,
       enum: ['check_in', 'check_out', 'routine'],
       default: 'check_out',
+      index: true,
     },
     operationalStatus: {
       type: String,
@@ -54,10 +64,40 @@ const conditionReportSchema = new Schema<IConditionReport>(
       enum: ['passed', 'needs_cleaning'],
       default: 'passed',
     },
-    meterReading: String,
+    meterReading: {
+      type: String,
+      default: '0',
+    },
+    conditionNotes: {
+      type: String,
+      default: '',
+    },
     observations: {
       type: String,
       required: true,
+    },
+    photos: {
+      type: [String],
+      default: [],
+    },
+    timestamp: {
+      type: Date,
+      default: Date.now,
+      index: true,
+    },
+    userConfirmation: {
+      type: Boolean,
+      default: false,
+    },
+    userConfirmedAt: {
+      type: Date,
+    },
+    ownerConfirmation: {
+      type: Boolean,
+      default: false,
+    },
+    ownerConfirmedAt: {
+      type: Date,
     },
     signoffConfirmed: {
       type: Boolean,

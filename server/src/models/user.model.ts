@@ -3,6 +3,21 @@ import bcrypt from 'bcryptjs';
 
 export type UserRole = 'student' | 'owner' | 'manager' | 'admin';
 
+export interface ITrainingCertification {
+  name: string;
+  certifiedDate: Date;
+  expiresAt?: Date;
+  credentialId: string;
+}
+
+export interface IHistoricalUsage {
+  weeklyHoursUsed: number;
+  totalHoursLogged: number;
+  totalCompletedBookings: number;
+  penaltyPoints: number;
+  monopolisationCooldownUntil?: Date;
+}
+
 export interface IUser extends Document {
   name: string;
   email: string;
@@ -13,6 +28,10 @@ export interface IUser extends Document {
   phone?: string;
   avatar?: string;
   isVerified: boolean;
+  institutionMembershipVerified: boolean;
+  academicQualification: string;
+  trainingCertifications: ITrainingCertification[];
+  historicalUsage: IHistoricalUsage;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -68,6 +87,44 @@ const userSchema = new Schema<IUser>(
     isVerified: {
       type: Boolean,
       default: true,
+    },
+    institutionMembershipVerified: {
+      type: Boolean,
+      default: true,
+    },
+    academicQualification: {
+      type: String,
+      default: 'Undergraduate',
+      enum: ['Undergraduate', 'Graduate Student', 'Final Year Student', 'PhD Scholar', 'Faculty', 'Postdoctoral Researcher'],
+    },
+    trainingCertifications: {
+      type: [
+        {
+          name: { type: String, required: true },
+          certifiedDate: { type: Date, default: Date.now },
+          expiresAt: { type: Date },
+          credentialId: { type: String, required: true },
+        },
+      ],
+      default: [
+        {
+          name: 'Basic Lab Safety Induction',
+          certifiedDate: new Date('2025-01-15'),
+          credentialId: 'CERT-SAF-001',
+        },
+        {
+          name: 'Equipment Handling Clearance',
+          certifiedDate: new Date('2025-02-01'),
+          credentialId: 'CERT-EHC-042',
+        },
+      ],
+    },
+    historicalUsage: {
+      weeklyHoursUsed: { type: Number, default: 0 },
+      totalHoursLogged: { type: Number, default: 0 },
+      totalCompletedBookings: { type: Number, default: 0 },
+      penaltyPoints: { type: Number, default: 0 },
+      monopolisationCooldownUntil: { type: Date },
     },
   },
   {

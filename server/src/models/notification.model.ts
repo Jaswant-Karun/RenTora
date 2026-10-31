@@ -1,6 +1,17 @@
 import { Schema, model, Document, Types } from 'mongoose';
 
-export type NotificationType = 'booking' | 'approval' | 'maintenance' | 'system';
+export type NotificationType =
+  | 'booking_confirmed'
+  | 'approval'
+  | 'rejection'
+  | 'waitlist_update'
+  | 'upcoming_booking'
+  | 'return_reminder'
+  | 'overdue_alert'
+  | 'incident_update'
+  | 'booking'
+  | 'maintenance'
+  | 'system';
 
 export interface INotification extends Document {
   userId?: Types.ObjectId;
@@ -10,7 +21,9 @@ export interface INotification extends Document {
   type: NotificationType;
   link?: string;
   isRead: boolean;
+  metadata?: Record<string, any>;
   createdAt: Date;
+  updatedAt: Date;
 }
 
 const notificationSchema = new Schema<INotification>(
@@ -28,21 +41,43 @@ const notificationSchema = new Schema<INotification>(
     title: {
       type: String,
       required: true,
+      trim: true,
     },
     message: {
       type: String,
       required: true,
+      trim: true,
     },
     type: {
       type: String,
-      enum: ['booking', 'approval', 'maintenance', 'system'],
+      enum: [
+        'booking_confirmed',
+        'approval',
+        'rejection',
+        'waitlist_update',
+        'upcoming_booking',
+        'return_reminder',
+        'overdue_alert',
+        'incident_update',
+        'booking',
+        'maintenance',
+        'system',
+      ],
       default: 'system',
+      index: true,
     },
-    link: String,
+    link: {
+      type: String,
+      default: '',
+    },
     isRead: {
       type: Boolean,
       default: false,
       index: true,
+    },
+    metadata: {
+      type: Schema.Types.Mixed,
+      default: {},
     },
   },
   {

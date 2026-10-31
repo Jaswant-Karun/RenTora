@@ -5,6 +5,7 @@ import { Booking } from '../models/booking.model.js';
 import { ConditionReport } from '../models/conditionReport.model.js';
 import { Incident } from '../models/incident.model.js';
 import { Notification } from '../models/notification.model.js';
+import { recordAuditLog } from '../utils/auditLogger.js';
 
 // 1. Get Owner Overview Stats & Summary
 export const getOwnerOverview = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
@@ -132,6 +133,24 @@ export const addOwnerResource = async (req: AuthenticatedRequest, res: Response,
       status: 'available',
       availabilityText: 'Available for Bookings',
       tags: Array.isArray(tags) ? tags : [category],
+    });
+
+    await recordAuditLog({
+      action: 'RESOURCE_CREATION',
+      entityType: 'Resource',
+      entityId: newResource._id,
+      entityTitle: newResource.name,
+      actorId: user._id,
+      actorName: user.name,
+      actorEmail: user.email,
+      actorRole: user.role,
+      details: {
+        category: newResource.category,
+        institution: newResource.institution,
+        location: newResource.location,
+        approvalRequired: newResource.approvalRequired,
+      },
+      reason: 'New equipment resource catalogued by owner.',
     });
 
     res.status(201).json({

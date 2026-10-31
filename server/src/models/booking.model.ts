@@ -28,6 +28,10 @@ export interface IConditionSnapshot {
   meterReading?: string;
   cleanliness: 'passed' | 'needs_cleaning';
   operationalStatus: 'optimal' | 'minor_wear' | 'damaged' | 'offline';
+  photos?: string[];
+  userConfirmation?: boolean;
+  ownerConfirmation?: boolean;
+  timestamp?: Date;
   recordedBy: string;
   recordedAt: Date;
 }
@@ -66,6 +70,11 @@ export interface IBooking extends Document {
   cancellationReason?: string;
   waitlistReason?: string;
   waitlistPriority?: number;
+  queuePosition?: number;
+  estimatedReleaseTime?: Date;
+  monopolisationDetected?: boolean;
+  managerOverrideReason?: string;
+  managerOverriddenBy?: string;
   notes?: string;
 
   // Step 9 & 10: Check-In & Initial Condition
@@ -113,6 +122,10 @@ const conditionSnapshotSchema = new Schema<IConditionSnapshot>(
     meterReading: String,
     cleanliness: { type: String, enum: ['passed', 'needs_cleaning'], default: 'passed' },
     operationalStatus: { type: String, enum: ['optimal', 'minor_wear', 'damaged', 'offline'], default: 'optimal' },
+    photos: { type: [String], default: [] },
+    userConfirmation: { type: Boolean, default: false },
+    ownerConfirmation: { type: Boolean, default: false },
+    timestamp: { type: Date, default: Date.now },
     recordedBy: { type: String, required: true },
     recordedAt: { type: Date, default: Date.now },
   },
@@ -226,6 +239,14 @@ const bookingSchema = new Schema<IBooking>(
       type: Number,
       default: 1,
     },
+    queuePosition: Number,
+    estimatedReleaseTime: Date,
+    monopolisationDetected: {
+      type: Boolean,
+      default: false,
+    },
+    managerOverrideReason: String,
+    managerOverriddenBy: String,
     notes: String,
     checkedIn: {
       type: Boolean,
