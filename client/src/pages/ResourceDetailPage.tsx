@@ -385,6 +385,27 @@ export const ResourceDetailPage: React.FC = () => {
                 </span>
                 <p className="text-[#172033] font-medium">{resource.trainingRequired}</p>
               </div>
+
+              {/* Usage Limits & Governance */}
+              <div className="p-3 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] space-y-1.5">
+                <span className="text-[10px] font-semibold text-[#64748B] uppercase tracking-wider flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 text-[#1769D2]" />
+                  Session Limits & Supervision
+                </span>
+                <div className="grid grid-cols-2 gap-2 text-[11px] pt-0.5">
+                  <div>
+                    <span className="text-[10px] text-slate-400 block">Min Session:</span>
+                    <span className="font-semibold text-[#172033]">{resource.minBookingDuration ? `${resource.minBookingDuration} hrs` : '1.0 hr'}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 block">Max Session:</span>
+                    <span className="font-semibold text-[#172033]">{resource.maxBookingDuration ? `${resource.maxBookingDuration} hrs` : '4.0 hrs'}</span>
+                  </div>
+                </div>
+                <p className="text-[10px] text-[#64748B] pt-0.5 border-t border-slate-200">
+                  {resource.supervisionRequirement ? 'Faculty supervisor sign-off required prior to checkout.' : 'Autonomous operation permitted after lab orientation.'}
+                </p>
+              </div>
             </div>
 
             {/* Owner / Lab Custodian Info Card */}

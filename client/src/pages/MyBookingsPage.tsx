@@ -613,6 +613,9 @@ export const MyBookingsPage: React.FC = () => {
               </div>
             </form>
           </div>
+        </div>
+      )}
+
       {/* Printable Booking Receipt Modal */}
       {receiptBooking && (
         <BookingReceiptModal
