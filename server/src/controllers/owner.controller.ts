@@ -633,6 +633,9 @@ export const cancelBookingByOwner = async (req: AuthenticatedRequest, res: Respo
       link: '/dashboard/bookings',
     });
 
+    // Advance waitlist and notify next eligible user
+    await FairShareService.advanceWaitlist(booking.resourceId, booking.date, booking.timeSlot, booking._id?.toString());
+
     res.status(200).json({
       success: true,
       message: 'Booking cancelled and alert dispatched to user.',
