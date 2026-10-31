@@ -94,6 +94,8 @@ export interface Booking {
   userEmail?: string;
   userDepartment?: string;
   userInstitution?: string;
+  institution?: string;
+  userRole?: string;
   resourceId?: string;
   resourceName?: string;
   resourceCategory?: string;
