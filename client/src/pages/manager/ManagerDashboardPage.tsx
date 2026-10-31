@@ -55,6 +55,8 @@ import { AuditLedgerViewer } from '../../components/manager/AuditLedgerViewer';
 import { ManagerOverrideModal } from '../../components/manager/ManagerOverrideModal';
 import { ResourceUtilizationDashboard } from '../../components/ai/ResourceUtilizationDashboard';
 import { IncidentSummaryModal } from '../../components/ai/IncidentSummaryModal';
+import { getFairShareHistoryApi, FairShareDecisionItem } from '../../api/fairshare.api';
+import { FairShareExplanationModal } from '../../components/fairshare/FairShareExplanationModal';
 
 type ManagerTab =
   | 'stats'

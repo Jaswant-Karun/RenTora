@@ -649,6 +649,19 @@ export const MyBookingsPage: React.FC = () => {
           onClose={() => setReceiptBooking(null)}
         />
       )}
+
+      {/* FairShare Transparency Explanation Modal */}
+      {fairShareModalBooking && (
+        <FairShareExplanationModal
+          isOpen={Boolean(fairShareModalBooking)}
+          onClose={() => setFairShareModalBooking(null)}
+          explanation={fairShareModalBooking.fairShareExplanation}
+          resourceName={fairShareModalBooking.resourceName}
+          isOverridden={Boolean(fairShareModalBooking.managerOverrideReason)}
+          overriddenBy={fairShareModalBooking.managerOverriddenBy}
+          overrideReason={fairShareModalBooking.managerOverrideReason}
+        />
+      )}
     </div>
   );
 };
