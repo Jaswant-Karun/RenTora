@@ -661,6 +661,19 @@ export const MyBookingsPage: React.FC = () => {
           overriddenBy={fairShareModalBooking.managerOverriddenBy}
           overrideReason={fairShareModalBooking.managerOverrideReason}
         />
+      {/* Incident Report Modal */}
+      {selectedIncidentBooking && (
+        <IncidentReportModal
+          isOpen={Boolean(selectedIncidentBooking)}
+          onClose={() => setSelectedIncidentBooking(null)}
+          booking={selectedIncidentBooking}
+          defaultBookingId={selectedIncidentBooking._id}
+          defaultResourceId={selectedIncidentBooking.resourceId}
+          defaultResourceName={selectedIncidentBooking.resourceName}
+          onSuccess={() => {
+            fetchBookings();
+          }}
+        />
       )}
     </div>
   );
