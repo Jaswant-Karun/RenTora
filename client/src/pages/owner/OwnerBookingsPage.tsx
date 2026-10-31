@@ -168,7 +168,8 @@ export const OwnerBookingsPage: React.FC<{ initialTab?: string }> = ({ initialTa
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-[#16834A] text-xs flex items-center gap-2"
+          exit={{ opacity: 0, y: -8 }}
+          className="fixed top-6 right-6 z-50 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-[#16834A] text-xs font-semibold flex items-center gap-2 shadow-lg"
         >
           <CheckCircle2 className="w-4 h-4 text-[#16834A] shrink-0" />
           <span>{actionFeedback}</span>
