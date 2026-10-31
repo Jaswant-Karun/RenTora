@@ -47,6 +47,7 @@ import { AuditLedgerViewer } from '../../components/manager/AuditLedgerViewer';
 import { ConfirmationModal } from '../../components/common/ConfirmationModal';
 import { StatCardSkeleton, TableRowSkeleton } from '../../components/common/SkeletonLoader';
 import { ALL_CATEGORIES } from '../ExploreResourcesPage';
+import { useToast } from '../../context/ToastContext';
 
 type AdminTab = 'overview' | 'users' | 'resources' | 'institutions' | 'audit' | 'settings';
 
@@ -75,8 +76,8 @@ export const AdminDashboardPage: React.FC = () => {
     setSearchParams({ tab: newTab });
   };
 
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [toastMessage, setToastMessage] = useState('');
 
   // Overview Data
   const [stats, setStats] = useState<AdminStatsData | null>(null);
@@ -121,8 +122,7 @@ export const AdminDashboardPage: React.FC = () => {
   });
 
   const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(''), 4000);
+    toast.success(msg);
   };
 
   const fetchOverview = async () => {
@@ -321,21 +321,6 @@ export const AdminDashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Toast Notification */}
-      <AnimatePresence>
-        {toastMessage && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="fixed top-6 right-6 z-50 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2 shadow-lg"
-          >
-            <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>{toastMessage}</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Header Banner */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6 sm:p-7 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm">
         <div className="space-y-1">
