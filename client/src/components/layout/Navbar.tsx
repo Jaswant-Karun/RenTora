@@ -88,6 +88,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleMobileSidebar }) => {
 
       {/* Right Controls */}
       <div className="flex items-center space-x-2 sm:space-x-3">
+        {/* Live Backend Status Indicator */}
+        <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-medium text-[#16834A]">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#16834A] animate-pulse" />
+          <span>Backend: Online</span>
+        </div>
         {/* Help Option */}
         <button
           type="button"
