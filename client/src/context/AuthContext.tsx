@@ -14,11 +14,11 @@ interface AuthContextType {
   token: string | null;
   loading: boolean;
   demoAccounts: DemoAccount[];
-  login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
-  register: (userData: any) => Promise<void>;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<User>;
+  register: (userData: any) => Promise<User>;
   logout: () => Promise<void>;
   forgotPassword: (email: string) => Promise<string>;
-  switchDemoRole: (role: UserRole) => Promise<void>;
+  switchDemoRole: (role: UserRole) => Promise<User>;
   refreshProfile: () => Promise<void>;
 }
 
