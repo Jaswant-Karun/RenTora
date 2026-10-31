@@ -7,6 +7,7 @@ import { StatusBadge } from '../components/common/StatusBadge';
 import { BookingTimeline } from '../components/booking/BookingTimeline';
 import { UserCheckInOutModal } from '../components/booking/UserCheckInOutModal';
 import { IncidentReportModal } from '../components/incident/IncidentReportModal';
+import { BookingReceiptModal } from '../components/booking/BookingReceiptModal';
 import { TableRowSkeleton } from '../components/common/SkeletonLoader';
 import { EmptyState } from '../components/common/EmptyState';
 import { Button } from '../components/common/Button';
@@ -32,6 +33,9 @@ import {
   ChevronRight,
   Eye,
   FileText,
+  Printer,
+  Download,
+  ClipboardCheck,
 } from 'lucide-react';
 
 export const MyBookingsPage: React.FC = () => {
@@ -50,6 +54,7 @@ export const MyBookingsPage: React.FC = () => {
   const [selectedBookingDetails, setSelectedBookingDetails] = useState<Booking | null>(null);
   const [selectedBookingForHandover, setSelectedBookingForHandover] = useState<Booking | null>(null);
   const [selectedIncidentBooking, setSelectedIncidentBooking] = useState<Booking | null>(null);
+  const [receiptBooking, setReceiptBooking] = useState<Booking | null>(null);
   const [handoverMode, setHandoverMode] = useState<'check_in' | 'return'>('check_in');
 
   // Cancel Modal State
@@ -290,6 +295,16 @@ export const MyBookingsPage: React.FC = () => {
                           <Eye className="w-4 h-4" />
                         </button>
 
+                        {/* Print / Download Receipt Pass */}
+                        <button
+                          type="button"
+                          onClick={() => setReceiptBooking(b)}
+                          className="p-1.5 text-[#64748B] hover:text-[#1769D2] hover:bg-[#EFF6FF] rounded-md transition-colors"
+                          title="Download / Print Official Reservation Pass"
+                        >
+                          <Printer className="w-4 h-4" />
+                        </button>
+
                         {/* Step 9 Check-In Action (Approved) */}
                         {b.status === 'approved' && (
                           <button
@@ -434,14 +449,80 @@ export const MyBookingsPage: React.FC = () => {
               </div>
             )}
 
+            {/* Condition Reports Inspection (Initial & Return) */}
+            {(selectedBookingDetails.initialCondition || selectedBookingDetails.returnCondition) && (
+              <div className="space-y-2.5 pt-2 border-t border-[#E2E8F0] text-xs">
+                <span className="font-semibold text-[#172033] flex items-center gap-1.5">
+                  <ClipboardCheck className="w-4 h-4 text-[#16834A]" />
+                  Condition & Equipment Inspection Reports
+                </span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {selectedBookingDetails.initialCondition && (
+                    <div className="p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-[#1769D2] uppercase tracking-wider">
+                          Check-In Inspection
+                        </span>
+                        <span className="text-[10px] font-semibold text-[#16834A] bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                          {selectedBookingDetails.initialCondition.operationalStatus || 'Operational'}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#64748B]">
+                        {selectedBookingDetails.initialCondition.conditionNotes || 'Inspected and certified in good condition.'}
+                      </p>
+                      {selectedBookingDetails.initialCondition.meterReading && (
+                        <p className="text-[10px] font-mono text-slate-500">
+                          Reading: {selectedBookingDetails.initialCondition.meterReading}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {selectedBookingDetails.returnCondition && (
+                    <div className="p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-[#16834A] uppercase tracking-wider">
+                          Return Handback Report
+                        </span>
+                        <span className="text-[10px] font-semibold text-[#16834A] bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                          {selectedBookingDetails.returnCondition.operationalStatus || 'Verified'}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#64748B]">
+                        {selectedBookingDetails.returnCondition.conditionNotes || 'Returned in clean, operational order.'}
+                      </p>
+                      {selectedBookingDetails.returnCondition.meterReading && (
+                        <p className="text-[10px] font-mono text-slate-500">
+                          Reading: {selectedBookingDetails.returnCondition.meterReading}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* 14-Step Visual Timeline */}
             <div className="space-y-2 pt-2 border-t border-[#E2E8F0]">
               <span className="text-xs font-semibold text-[#172033] block">Lifecycle Audit Timeline</span>
               <BookingTimeline booking={selectedBookingDetails} />
             </div>
 
-            <div className="flex justify-end pt-3 border-t border-[#E2E8F0]">
+            <div className="flex items-center justify-between pt-3 border-t border-[#E2E8F0]">
               <button
+                type="button"
+                onClick={() => {
+                  setReceiptBooking(selectedBookingDetails);
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#EFF6FF] hover:bg-blue-100 text-[#1769D2] text-xs font-semibold border border-blue-200 transition-colors"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Print Official Receipt Pass</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setSelectedBookingDetails(null)}
                 className="px-4 py-2 bg-white border border-[#E2E8F0] text-[#172033] hover:bg-slate-50 text-xs font-medium rounded-lg"
               >
@@ -532,7 +613,13 @@ export const MyBookingsPage: React.FC = () => {
               </div>
             </form>
           </div>
-        </div>
+      {/* Printable Booking Receipt Modal */}
+      {receiptBooking && (
+        <BookingReceiptModal
+          booking={receiptBooking}
+          isOpen={Boolean(receiptBooking)}
+          onClose={() => setReceiptBooking(null)}
+        />
       )}
     </div>
   );
