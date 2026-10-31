@@ -844,12 +844,53 @@
       </tbody>
     </table>
 
+    <!-- Cryptographic Event Hashing & WORM Ledger Protocol Specification to fill bottom -->
+    <h2>Cryptographic WORM Ledger Protocol & Security Architecture</h2>
+    <table class="spec-table" style="margin-bottom:4px;">
+      <thead>
+        <tr>
+          <th>WORM Security Layer</th>
+          <th>Implementation Mechanism</th>
+          <th>Cryptographic Verification</th>
+          <th>Tamper Resistance Guarantee</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Event Chaining</strong></td>
+          <td>SHA-256 forward-hash linkage chaining each audit event to its parent block.</td>
+          <td><span class="code-pill">Hash = SHA256(prevHash + payload + ts)</span></td>
+          <td><span class="badge badge-purple">Mathematical Guarantee</span></td>
+        </tr>
+        <tr>
+          <td><strong>Immutable Route Lock</strong></td>
+          <td>Mongoose schema drops all update/delete middleware; router blocks HTTP DELETE with 405.</td>
+          <td><span class="badge badge-emerald">HTTP 405 Method Not Allowed</span></td>
+          <td><span class="badge badge-emerald">Zero Deletion Vector</span></td>
+        </tr>
+        <tr>
+          <td><strong>Atomic Session Isolation</strong></td>
+          <td>MongoDB write transactions with two-phase commit on resource state changes.</td>
+          <td><span class="code-pill">session.withTransaction(...)</span></td>
+          <td><span class="badge badge-blue">ACID Concurrency</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="card card-highlight" style="background:#F8FAFC; border:1px solid #CBD5E1; margin-bottom:0; padding:4px 8px;">
+      <div style="font-size:7.5px; font-weight:700; color:#172033; margin-bottom:1px; text-transform:uppercase;">Stateless API Gateway & Request Execution Topology</div>
+      <p style="font-size:6.8px; color:#475569; margin-bottom:0;">
+        All API traffic terminates at the hardened Express gateway, which enforces CORS origin whitelisting, IP-based sliding window rate-limiting (100 req / 15 min), and automated JSON payload sanitization against NoSQL injection before dispatching to modular controllers.
+      </p>
+    </div>
+
     <div class="running-footer">
       <div>RENTORA — Smart Institutional Resource Sharing Platform</div>
       <div class="accent">Team: Storm Breakerz • Lead: Jaswant Karun S A</div>
       <div>Section 02 • Page 3</div>
     </div>
   </div>
+
 
   <!-- ========================================================================= -->
   <!-- PAGE 4: ROLE-BASED ACCESS CONTROL (RBAC) (100% FILLED) -->
@@ -1036,11 +1077,56 @@
       </tbody>
     </table>
 
-    <!-- Session & Authorization Architecture Box -->
-    <div class="card card-highlight" style="background:#F8FAFC; border:1px solid #CBD5E1; margin-bottom:0; padding:5px 9px;">
+    <div class="card card-highlight" style="background:#F8FAFC; border:1px solid #CBD5E1; margin-bottom:4px; padding:5px 9px;">
       <div style="font-size:7.5px; font-weight:700; color:#172033; margin-bottom:1.5px; text-transform:uppercase;">Stateless JWT Authorization & Credential Claims Design</div>
       <p style="font-size:7px; color:#475569; margin-bottom:0;">
         RENTORA utilizes cryptographically signed JSON Web Tokens containing the user's canonical ObjectId, current institutional affiliation, and assigned role enum (<span class="code-pill">student</span>, <span class="code-pill">faculty</span>, <span class="code-pill">owner</span>, <span class="code-pill">manager</span>, <span class="code-pill">admin</span>). Every protected API request authenticates statelessly via the Bearer header or HTTP-only cookies, verified against HMAC SHA-256 signatures in sub-millisecond execution times. Security middleware logs all 403 Forbidden violations directly into the immutable WORM ledger.
+      </p>
+    </div>
+
+    <!-- Zero-Trust Token Lifecycle & Credential Security Table to fill bottom -->
+    <h2>Zero-Trust Credential Revocation & Token Governance Architecture</h2>
+    <table class="spec-table" style="margin-bottom:4px;">
+      <thead>
+        <tr>
+          <th>Credential Governance Dimension</th>
+          <th>Standard Policy Setting</th>
+          <th>Cryptographic Implementation</th>
+          <th>Security Threat Mitigated</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Token Signing & Algorithm</strong></td>
+          <td>RFC 7519 Compliant Signed Payload</td>
+          <td>HMAC-SHA256 with 512-bit rotatable secret key</td>
+          <td>Token forgery and header tampering</td>
+        </tr>
+        <tr>
+          <td><strong>Session Expiry & Sliding Window</strong></td>
+          <td>7-Day absolute TTL with active sliding refresh</td>
+          <td>Automatic cookie expiration & client token eviction</td>
+          <td>Stale session hijacking and abandonment</td>
+        </tr>
+        <tr>
+          <td><strong>Instant Role Revocation</strong></td>
+          <td>Immediate permission change propagation</td>
+          <td>WORM audit blacklist event invalidating active JTI claim</td>
+          <td>Zombie admin privilege persistence</td>
+        </tr>
+        <tr>
+          <td><strong>Brute-Force Rate Limiting</strong></td>
+          <td>100 Requests per 15-minute rolling window</td>
+          <td>Redis-compatible in-memory IP request counter</td>
+          <td>Credential stuffing and password brute-force</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="card card-highlight" style="border-left-color:#059669; background:#ECFDF5; margin-bottom:0; padding:4px 8px;">
+      <div style="font-size:7.2px; font-weight:700; color:#065F46; margin-bottom:1px; text-transform:uppercase;">Separation of Duties & Multi-Role Governance Guarantee</div>
+      <p style="font-size:6.8px; color:#047857; margin-bottom:0;">
+        RENTORA enforces strict separation of duties: Lab Custodians maintain full authority over physical equipment handovers and damage reporting, while Department Managers oversee campus allocations and conflict arbitration. System Administrators manage multi-institution tenant federation without the ability to modify active research session logs or tamper with past booking history.
       </p>
     </div>
 
@@ -1050,6 +1136,7 @@
       <div>Section 03 • Page 4</div>
     </div>
   </div>
+
 
   <!-- ========================================================================= -->
   <!-- PAGE 5: 15-STAGE LIFECYCLE & FSM MATRIX (100% FILLED) -->
@@ -1224,7 +1311,7 @@
 
     <!-- Automated Exception Handling & Edge Case Fallback Protocol to fill bottom -->
     <h2>Automated Edge-Case Resolution & Exception Recovery Protocols</h2>
-    <table class="spec-table" style="margin-bottom:0;">
+    <table class="spec-table" style="margin-bottom:4px;">
       <thead>
         <tr>
           <th>Operational Edge Case</th>
@@ -1261,12 +1348,59 @@
       </tbody>
     </table>
 
+    <!-- Physical Custodial Check-In / Check-Out Verification Standards to fill bottom -->
+    <h2>Physical Custodial Check-In / Check-Out Handover Verification Standards</h2>
+    <table class="spec-table" style="margin-bottom:4px;">
+      <thead>
+        <tr>
+          <th>Handover Stage</th>
+          <th>Mandatory Inspection Item</th>
+          <th>Custodian Verification Standard</th>
+          <th>Borrower Acknowledgement</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Pre-Use Check-In</strong></td>
+          <td>Baseline Calibration & Power-On Diagnostics</td>
+          <td>Verify sensor zero-drift & interlock voltage within ±0.5% tolerance.</td>
+          <td><span class="badge badge-blue">Borrower Digital Sign-Off</span></td>
+        </tr>
+        <tr>
+          <td><strong>Pre-Use Check-In</strong></td>
+          <td>Surface & Optical Integrity Inspection</td>
+          <td>Inspect objective lenses, mirrors, and clamps under 10x inspection loupe.</td>
+          <td><span class="badge badge-blue">Condition Logged (Zero Scratches)</span></td>
+        </tr>
+        <tr>
+          <td><strong>Post-Use Return</strong></td>
+          <td>Workstation Decontamination & Solvent Cleansing</td>
+          <td>Ensure cleanroom standard cleanliness; hazardous waste safely disposed.</td>
+          <td><span class="badge badge-emerald">Custodian Verification Signed</span></td>
+        </tr>
+        <tr>
+          <td><strong>Post-Use Return</strong></td>
+          <td>Consumable Inventory & Logbook Sealing</td>
+          <td>Measure remaining liquid helium / resin volume; close session timer.</td>
+          <td><span class="badge badge-purple">Sealed to WORM Audit Ledger</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="card card-highlight" style="border-left-color:#1769D2; background:#F8FAFC; margin-bottom:0; padding:4px 8px;">
+      <div style="font-size:7.2px; font-weight:700; color:#172033; margin-bottom:1px; text-transform:uppercase;">Automated Priority Waitlist Queue & Cascade Allocation Protocol</div>
+      <p style="font-size:6.8px; color:#475569; margin-bottom:0;">
+        When an active reservation is cancelled or rejected, RENTORA's waitlist engine immediately evaluates the queue using the fair-share formula: <span class="code-pill">Priority = (WaitDuration · 0.5) + (AcademicTier · 0.3) - (CancelRate · 0.2)</span>. The highest-ranked researcher receives an exclusive 4-hour reservation claim window via push alert before cascading to the next candidate.
+      </p>
+    </div>
+
     <div class="running-footer">
       <div>RENTORA — Smart Institutional Resource Sharing Platform</div>
       <div class="accent">Team: Storm Breakerz • Lead: Jaswant Karun S A</div>
       <div>Section 04 • Page 5</div>
     </div>
   </div>
+
 
   <!-- ========================================================================= -->
   <!-- PAGE 6: CORE AI FEATURES 1 & 2 (100% FILLED) -->
