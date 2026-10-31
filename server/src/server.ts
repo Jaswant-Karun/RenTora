@@ -82,13 +82,14 @@ const startServer = async () => {
   // Connect to MongoDB Atlas / Local
   await connectDB();
 
-  app.listen(PORT, () => {
+  const portNumber = Number(PORT) || 5000;
+  app.listen(portNumber, '0.0.0.0', () => {
     console.log(`
 =====================================================
 🚀 RENTORA Backend API is live!
 🏛️ Smart Institutional Resource Sharing Platform
-📡 URL: http://localhost:${PORT}
-🩺 Health Check: http://localhost:${PORT}/api/health
+📡 Port: ${portNumber} (host: 0.0.0.0)
+🩺 Health Check: http://localhost:${portNumber}/health
 =====================================================
     `);
   });

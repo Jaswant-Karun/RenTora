@@ -1,18 +1,26 @@
 import mongoose from 'mongoose';
 
 export const connectDB = async (): Promise<boolean> => {
-  const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/rentora';
-  
+  const rawUri =
+    process.env.MONGO_DB ||
+    process.env.MONGODB_URI ||
+    process.env.MONGO_URI ||
+    process.env.DATABASE_URL;
+
+  const uri = rawUri ? rawUri.trim() : 'mongodb://127.0.0.1:27017/rentora';
+  const dbName = process.env.DB_NAME || 'rentora';
+
   try {
     mongoose.set('strictQuery', false);
     const conn = await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 10000,
+      dbName,
     });
-    console.log(`[RENTORA MongoDB] Connected successfully: ${conn.connection.host}`);
+    console.log(`[RENTORA MongoDB] Connected successfully to host: ${conn.connection.host} (DB: ${conn.connection.name})`);
     return true;
   } catch (error: any) {
     console.error(`[RENTORA MongoDB Connection Error]: ${error.message}`);
-    console.warn(`[RENTORA Info] Please make sure MongoDB is running locally or specify a valid MONGODB_URI in server/.env`);
+    console.warn(`[RENTORA Info] Please make sure MongoDB is running locally or specify valid MONGO_DB / MONGODB_URI in environment variables.`);
     return false;
   }
 };
