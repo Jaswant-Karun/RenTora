@@ -531,6 +531,15 @@ export const ExploreResourcesPage: React.FC = () => {
           navigate('/dashboard/bookings');
         }}
       />
+
+      {/* AI Smart Resource Matcher Modal */}
+      <SmartResourceMatcherModal
+        isOpen={isSmartMatcherOpen}
+        onClose={() => setIsSmartMatcherOpen(false)}
+        onSelectResourceForBooking={(res) => {
+          setSelectedForBooking(res);
+        }}
+      />
     </div>
   );
 };

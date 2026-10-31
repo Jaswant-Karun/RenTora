@@ -42,12 +42,16 @@ import {
   Calendar,
   History,
   Lock,
+  Sparkles,
 } from 'lucide-react';
 import { AuditLedgerViewer } from '../../components/manager/AuditLedgerViewer';
 import { ManagerOverrideModal } from '../../components/manager/ManagerOverrideModal';
+import { ResourceUtilizationDashboard } from '../../components/ai/ResourceUtilizationDashboard';
+import { IncidentSummaryModal } from '../../components/ai/IncidentSummaryModal';
 
 type ManagerTab =
   | 'stats'
+  | 'ai-analytics'
   | 'approvals'
   | 'users'
   | 'eligibility'
@@ -63,6 +67,8 @@ export const ManagerDashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [statsData, setStatsData] = useState<ManagerStatsData | null>(null);
   const [waitlistBookings, setWaitlistBookings] = useState<any[]>([]);
+  const [selectedOverrideBooking, setSelectedOverrideBooking] = useState<any | null>(null);
+  const [selectedAiIncident, setSelectedAiIncident] = useState<any | null>(null);
   const [selectedOverrideBooking, setSelectedOverrideBooking] = useState<any | null>(null);
 
   // Module States
