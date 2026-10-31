@@ -661,6 +661,8 @@ export const MyBookingsPage: React.FC = () => {
           overriddenBy={fairShareModalBooking.managerOverriddenBy}
           overrideReason={fairShareModalBooking.managerOverrideReason}
         />
+      )}
+
       {/* Incident Report Modal */}
       {selectedIncidentBooking && (
         <IncidentReportModal

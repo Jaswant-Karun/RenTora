@@ -20,6 +20,7 @@ import {
   ShieldCheck,
   HelpCircle,
   Upload,
+  Layers,
 } from 'lucide-react';
 import {
   getIncidentsApi,
