@@ -18,7 +18,9 @@ export type AuditAction =
   | 'MANAGER_DECISION'
   | 'MANAGER_OVERRIDE'
   | 'WAITLIST_ENQUEUE'
-  | 'WAITLIST_PROMOTION';
+  | 'WAITLIST_PROMOTION'
+  | 'FAIRSHARE_DECISION'
+  | 'SLOT_RELEASE_NOTIFICATION';
 
 export interface IAuditLog extends Document {
   action: AuditAction;
@@ -61,6 +63,8 @@ const auditLogSchema = new Schema<IAuditLog>(
         'MANAGER_OVERRIDE',
         'WAITLIST_ENQUEUE',
         'WAITLIST_PROMOTION',
+        'FAIRSHARE_DECISION',
+        'SLOT_RELEASE_NOTIFICATION',
       ],
     },
     entityType: {

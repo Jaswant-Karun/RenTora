@@ -103,6 +103,7 @@ export interface IBooking extends Document {
   };
   conflictDetected?: boolean;
   isOverdue?: boolean;
+  fairShareExplanation?: any;
 
   createdAt: Date;
   updatedAt: Date;
@@ -284,6 +285,9 @@ const bookingSchema = new Schema<IBooking>(
     isOverdue: {
       type: Boolean,
       default: false,
+    },
+    fairShareExplanation: {
+      type: Schema.Types.Mixed,
     },
     auditTrail: {
       type: [auditEntrySchema],
