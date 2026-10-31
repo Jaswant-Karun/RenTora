@@ -19,13 +19,15 @@ import { ALL_CATEGORIES } from '../../pages/ExploreResourcesPage';
 interface SmartResourceMatcherModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectResourceForBooking: (resource: Resource) => void;
+  onSelectResourceForBooking?: (resource: Resource) => void;
+  onSelectResource?: (resource: any) => void;
 }
 
 export const SmartResourceMatcherModal: React.FC<SmartResourceMatcherModalProps> = ({
   isOpen,
   onClose,
   onSelectResourceForBooking,
+  onSelectResource,
 }) => {
   const [requirements, setRequirements] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -170,8 +172,8 @@ export const SmartResourceMatcherModal: React.FC<SmartResourceMatcherModalProps>
               >
                 <option value="All">All Categories</option>
                 {ALL_CATEGORIES.map((cat) => (
-                  <option key={cat.name} value={cat.name}>
-                    {cat.name}
+                  <option key={cat} value={cat}>
+                    {cat}
                   </option>
                 ))}
               </select>
@@ -260,7 +262,8 @@ export const SmartResourceMatcherModal: React.FC<SmartResourceMatcherModalProps>
 
                       <button
                         onClick={() => {
-                          onSelectResourceForBooking(item.resource);
+                          if (onSelectResourceForBooking) onSelectResourceForBooking(item.resource);
+                          if (onSelectResource) onSelectResource(item.resource);
                           onClose();
                         }}
                         className="px-4 py-1.5 bg-[#1769D2] hover:bg-[#1256B0] text-white rounded-lg text-xs font-semibold shadow-sm transition-all flex items-center justify-center gap-1.5 shrink-0"
@@ -270,7 +273,8 @@ export const SmartResourceMatcherModal: React.FC<SmartResourceMatcherModalProps>
                     </div>
 
                     <p className="text-xs text-[#172033] bg-white p-2.5 rounded-lg border border-[#E2E8F0] leading-relaxed">
-                      <strong className="text-[#1769D2]">Match Rationale:</strong> {item.matchRationale}
+                      <strong className="text-[#1769D2]">Match Rationale:</strong>{' '}
+                      {(item as any).matchRationale || (item.whyRecommended && item.whyRecommended.length > 0 ? item.whyRecommended.join(' • ') : 'High compatibility with project specifications.'}
                     </p>
                   </div>
                 ))}
