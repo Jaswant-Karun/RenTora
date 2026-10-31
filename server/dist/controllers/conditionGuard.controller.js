@@ -73,7 +73,7 @@ const recordAfterCheckOut = async (req, res, next) => {
 exports.recordAfterCheckOut = recordAfterCheckOut;
 const getComparison = async (req, res, next) => {
     try {
-        const { bookingId } = req.params;
+        const bookingId = String(req.params.bookingId || '');
         if (!bookingId) {
             res.status(400).json({ success: false, message: 'bookingId is required.' });
             return;

@@ -203,7 +203,7 @@ class ConditionGuardService {
             borrower: {
                 name: booking.userName,
                 email: booking.userEmail,
-                role: booking.userRole,
+                role: booking.userRole || 'student',
             },
             beforeReport,
             afterReport: report,
@@ -263,7 +263,7 @@ class ConditionGuardService {
             borrower: {
                 name: booking.userName,
                 email: booking.userEmail,
-                role: booking.userRole,
+                role: booking.userRole || 'student',
             },
             beforeReport,
             afterReport,
