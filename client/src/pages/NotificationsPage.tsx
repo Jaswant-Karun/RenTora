@@ -3,6 +3,7 @@ import { getNotificationsApi, markNotificationReadApi, markAllNotificationsReadA
 import { NotificationItem } from '../types/resource';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { EmptyState } from '../components/common/EmptyState';
+import { useToast } from '../context/ToastContext';
 import {
   Bell,
   CheckCheck,
@@ -18,11 +19,11 @@ import {
 type NotificationFilter = 'all' | 'unread' | 'bookings' | 'safety';
 
 export const NotificationsPage: React.FC = () => {
+  const { toast } = useToast();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<NotificationFilter>('all');
   const [actionLoading, setActionLoading] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
 
   const fetchNotifications = async () => {
     setLoading(true);
