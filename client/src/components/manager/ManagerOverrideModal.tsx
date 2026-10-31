@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ShieldCheck, AlertCircle, CheckCircle2, Lock, X } from 'lucide-react';
 import { LoadingSpinner } from '../common/LoadingSpinner';
+import apiClient from '../../api/client';
 
 interface ManagerOverrideModalProps {
   isOpen: boolean;
@@ -36,21 +37,12 @@ export const ManagerOverrideModal: React.FC<ManagerOverrideModalProps> = ({
     setSuccessMessage('');
 
     try {
-      const token = localStorage.getItem('rentora_token');
-      const res = await fetch(`http://localhost:5000/api/bookings/${booking._id}/override`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          mandatoryReason: mandatoryReason.trim(),
-          action,
-        }),
+      const res = await apiClient.post(`/bookings/${booking._id}/override`, {
+        mandatoryReason: mandatoryReason.trim(),
+        action,
       });
 
-      const data = await res.json();
-      if (data.success) {
+      if (res.data.success) {
         setSuccessMessage('Manager override executed and committed to immutable audit ledger.');
         setTimeout(() => {
           onSuccess();

@@ -6,6 +6,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { LoadingSpinner } from '../common/LoadingSpinner';
+import apiClient from '../../api/client';
 
 interface AuditLogEntry {
   _id: string;
@@ -33,21 +34,15 @@ export const AuditLedgerViewer: React.FC = () => {
   const fetchAuditLogs = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('rentora_token');
-      let url = 'http://localhost:5000/api/audit-logs?limit=100';
-      if (actionFilter !== 'ALL') {
-        url += `&action=${actionFilter}`;
-      }
-
-      const res = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const res = await apiClient.get('/audit-logs', {
+        params: {
+          limit: 100,
+          action: actionFilter !== 'ALL' ? actionFilter : undefined,
         },
       });
-      const data = await res.json();
-      if (data.success) {
-        setLogs(data.data);
-        setTotalCount(data.pagination?.total || data.data.length);
+      if (res.data.success) {
+        setLogs(res.data.data);
+        setTotalCount(res.data.pagination?.total || res.data.data.length);
       }
     } catch (err) {
       console.error('Error loading audit ledger:', err);
