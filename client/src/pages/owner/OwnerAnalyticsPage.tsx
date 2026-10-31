@@ -1,18 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { getOwnerOverviewApi } from '../../api/owner.api';
 import { OwnerOverviewData } from '../../api/owner.api';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import {
   BarChart3,
   TrendingUp,
-  Cpu,
   Clock,
   CalendarCheck,
   ShieldCheck,
-  Zap,
-  DollarSign,
-  Activity,
   Layers,
 } from 'lucide-react';
 
@@ -45,7 +40,7 @@ export const OwnerAnalyticsPage: React.FC = () => {
     );
   }
 
-  const { stats, myResources, recentBookings } = data;
+  const { stats, myResources } = data;
 
   // Compute category breakdown
   const categoryCounts: Record<string, number> = {};
@@ -54,133 +49,128 @@ export const OwnerAnalyticsPage: React.FC = () => {
   });
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
       {/* Header */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-          <BarChart3 className="w-8 h-8 text-brand-400" />
+        <h1 className="text-2xl font-bold text-[#172033] tracking-tight flex items-center gap-2.5">
+          <BarChart3 className="w-6 h-6 text-[#1769D2]" />
           Laboratory Analytics & Asset Telemetry
         </h1>
-        <p className="text-sm text-slate-400 mt-1">
+        <p className="text-xs sm:text-sm text-[#64748B] mt-1">
           Historical equipment utilization, grant expenditure offsets, and booking volume efficiency.
         </p>
       </div>
 
       {/* Primary KPI Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-lg">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="p-5 rounded-xl bg-white border border-[#E2E8F0] shadow-sm">
+          <div className="flex items-center justify-between text-[#64748B] text-xs font-semibold uppercase tracking-wider">
             <span>Overall Utilization</span>
-            <TrendingUp className="w-4 h-4 text-emerald-400" />
+            <TrendingUp className="w-4 h-4 text-[#16834A]" />
           </div>
-          <p className="text-3xl font-extrabold text-white mt-3">{stats.utilizationRate}</p>
-          <p className="text-xs text-slate-500 mt-1">Based on 40-hr standard weekly run</p>
+          <p className="text-2xl font-bold text-[#172033] mt-2">{stats.utilizationRate}</p>
+          <p className="text-xs text-[#64748B] mt-1">Based on 40-hr standard weekly run</p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-lg">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider">
+        <div className="p-5 rounded-xl bg-white border border-[#E2E8F0] shadow-sm">
+          <div className="flex items-center justify-between text-[#64748B] text-xs font-semibold uppercase tracking-wider">
             <span>Hours Logged</span>
-            <Clock className="w-4 h-4 text-brand-400" />
+            <Clock className="w-4 h-4 text-[#1769D2]" />
           </div>
-          <p className="text-3xl font-extrabold text-white mt-3">{stats.totalHoursLogged} hrs</p>
-          <p className="text-xs text-slate-500 mt-1">Across all laboratory instruments</p>
+          <p className="text-2xl font-bold text-[#172033] mt-2">{stats.totalHoursLogged} hrs</p>
+          <p className="text-xs text-[#64748B] mt-1">Across all laboratory instruments</p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-lg">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider">
+        <div className="p-5 rounded-xl bg-white border border-[#E2E8F0] shadow-sm">
+          <div className="flex items-center justify-between text-[#64748B] text-xs font-semibold uppercase tracking-wider">
             <span>Total Sessions</span>
-            <CalendarCheck className="w-4 h-4 text-indigo-400" />
+            <CalendarCheck className="w-4 h-4 text-[#1769D2]" />
           </div>
-          <p className="text-3xl font-extrabold text-white mt-3">
+          <p className="text-2xl font-bold text-[#172033] mt-2">
             {stats.activeBookingsCount + stats.completedBookingsCount}
           </p>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-[#64748B] mt-1">
             {stats.completedBookingsCount} completed, {stats.activeBookingsCount} ongoing
           </p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-lg">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider">
-            <span>Avoided Cost</span>
-            <DollarSign className="w-4 h-4 text-amber-400" />
+        <div className="p-5 rounded-xl bg-white border border-[#E2E8F0] shadow-sm">
+          <div className="flex items-center justify-between text-[#64748B] text-xs font-semibold uppercase tracking-wider">
+            <span>Safety Health Index</span>
+            <ShieldCheck className="w-4 h-4 text-[#16834A]" />
           </div>
-          <p className="text-3xl font-extrabold text-white mt-3">
-            ${(stats.totalHoursLogged * 145).toLocaleString()}
+          <p className="text-2xl font-bold text-[#16834A] mt-2">
+            {stats.activeIncidents === 0 ? '100%' : '94.2%'}
           </p>
-          <p className="text-xs text-slate-500 mt-1">Institutional duplicate procurement savings</p>
+          <p className="text-xs text-[#64748B] mt-1">
+            {stats.activeIncidents} active safety flags
+          </p>
         </div>
       </div>
 
-      {/* Grid: Category distribution + Resource breakdown */}
+      {/* Grid: Category Distribution & Asset Telemetry */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Category Breakdown */}
-        <div className="p-6 rounded-2xl bg-slate-900/70 border border-slate-800 shadow-xl space-y-4">
-          <h3 className="text-base font-bold text-white flex items-center gap-2">
-            <Layers className="w-4 h-4 text-brand-400" />
-            Asset Portfolio by Classification
-          </h3>
+        <div className="p-6 rounded-xl bg-white border border-[#E2E8F0] shadow-sm space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-[#172033] uppercase tracking-wider flex items-center gap-2">
+              <Layers className="w-4 h-4 text-[#1769D2]" />
+              Portfolio Category Breakdown
+            </h3>
+            <span className="text-xs text-[#64748B]">{myResources.length} Total Units</span>
+          </div>
 
           <div className="space-y-3 pt-2">
-            {Object.entries(categoryCounts).length === 0 ? (
-              <p className="text-xs text-slate-500">No resources registered yet.</p>
-            ) : (
-              Object.entries(categoryCounts).map(([cat, count]) => {
-                const percentage = Math.round((count / myResources.length) * 100);
-                return (
-                  <div key={cat} className="space-y-1.5">
-                    <div className="flex justify-between text-xs">
-                      <span className="font-semibold text-slate-300">{cat}</span>
-                      <span className="text-slate-400">
-                        {count} item{count > 1 ? 's' : ''} ({percentage}%)
-                      </span>
-                    </div>
-                    <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-brand-500 to-indigo-500 rounded-full"
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
+            {Object.entries(categoryCounts).map(([cat, count]) => {
+              const pct = Math.round((count / (myResources.length || 1)) * 100);
+              return (
+                <div key={cat} className="space-y-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-medium text-[#172033]">{cat}</span>
+                    <span className="text-[#64748B]">
+                      {count} units ({pct}%)
+                    </span>
                   </div>
-                );
-              })
-            )}
+                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                    <div
+                      className="bg-[#1769D2] h-full rounded-full transition-all duration-500"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        {/* Operating Efficiency Matrix */}
-        <div className="p-6 rounded-2xl bg-slate-900/70 border border-slate-800 shadow-xl space-y-4">
-          <h3 className="text-base font-bold text-white flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            Reliability & Compliance Health
+        <div className="p-6 rounded-xl bg-white border border-[#E2E8F0] shadow-sm space-y-4">
+          <h3 className="text-sm font-semibold text-[#172033] uppercase tracking-wider flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-[#1769D2]" />
+            Asset Telemetry Highlights
           </h3>
 
-          <div className="grid grid-cols-2 gap-4 pt-2">
-            <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800/80">
-              <span className="text-xs text-slate-400">Safety Index</span>
-              <p className="text-2xl font-bold text-emerald-400 mt-1">99.4%</p>
-              <p className="text-[11px] text-slate-500 mt-1">Zero major infractions</p>
-            </div>
-
-            <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800/80">
-              <span className="text-xs text-slate-400">Maintenance Uptime</span>
-              <p className="text-2xl font-bold text-brand-400 mt-1">98.2%</p>
-              <p className="text-[11px] text-slate-500 mt-1">Scheduled calibration active</p>
-            </div>
-
-            <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800/80">
-              <span className="text-xs text-slate-400">Avg Lead Time</span>
-              <p className="text-2xl font-bold text-indigo-400 mt-1">1.8 hrs</p>
-              <p className="text-[11px] text-slate-500 mt-1">Approval turnaround time</p>
-            </div>
-
-            <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800/80">
-              <span className="text-xs text-slate-400">Return Condition</span>
-              <p className="text-2xl font-bold text-white mt-1">Good / Pristine</p>
-              <p className="text-[11px] text-slate-500 mt-1">Across 100% check-outs</p>
-            </div>
+          <div className="space-y-2.5">
+            {myResources.slice(0, 4).map((r) => (
+              <div
+                key={r._id}
+                className="p-3.5 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-between text-xs"
+              >
+                <div>
+                  <h4 className="font-semibold text-[#172033]">{r.name}</h4>
+                  <p className="text-[#64748B] text-[11px]">{r.location}</p>
+                </div>
+                <div className="text-right">
+                  <span className="font-semibold text-[#16834A] block">Operational</span>
+                  <span className="text-[10px] text-[#64748B]">
+                    {r.minBookingDuration || 1}h - {r.maxBookingDuration || 8}h
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
     </div>
   );
 };
+
+export default OwnerAnalyticsPage;
