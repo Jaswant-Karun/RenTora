@@ -114,7 +114,7 @@ export const getComparison = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { bookingId } = req.params;
+    const bookingId = String(req.params.bookingId || '');
     if (!bookingId) {
       res.status(400).json({ success: false, message: 'bookingId is required.' });
       return;
