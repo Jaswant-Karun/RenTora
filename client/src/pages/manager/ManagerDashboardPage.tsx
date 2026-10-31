@@ -304,6 +304,21 @@ export const ManagerDashboardPage: React.FC = () => {
     }
   };
 
+  const handlePromoteWaitlist = async (id: string) => {
+    setActionLoading(true);
+    try {
+      const res = await promoteWaitlistBookingApi(id);
+      if (res.success) {
+        showToast(res.message || 'Waitlist reservation promoted to approved.');
+        await fetchAllData();
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error promoting waitlist booking');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   if (loading && !statsData) {
     return (
       <div className="py-24 flex justify-center items-center">
@@ -314,16 +329,17 @@ export const ManagerDashboardPage: React.FC = () => {
 
   const navTabs = [
     { id: 'stats' as ManagerTab, label: 'Institution Stats', icon: BarChart3, count: null },
-    { id: 'ai-analytics' as ManagerTab, label: 'AI Utilization & Demand', icon: Sparkles, count: null },
+    { id: 'ai-analytics' as ManagerTab, label: 'AI Analytics', icon: Sparkles, count: null },
     { id: 'approvals' as ManagerTab, label: 'Resource Approvals', icon: CheckCircle2, count: approvals.filter((a) => a.approvalStatus === 'pending').length },
-    { id: 'users' as ManagerTab, label: 'User Verification', icon: Users, count: usersList.filter((u) => !u.isVerified).length },
+    { id: 'users' as ManagerTab, label: 'User & Owner Verification', icon: Users, count: usersList.filter((u) => !u.isVerified).length },
+    { id: 'bookings' as ManagerTab, label: 'Booking Oversight', icon: BookOpen, count: institutionalBookings.length },
     { id: 'eligibility' as ManagerTab, label: 'Eligibility Management', icon: ShieldCheck, count: null },
-    { id: 'waitlist' as ManagerTab, label: 'Waiting Lists & Overrides', icon: Clock, count: waitlistBookings.length },
+    { id: 'waitlist' as ManagerTab, label: 'Waiting Lists', icon: Clock, count: waitlistBookings.length },
     { id: 'conflicts' as ManagerTab, label: 'Conflict Resolution', icon: AlertTriangle, count: conflicts.length },
     { id: 'incidents' as ManagerTab, label: 'Incident Review', icon: AlertCircle, count: incidents.filter((i) => i.status !== 'resolved').length },
-    { id: 'disputes' as ManagerTab, label: 'Dispute Arbitration', icon: Scale, count: disputes.filter((d) => d.status === 'open').length },
+    { id: 'disputes' as ManagerTab, label: 'Disputes', icon: Scale, count: disputes.filter((d) => d.status === 'open').length },
     { id: 'fair-allocation' as ManagerTab, label: 'Fair Allocation', icon: Settings, count: null },
-    { id: 'audit' as ManagerTab, label: 'Immutable Audit Ledger', icon: History, count: null },
+    { id: 'audit' as ManagerTab, label: 'Audit Logs', icon: History, count: null },
   ];
 
   return (
@@ -387,37 +403,88 @@ export const ManagerDashboardPage: React.FC = () => {
       {/* Tab 1: Institution-wide resource statistics */}
       {activeTab === 'stats' && statsData && (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="p-5 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm">
-              <span className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">
-                Total Campus Assets
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div className="p-4 rounded-xl bg-white border border-[#E2E8F0] shadow-sm">
+              <span className="text-[11px] font-semibold text-[#64748B] uppercase tracking-wider">
+                Total Assets
               </span>
-              <p className="text-3xl font-extrabold text-[#172033] mt-2">{statsData.stats.totalResources}</p>
-              <p className="text-xs text-[#64748B] mt-1">Across 10 academic classifications</p>
+              <p className="text-2xl font-bold text-[#172033] mt-1">{statsData.stats.totalResources}</p>
+              <p className="text-[10px] text-[#64748B] mt-0.5">Campus catalogue</p>
             </div>
 
-            <div className="p-5 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm">
-              <span className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">
-                Active Bookings
+            <div className="p-4 rounded-xl bg-white border border-[#E2E8F0] shadow-sm">
+              <span className="text-[11px] font-semibold text-[#16834A] uppercase tracking-wider">
+                Available
               </span>
-              <p className="text-3xl font-extrabold text-[#1769D2] mt-2">{statsData.stats.activeBookings}</p>
-              <p className="text-xs text-[#64748B] mt-1">Simultaneous laboratory sessions</p>
+              <p className="text-2xl font-bold text-[#16834A] mt-1">{statsData.stats.availableResources ?? 0}</p>
+              <p className="text-[10px] text-[#64748B] mt-0.5">Ready for booking</p>
             </div>
 
-            <div className="p-5 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm">
-              <span className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">
-                Campus Safety Score
+            <div className="p-4 rounded-xl bg-white border border-[#E2E8F0] shadow-sm">
+              <span className="text-[11px] font-semibold text-[#1769D2] uppercase tracking-wider">
+                Active Passes
               </span>
-              <p className="text-3xl font-extrabold text-emerald-600 mt-2">{statsData.stats.campusSafetyScore}</p>
-              <p className="text-xs text-[#64748B] mt-1">OSHA / ISO compliance rating</p>
+              <p className="text-2xl font-bold text-[#1769D2] mt-1">{statsData.stats.activeBookings}</p>
+              <p className="text-[10px] text-[#64748B] mt-0.5">Simultaneous in-use</p>
             </div>
 
-            <div className="p-5 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm">
-              <span className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">
-                Avoided Procurement Cost
+            <div className="p-4 rounded-xl bg-white border border-[#E2E8F0] shadow-sm">
+              <span className="text-[11px] font-semibold text-[#64748B] uppercase tracking-wider">
+                Completed
               </span>
-              <p className="text-3xl font-extrabold text-amber-600 mt-2">{statsData.stats.utilizationAvoidedCost}</p>
-              <p className="text-xs text-[#64748B] mt-1">Resource sharing grant savings</p>
+              <p className="text-2xl font-bold text-[#172033] mt-1">{statsData.stats.completedBookings ?? 0}</p>
+              <p className="text-[10px] text-[#64748B] mt-0.5">Logged sessions</p>
+            </div>
+
+            <div className="p-4 rounded-xl bg-white border border-[#E2E8F0] shadow-sm">
+              <span className="text-[11px] font-semibold text-[#D97706] uppercase tracking-wider">
+                Waitlisted
+              </span>
+              <p className="text-2xl font-bold text-[#D97706] mt-1">{statsData.stats.waitlistedBookings ?? 0}</p>
+              <p className="text-[10px] text-[#64748B] mt-0.5">Standby requests</p>
+            </div>
+
+            <div className="p-4 rounded-xl bg-white border border-[#E2E8F0] shadow-sm">
+              <span className="text-[11px] font-semibold text-[#1769D2] uppercase tracking-wider">
+                Utilization
+              </span>
+              <p className="text-2xl font-bold text-[#1769D2] mt-1">{statsData.stats.utilizationRate ?? '34%'}</p>
+              <p className="text-[10px] text-[#16834A] mt-0.5">Campus KPI</p>
+            </div>
+          </div>
+
+          {/* User & Governance Breakdown */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="p-4 rounded-xl bg-white border border-[#E2E8F0] shadow-sm">
+              <span className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">
+                Total Accounts
+              </span>
+              <p className="text-2xl font-bold text-[#172033] mt-1">{statsData.stats.totalUsers}</p>
+              <p className="text-[11px] text-[#64748B] mt-0.5">Students: {statsData.stats.studentUsers ?? 0} • Owners: {statsData.stats.ownerUsers ?? 0}</p>
+            </div>
+
+            <div className="p-4 rounded-xl bg-white border border-[#E2E8F0] shadow-sm">
+              <span className="text-xs font-semibold text-[#D97706] uppercase tracking-wider">
+                Pending Verification
+              </span>
+              <p className="text-2xl font-bold text-[#D97706] mt-1">{statsData.stats.unverifiedUsers}</p>
+              <p className="text-[11px] text-[#D97706] mt-0.5">Action required in Users tab</p>
+            </div>
+
+            <div className="p-4 rounded-xl bg-white border border-[#E2E8F0] shadow-sm">
+              <span className="text-xs font-semibold text-[#16834A] uppercase tracking-wider">
+                Safety & Compliance
+              </span>
+              <p className="text-2xl font-bold text-[#16834A] mt-1">{statsData.stats.campusSafetyScore}</p>
+              <p className="text-[11px] text-[#64748B] mt-0.5">OSHA / ISO compliance rating</p>
+            </div>
+
+            <div className="p-4 rounded-xl bg-white border border-[#E2E8F0] shadow-sm">
+              <span className="text-xs font-semibold text-[#1769D2] uppercase tracking-wider">
+                Avoided Cost
+              </span>
+              <p className="text-2xl font-bold text-[#1769D2] mt-1">{statsData.stats.utilizationAvoidedCost}</p>
+              <p className="text-[11px] text-[#64748B] mt-0.5">Inter-department grant savings</p>
             </div>
           </div>
 
