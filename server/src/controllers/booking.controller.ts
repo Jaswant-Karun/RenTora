@@ -1451,6 +1451,9 @@ export const cancelBooking = async (
     // If resource was in_use, free it up
     await Resource.findByIdAndUpdate(booking.resourceId, { status: 'available' });
 
+    // Advance waitlist and notify next eligible user
+    await FairShareService.advanceWaitlist(booking.resourceId, booking.date, booking.timeSlot, booking._id?.toString());
+
     // Immutable Audit Log
     await recordAuditLog({
       action: 'BOOKING_CANCELLATION',
