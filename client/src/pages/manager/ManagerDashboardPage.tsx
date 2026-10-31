@@ -349,9 +349,9 @@ export const ManagerDashboardPage: React.FC = () => {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center gap-2 shadow-sm"
+            className="fixed top-6 right-6 z-50 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2 shadow-lg"
           >
-            <Check className="w-5 h-5 shrink-0 text-emerald-600" />
+            <Check className="w-4 h-4 shrink-0 text-emerald-600" />
             <span>{successToast}</span>
           </motion.div>
         )}
