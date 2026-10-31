@@ -1,5 +1,13 @@
 import { Schema, model, Document } from 'mongoose';
 
+export interface ISustainabilityConfig {
+  costAvoidedPerHourINR: number;
+  purchaseAvoidanceThresholdHours: number;
+  averageApparatusCapitalCostINR: number;
+  lifecycleEmbodiedCarbonEstimateKgPerUnit: number;
+  methodologyNotes: string;
+}
+
 export interface ISystemSetting extends Document {
   platformName: string;
   supportEmail: string;
@@ -12,6 +20,7 @@ export interface ISystemSetting extends Document {
   monopolisationWindowDays: number;
   enforceAuditLedgerIntegrity: boolean;
   aiEngineProvider: string;
+  sustainabilityConfig: ISustainabilityConfig;
   updatedBy?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -62,6 +71,17 @@ const systemSettingSchema = new Schema<ISystemSetting>(
     aiEngineProvider: {
       type: String,
       default: 'RENTORA Embedded Intelligence Engine',
+    },
+    sustainabilityConfig: {
+      costAvoidedPerHourINR: { type: Number, default: 1850 },
+      purchaseAvoidanceThresholdHours: { type: Number, default: 80 },
+      averageApparatusCapitalCostINR: { type: Number, default: 250000 },
+      lifecycleEmbodiedCarbonEstimateKgPerUnit: { type: Number, default: 350 },
+      methodologyNotes: {
+        type: String,
+        default:
+          'Estimates reflect avoided duplicate institutional procurement based on amortized laboratory apparatus usage. These figures represent engineering estimates and are not certified carbon offsets.',
+      },
     },
     updatedBy: {
       type: String,
