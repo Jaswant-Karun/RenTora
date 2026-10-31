@@ -3,7 +3,10 @@ import {
   reportIncident,
   getIncidents,
   getIncidentById,
-  reviewIncident,
+  addInvestigationNote,
+  recordDecision,
+  resolveIncident,
+  getIncidentConditionComparison,
 } from '../controllers/incident.controller.js';
 import { authenticate, requireRole } from '../middleware/auth.middleware.js';
 
@@ -11,12 +14,24 @@ const router = Router();
 
 router.use(authenticate);
 
-// Public authenticated reporting & listing
+// Lifecycle 1 & 2: Report Incident & List
 router.post('/', reportIncident);
 router.get('/', getIncidents);
-router.get('/:id', getIncidentById);
 
-// Manager / Custodian / Admin Review
-router.patch('/:id/review', requireRole(['manager', 'admin', 'owner']), reviewIncident);
+// Lifecycle 3 & 4: Get Incident Details & Condition Comparison
+router.get('/:id', getIncidentById);
+router.get('/:id/comparison', getIncidentConditionComparison);
+
+// Lifecycle 5: Add Investigation Notes
+router.post('/:id/investigate', addInvestigationNote);
+
+// Lifecycle 6: Record Decision (Authorized Human Review Enforced)
+router.post('/:id/decision', requireRole(['manager', 'admin', 'owner']), recordDecision);
+
+// Lifecycle 7 & 8: Record Resolution & Full History
+router.post('/:id/resolve', requireRole(['manager', 'admin', 'owner']), resolveIncident);
+
+// Backward Compatibility
+router.patch('/:id/review', requireRole(['manager', 'admin', 'owner']), resolveIncident);
 
 export default router;
