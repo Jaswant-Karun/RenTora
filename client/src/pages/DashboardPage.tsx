@@ -63,6 +63,7 @@ export const DashboardPage: React.FC = () => {
 
   // Quick booking modal
   const [quickBookResource, setQuickBookResource] = useState<Resource | null>(null);
+  const [isSmartMatcherOpen, setIsSmartMatcherOpen] = useState(false);
 
   useEffect(() => {
     if (searchParams.get('new') === 'true') {
@@ -179,6 +180,13 @@ export const DashboardPage: React.FC = () => {
               <Calendar className="w-4 h-4" />
               <span>My Bookings</span>
             </Link>
+            <button
+              onClick={() => setIsSmartMatcherOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white text-xs font-bold shadow-lg shadow-brand-500/25 transition-all"
+            >
+              <Sparkles className="w-4 h-4 text-brand-200 animate-pulse" />
+              <span>AI Smart Matcher</span>
+            </button>
           </div>
         </div>
 
@@ -529,6 +537,15 @@ export const DashboardPage: React.FC = () => {
         onClose={() => setQuickBookResource(null)}
         onSuccess={() => {
           navigate('/dashboard/bookings');
+        }}
+      />
+
+      {/* AI Smart Resource Matcher Modal */}
+      <SmartResourceMatcherModal
+        isOpen={isSmartMatcherOpen}
+        onClose={() => setIsSmartMatcherOpen(false)}
+        onSelectResourceForBooking={(res) => {
+          setQuickBookResource(res);
         }}
       />
     </div>
