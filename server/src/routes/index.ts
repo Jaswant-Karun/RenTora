@@ -4,6 +4,8 @@ import resourceRoutes from './resource.routes.js';
 import bookingRoutes from './booking.routes.js';
 import dashboardRoutes from './dashboard.routes.js';
 import notificationRoutes from './notification.routes.js';
+import ownerRoutes from './owner.routes.js';
+import managerRoutes from './manager.routes.js';
 import { getDBStatus } from '../config/db.js';
 
 const router = Router();
@@ -35,5 +37,7 @@ router.use('/resources', resourceRoutes);
 router.use('/bookings', bookingRoutes);
 router.use('/dashboard', dashboardRoutes);
 router.use('/notifications', notificationRoutes);
+router.use('/owner', ownerRoutes);
+router.use('/manager', managerRoutes);
 
 export default router;

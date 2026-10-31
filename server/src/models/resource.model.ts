@@ -32,6 +32,12 @@ export interface IResource extends Document {
   availableDates?: string[];
   eligibility: string;
   approvalRequired: boolean;
+  approvalStatus: 'approved' | 'pending_manager' | 'rejected';
+  availabilitySchedule?: string;
+  minBookingDuration?: string;
+  maxBookingDuration?: string;
+  supervisionRequirement?: string;
+  depositConditions?: string;
   specifications: Record<string, string>;
   usageInstructions: string[];
   trainingRequired: string;
@@ -142,6 +148,32 @@ const resourceSchema = new Schema<IResource>(
     approvalRequired: {
       type: Boolean,
       default: true,
+    },
+    approvalStatus: {
+      type: String,
+      enum: ['approved', 'pending_manager', 'rejected'],
+      default: 'approved',
+      index: true,
+    },
+    availabilitySchedule: {
+      type: String,
+      default: 'Monday - Friday (09:00 - 18:00)',
+    },
+    minBookingDuration: {
+      type: String,
+      default: '1 hour',
+    },
+    maxBookingDuration: {
+      type: String,
+      default: '4 hours',
+    },
+    supervisionRequirement: {
+      type: String,
+      default: 'Self-Operated after training clearance',
+    },
+    depositConditions: {
+      type: String,
+      default: 'None',
     },
     specifications: {
       type: Map,

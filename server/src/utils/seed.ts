@@ -5,6 +5,10 @@ import { User } from '../models/user.model.js';
 import { Resource } from '../models/resource.model.js';
 import { Booking } from '../models/booking.model.js';
 import { Notification } from '../models/notification.model.js';
+import { ConditionReport } from '../models/conditionReport.model.js';
+import { Incident } from '../models/incident.model.js';
+import { Dispute } from '../models/dispute.model.js';
+import { FairAllocation } from '../models/fairAllocation.model.js';
 
 dotenv.config();
 
@@ -650,6 +654,10 @@ export const seedDatabase = async () => {
     await Resource.deleteMany({});
     await Booking.deleteMany({});
     await Notification.deleteMany({});
+    await ConditionReport.deleteMany({});
+    await Incident.deleteMany({});
+    await Dispute.deleteMany({});
+    await FairAllocation.deleteMany({});
 
     console.log('[Seed] Creating demo role accounts...');
     const createdUsers: Record<string, any> = {};
@@ -767,6 +775,71 @@ export const seedDatabase = async () => {
       await Notification.create(nData);
     }
     console.log(` -> Created ${sampleNotifications.length} system notifications`);
+
+    console.log('[Seed] Generating sample condition reports...');
+    await ConditionReport.create([
+      {
+        resourceId: createdResources[0]._id,
+        resourceName: createdResources[0].name,
+        bookingId: sampleBookings[0]._id,
+        inspectorName: 'Dr. Meera Raman',
+        type: 'check_out',
+        operationalStatus: 'optimal',
+        cleanliness: 'passed',
+        meterReading: '124 hrs',
+        observations: 'Sputter chamber base pressure reached 1.2e-6 Torr. Nitrogen lines purged and secured.',
+      },
+      {
+        resourceId: createdResources[4]._id,
+        resourceName: createdResources[4].name,
+        inspectorName: 'Dr. Meera Raman',
+        type: 'routine',
+        operationalStatus: 'optimal',
+        cleanliness: 'passed',
+        meterReading: '2,450 GPU-hrs',
+        observations: 'All 8x A100 GPU nodes thermal telemetry normal at 42°C under Slurm idle load.',
+      },
+    ]);
+
+    console.log('[Seed] Generating sample safety incidents...');
+    await Incident.create([
+      {
+        resourceId: createdResources[8]._id, // CNC
+        resourceName: createdResources[8].name,
+        reportedBy: 'Arun Kumar',
+        userEmail: 'student@rentora.edu',
+        severity: 'medium',
+        title: 'Emergency E-Stop Activated during High-Feed Aluminum Cut',
+        description: 'Workpiece clamp loosened slightly causing minor tool chatter. Operator hit emergency stop immediately. No structural damage.',
+        status: 'investigating',
+        resolutionNotes: 'Spindle runout inspected with dial indicator. Operator cleared for re-machining with mandatory technician supervision.',
+      },
+    ]);
+
+    console.log('[Seed] Generating sample dispute...');
+    await Dispute.create([
+      {
+        resourceName: 'Haas Mini Mill 3-Axis CNC Machining Center',
+        userName: 'Arun Kumar',
+        userEmail: 'student@rentora.edu',
+        ownerName: 'Dr. Meera Raman',
+        reason: 'Timeslot delayed by 30 mins due to previous user late cleanout. Requested 30-min compensatory extension.',
+        status: 'open',
+        resolution: '',
+      },
+    ]);
+
+    console.log('[Seed] Initializing institutional fair allocation policy...');
+    await FairAllocation.create({
+      institution: 'National Institute of Technology',
+      maxWeeklyHoursPerStudent: 16,
+      maxActiveBookingsPerStudent: 3,
+      peakHourThrottling: true,
+      emergencyBypassEnabled: true,
+      priorityTiers: ['Research Scholar', 'Final Year Student', 'Graduate Student', 'Undergraduate'],
+      advanceBookingDays: 14,
+      cancellationGraceHours: 2,
+    });
 
     console.log('\n✅ Demo users, resources, bookings, and notifications seeded successfully!');
     console.log('-----------------------------------------------------');

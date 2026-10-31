@@ -1,6 +1,6 @@
 import { Schema, model, Document, Types } from 'mongoose';
 
-export type BookingStatus = 'active' | 'pending' | 'completed' | 'cancelled';
+export type BookingStatus = 'active' | 'pending' | 'completed' | 'cancelled' | 'rejected' | 'waitlisted';
 
 export interface IBooking extends Document {
   userId: Types.ObjectId;
@@ -8,6 +8,7 @@ export interface IBooking extends Document {
   userEmail: string;
   userDepartment?: string;
   userInstitution?: string;
+  userEligibility?: string;
   resourceId: Types.ObjectId;
   resourceName: string;
   resourceCategory: string;
@@ -19,6 +20,14 @@ export interface IBooking extends Document {
   supervisorName?: string;
   status: BookingStatus;
   notes?: string;
+  rejectionReason?: string;
+  cancellationReason?: string;
+  checkedIn?: boolean;
+  checkedInAt?: Date;
+  checkedOut?: boolean;
+  checkedOutAt?: Date;
+  conditionOnCheckout?: string;
+  conflictDetected?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -41,6 +50,10 @@ const bookingSchema = new Schema<IBooking>(
     },
     userDepartment: String,
     userInstitution: String,
+    userEligibility: {
+      type: String,
+      default: 'Verified Institutional Student',
+    },
     resourceId: {
       type: Schema.Types.ObjectId,
       ref: 'Resource',
@@ -82,11 +95,28 @@ const bookingSchema = new Schema<IBooking>(
     },
     status: {
       type: String,
-      enum: ['active', 'pending', 'completed', 'cancelled'],
+      enum: ['active', 'pending', 'completed', 'cancelled', 'rejected', 'waitlisted'],
       default: 'pending',
       index: true,
     },
     notes: String,
+    rejectionReason: String,
+    cancellationReason: String,
+    checkedIn: {
+      type: Boolean,
+      default: false,
+    },
+    checkedInAt: Date,
+    checkedOut: {
+      type: Boolean,
+      default: false,
+    },
+    checkedOutAt: Date,
+    conditionOnCheckout: String,
+    conflictDetected: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
