@@ -13,6 +13,10 @@ import {
   resolveDispute,
   getFairAllocationSettings,
   updateFairAllocationSettings,
+  getManagerBookings,
+  getManagerWaitlists,
+  promoteWaitlistBooking,
+  getManagerAuditLogs,
 } from '../controllers/manager.controller.js';
 import { authenticate, requireRole } from '../middleware/auth.middleware.js';
 
@@ -22,16 +26,23 @@ const router = Router();
 router.use(authenticate);
 router.use(requireRole(['manager', 'admin']));
 
-// Stats
+// Stats & Analytics
 router.get('/stats', getManagerStats);
 
 // Resource Approvals
 router.get('/resource-approvals', getResourceApprovals);
 router.patch('/resource-approvals/:id', updateResourceApproval);
 
-// User Verification
+// User & Owner Verification
 router.get('/users', getUsersForVerification);
 router.patch('/users/:id/verify', toggleUserVerification);
+
+// Booking Oversight
+router.get('/bookings', getManagerBookings);
+
+// Waiting-List Management
+router.get('/waitlists', getManagerWaitlists);
+router.post('/waitlists/:id/promote', promoteWaitlistBooking);
 
 // Scheduling Conflicts
 router.get('/conflicts', getSchedulingConflicts);
@@ -48,5 +59,8 @@ router.post('/disputes/:id/resolve', resolveDispute);
 // Fair Allocation Policies
 router.get('/fair-allocation', getFairAllocationSettings);
 router.put('/fair-allocation', updateFairAllocationSettings);
+
+// Institutional Audit Logs
+router.get('/audit-logs', getManagerAuditLogs);
 
 export default router;

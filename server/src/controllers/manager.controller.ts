@@ -152,10 +152,25 @@ export const updateResourceApproval = async (req: AuthenticatedRequest, res: Res
   }
 };
 
-// 3. User Verification
-export const getUsersForVerification = async (_req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+// 3. User & Owner Verification
+export const getUsersForVerification = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const users = await User.find().select('-password').sort({ createdAt: -1 });
+    const { role, isVerified, search } = req.query;
+    const filter: any = {};
+    if (role && role !== 'all') {
+      filter.role = role;
+    }
+    if (isVerified !== undefined && isVerified !== 'all') {
+      filter.isVerified = isVerified === 'true';
+    }
+    if (search) {
+      filter.$or = [
+        { name: { $regex: String(search), $options: 'i' } },
+        { email: { $regex: String(search), $options: 'i' } },
+        { department: { $regex: String(search), $options: 'i' } },
+      ];
+    }
+    const users = await User.find(filter).select('-password').sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: users });
   } catch (error) {
     next(error);
@@ -366,6 +381,112 @@ export const updateFairAllocationSettings = async (req: AuthenticatedRequest, re
       message: 'Institution fair allocation policies updated.',
       data: settings,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 8. Institutional Booking Oversight
+export const getManagerBookings = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { status, search, date } = req.query;
+    const filter: any = {};
+    if (status && status !== 'all') {
+      filter.status = status;
+    }
+    if (date) {
+      filter.date = date;
+    }
+    if (search) {
+      filter.$or = [
+        { resourceName: { $regex: String(search), $options: 'i' } },
+        { userName: { $regex: String(search), $options: 'i' } },
+        { userEmail: { $regex: String(search), $options: 'i' } },
+      ];
+    }
+    const bookings = await Booking.find(filter).sort({ createdAt: -1 });
+    res.status(200).json({ success: true, data: bookings });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 9. Institutional Waitlist Management
+export const getManagerWaitlists = async (_req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const waitlists = await Booking.find({ status: 'waitlisted' }).sort({ queuePosition: 1, createdAt: 1 });
+    res.status(200).json({ success: true, data: waitlists });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const promoteWaitlistBooking = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const booking = await Booking.findById(id);
+    if (!booking) {
+      res.status(404).json({ success: false, message: 'Waitlist record not found' });
+      return;
+    }
+
+    const previousStatus = booking.status;
+    booking.status = 'approved';
+    booking.auditTrail.push({
+      transition: 'WAITLIST_PROMOTED_BY_MANAGER',
+      fromStatus: previousStatus,
+      toStatus: 'approved',
+      performedBy: req.user?.name || 'Manager',
+      performedByRole: req.user?.role || 'manager',
+      timestamp: new Date(),
+      note: 'Manager promoted booking from standby queue.',
+    });
+    await booking.save();
+
+    await Notification.create({
+      userId: booking.userId,
+      title: 'Waitlist Promoted: Reservation Confirmed',
+      message: `Your waitlisted reservation for "${booking.resourceName}" on ${booking.date} (${booking.timeSlot}) has been approved by the institution manager.`,
+      type: 'approval',
+      link: '/dashboard/bookings',
+    });
+
+    await recordAuditLog({
+      action: 'WAITLIST_PROMOTION',
+      entityType: 'Booking',
+      entityId: booking._id,
+      entityTitle: `${booking.resourceName} - ${booking.userName}`,
+      actorId: req.user?._id,
+      actorName: req.user?.name || 'Manager',
+      actorEmail: req.user?.email,
+      actorRole: req.user?.role || 'manager',
+      details: { date: booking.date, timeSlot: booking.timeSlot },
+      reason: 'Promoted from waitlist by institution manager.',
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `Booking for ${booking.userName} promoted from waitlist to approved.`,
+      data: booking,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 10. Institutional Compliance Audit Logs
+export const getManagerAuditLogs = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { action, entityType, limit } = req.query;
+    const filter: any = {};
+    if (action && action !== 'all') filter.action = action;
+    if (entityType && entityType !== 'all') filter.entityType = entityType;
+
+    const auditLogs = await AuditLog.find(filter)
+      .sort({ timestamp: -1 })
+      .limit(Number(limit) || 100);
+
+    res.status(200).json({ success: true, data: auditLogs });
   } catch (error) {
     next(error);
   }
