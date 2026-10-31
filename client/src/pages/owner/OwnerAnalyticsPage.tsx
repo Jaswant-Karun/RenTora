@@ -49,7 +49,7 @@ export const OwnerAnalyticsPage: React.FC = () => {
   });
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-[#172033] tracking-tight flex items-center gap-2.5">
