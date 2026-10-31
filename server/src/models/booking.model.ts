@@ -95,7 +95,12 @@ export interface IBooking extends Document {
   // Audit History Trail
   auditTrail: IAuditEntry[];
 
-  // Flags
+  suggestedAlternative?: {
+    date: string;
+    timeSlot: string;
+    note?: string;
+    offeredAt?: Date;
+  };
   conflictDetected?: boolean;
   isOverdue?: boolean;
 
