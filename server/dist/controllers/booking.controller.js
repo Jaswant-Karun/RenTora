@@ -1,18 +1,79 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.cancelBooking = exports.confirmReturnAndComplete = exports.initiateReturn = exports.checkInBooking = exports.waitlistBookingRequest = exports.rejectBookingRequest = exports.approveBookingRequest = exports.putBookingUnderReview = exports.getBookingById = exports.getMyBookings = exports.createBooking = exports.preCheckBooking = exports.hasOverlap = void 0;
+exports.getTransparentWaitlist = exports.managerOverrideBooking = exports.cancelBooking = exports.confirmReturnAndComplete = exports.initiateReturn = exports.checkInBooking = exports.waitlistBookingRequest = exports.rejectBookingRequest = exports.approveBookingRequest = exports.putBookingUnderReview = exports.getBookingById = exports.getMyBookings = exports.createBooking = exports.preCheckBooking = exports.checkMonopolisation = exports.computeWaitlistPriority = exports.hasOverlap = void 0;
 const booking_model_js_1 = require("../models/booking.model.js");
 const resource_model_js_1 = require("../models/resource.model.js");
+const user_model_js_1 = require("../models/user.model.js");
 const notification_model_js_1 = require("../models/notification.model.js");
 const conditionReport_model_js_1 = require("../models/conditionReport.model.js");
 const fairAllocation_model_js_1 = require("../models/fairAllocation.model.js");
+const auditLogger_js_1 = require("../utils/auditLogger.js");
 // Helper: Check if two time intervals overlap
-// [s1, e1] and [s2, e2] overlap if s1 < e2 && e1 > s2
 const hasOverlap = (s1, e1, s2, e2) => {
     return s1 < e2 && e1 > s2;
 };
 exports.hasOverlap = hasOverlap;
-// 1. STEP 3: Pre-check Validation API
+// Helper: Compute waitlist priority score based on configurable policy
+const computeWaitlistPriority = (user, resource, policy) => {
+    let score = 50; // base score
+    const cfg = policy?.priorityScoring || {
+        phdScholarPoints: 30,
+        finalYearPoints: 20,
+        undergradPoints: 10,
+        deptPriorityPoints: 15,
+        lowUsageBonusPoints: 25,
+        penaltyDeductionPoints: 15,
+    };
+    const qual = user?.academicQualification || 'Undergraduate';
+    if (qual === 'PhD Scholar' || qual === 'Postdoctoral Researcher') {
+        score += cfg.phdScholarPoints;
+    }
+    else if (qual === 'Final Year Student') {
+        score += cfg.finalYearPoints;
+    }
+    else if (qual === 'Graduate Student') {
+        score += 15;
+    }
+    else {
+        score += cfg.undergradPoints;
+    }
+    if (user?.department &&
+        resource?.ownerDepartment &&
+        user.department.trim().toLowerCase() === resource.ownerDepartment.trim().toLowerCase()) {
+        score += cfg.deptPriorityPoints;
+    }
+    const totalHours = user?.historicalUsage?.totalHoursLogged || 0;
+    if (totalHours < 10) {
+        score += cfg.lowUsageBonusPoints;
+    }
+    else if (totalHours > 40) {
+        score -= 10;
+    }
+    const penalty = user?.historicalUsage?.penaltyPoints || 0;
+    score -= penalty * cfg.penaltyDeductionPoints;
+    return Math.max(1, score);
+};
+exports.computeWaitlistPriority = computeWaitlistPriority;
+// Helper: Check monopolisation cooldown (prevent repeated monopolisation of same asset)
+const checkMonopolisation = async (userId, resourceId, daysWindow = 14, maxAllowed = 3) => {
+    const windowStart = new Date(Date.now() - daysWindow * 24 * 60 * 60 * 1000);
+    const count = await booking_model_js_1.Booking.countDocuments({
+        userId,
+        resourceId,
+        createdAt: { $gte: windowStart },
+        status: { $in: ['pending', 'under_review', 'approved', 'checked_in', 'return_pending', 'completed'] },
+    });
+    if (count >= maxAllowed) {
+        return {
+            monopolised: true,
+            count,
+            reason: `Campus fair-share policy: Monopolisation cooldown active. You have reserved this high-demand asset ${count} times in the last ${daysWindow} days.`,
+        };
+    }
+    return { monopolised: false, count };
+};
+exports.checkMonopolisation = checkMonopolisation;
+// 1. STEP 3: Pre-check Validation API (Trust, Safety & Fairness Diagnostics)
 const preCheckBooking = async (req, res, next) => {
     try {
         if (!req.user) {
@@ -29,6 +90,7 @@ const preCheckBooking = async (req, res, next) => {
             res.status(404).json({ success: false, message: 'Resource not found' });
             return;
         }
+        const userProfile = await user_model_js_1.User.findById(req.user._id);
         // 1. Resource Availability Check
         const isResourceAvailable = resource.status === 'available';
         let availabilityMessage = 'Resource is available for reservations.';
@@ -38,15 +100,26 @@ const preCheckBooking = async (req, res, next) => {
         else if (resource.status === 'in_use') {
             availabilityMessage = 'Resource is currently occupied for another session.';
         }
-        // 2. User Eligibility Check
-        // If resource requires verified institutional affiliation
-        const isEligible = req.user.isVerified;
-        const eligibilityMessage = isEligible
+        // 2. User Eligibility & Membership Verification
+        const isMemberVerified = Boolean(userProfile?.institutionMembershipVerified || req.user.isVerified);
+        const eligibilityMessage = isMemberVerified
             ? `Verified Institutional Researcher (${req.user.institution})`
-            : 'Unverified Account. Verification with institutional credentials recommended.';
-        // 3. Training Requirements
-        const trainingRequirement = resource.trainingRequired || 'Standard Laboratory Safety Briefing';
-        // Parse dates if provided
+            : 'Institutional membership unverified. Please upload student ID in settings.';
+        // 3. Training & Certification Status
+        const trainingRequirement = resource.trainingRequired || 'Basic Lab Safety Induction';
+        const userCerts = userProfile?.trainingCertifications || [];
+        const hasRequiredTraining = !resource.trainingRequired ||
+            userCerts.some((c) => c.name.toLowerCase().includes(resource.trainingRequired.toLowerCase()) ||
+                resource.trainingRequired.toLowerCase().includes(c.name.toLowerCase()));
+        // 4. Required Qualification Status
+        const userQualification = userProfile?.academicQualification || 'Undergraduate';
+        const isQualificationSufficient = !resource.requiredQualification ||
+            resource.requiredQualification === 'None' ||
+            resource.requiredQualification === 'Any' ||
+            userQualification === resource.requiredQualification ||
+            userQualification === 'PhD Scholar' ||
+            userQualification === 'Faculty';
+        // 5. Parse dates if provided
         let parsedStart = null;
         let parsedEnd = null;
         if (startTime && endTime) {
@@ -62,8 +135,8 @@ const preCheckBooking = async (req, res, next) => {
         }
         let conflictFound = false;
         let conflictDetails = '';
+        let conflictingBooking = null;
         if (parsedStart && parsedEnd && !isNaN(parsedStart.getTime()) && !isNaN(parsedEnd.getTime())) {
-            // 4. Existing Booking Conflict Check
             const conflictingBookings = await booking_model_js_1.Booking.find({
                 resourceId: resource._id,
                 status: { $in: ['approved', 'checked_in', 'return_pending', 'active'] },
@@ -72,11 +145,11 @@ const preCheckBooking = async (req, res, next) => {
             });
             if (conflictingBookings.length > 0) {
                 conflictFound = true;
-                const conf = conflictingBookings[0];
-                conflictDetails = `Slot collision: Already reserved by ${conf.userName} from ${new Date(conf.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} to ${new Date(conf.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                conflictingBooking = conflictingBookings[0];
+                conflictDetails = `Slot collision: Already reserved by ${conflictingBooking.userName} until ${new Date(conflictingBooking.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
             }
         }
-        // 5. Active Booking Limits Check (Fair Allocation)
+        // 6. Active Booking Limits Check (Fair Allocation)
         const activeCount = await booking_model_js_1.Booking.countDocuments({
             userId: req.user._id,
             status: { $in: ['pending', 'under_review', 'approved', 'checked_in', 'return_pending', 'active'] },
@@ -84,9 +157,22 @@ const preCheckBooking = async (req, res, next) => {
         const fairPolicy = (await fairAllocation_model_js_1.FairAllocation.findOne()) || {
             maxActiveBookingsPerStudent: 3,
             maxWeeklyHoursPerStudent: 16,
+            maxReservationsPerAssetPer14Days: 3,
+            cooldownPeriodDays: 14,
         };
-        const limitExceeded = activeCount >= fairPolicy.maxActiveBookingsPerStudent;
-        const canBook = isResourceAvailable && !conflictFound && (!limitExceeded || req.user.role !== 'student');
+        const limitExceeded = activeCount >= (fairPolicy.maxActiveBookingsPerStudent || 3);
+        // 7. Monopolisation Check
+        const monopolisation = await (0, exports.checkMonopolisation)(req.user._id, resource._id, fairPolicy.cooldownPeriodDays || 14, fairPolicy.maxReservationsPerAssetPer14Days || 3);
+        // 8. Priority Score Calculation for Transparent Waitlist
+        const calculatedPriority = (0, exports.computeWaitlistPriority)(userProfile, resource, fairPolicy);
+        // Overall booking readiness
+        const canBook = isResourceAvailable &&
+            !conflictFound &&
+            isMemberVerified &&
+            hasRequiredTraining &&
+            isQualificationSufficient &&
+            (!limitExceeded || req.user.role !== 'student') &&
+            !monopolisation.monopolised;
         res.status(200).json({
             success: true,
             data: {
@@ -98,31 +184,65 @@ const preCheckBooking = async (req, res, next) => {
                         email: req.user.email,
                         role: req.user.role,
                         isVerified: req.user.isVerified,
+                        academicQualification: userQualification,
                     },
                     eligibility: {
-                        passed: isEligible,
+                        passed: isMemberVerified && isQualificationSufficient,
+                        membershipVerified: isMemberVerified,
+                        qualification: userQualification,
+                        requiredQualification: resource.requiredQualification || 'None',
                         detail: eligibilityMessage,
                     },
                     training: {
                         required: trainingRequirement,
-                        acknowledged: true,
+                        completed: hasRequiredTraining,
+                        userCertifications: userCerts.map((c) => c.name),
+                        passed: hasRequiredTraining,
+                        detail: hasRequiredTraining
+                            ? `Safety clearance active: ${trainingRequirement}`
+                            : `Missing required clearance: ${trainingRequirement}`,
                     },
                     resourceAvailability: {
                         status: resource.status,
                         passed: isResourceAvailable,
                         detail: availabilityMessage,
                     },
+                    ownerApprovalRequired: {
+                        required: resource.approvalRequired,
+                        isRestricted: resource.isRestricted,
+                        detail: resource.isRestricted || resource.approvalRequired
+                            ? 'Mandatory human custodian signoff enforced. Automatic AI bypass strictly prohibited.'
+                            : 'Direct self-booking permitted.',
+                    },
                     schedulingConflict: {
                         conflictDetected: conflictFound,
                         detail: conflictFound ? conflictDetails : 'Timeslot is open and free of collisions.',
+                        estimatedReleaseTime: conflictingBooking ? conflictingBooking.endTime : null,
                     },
                     activeBookingLimits: {
                         currentActive: activeCount,
-                        allowedLimit: fairPolicy.maxActiveBookingsPerStudent,
+                        allowedLimit: fairPolicy.maxActiveBookingsPerStudent || 3,
                         passed: !limitExceeded,
                         detail: limitExceeded
                             ? `You have reached the maximum allowed ${fairPolicy.maxActiveBookingsPerStudent} simultaneous reservations under campus fair allocation.`
-                            : `Current active: ${activeCount}/${fairPolicy.maxActiveBookingsPerStudent}`,
+                            : `Current active: ${activeCount}/${fairPolicy.maxActiveBookingsPerStudent || 3}`,
+                    },
+                    monopolisationCheck: {
+                        monopolised: monopolisation.monopolised,
+                        reservationCountLast14Days: monopolisation.count,
+                        passed: !monopolisation.monopolised,
+                        detail: monopolisation.monopolised
+                            ? monopolisation.reason
+                            : `Fair-share verified: ${monopolisation.count}/${fairPolicy.maxReservationsPerAssetPer14Days || 3} recent bookings.`,
+                    },
+                    waitlistDiagnostics: {
+                        eligibleForWaitlist: conflictFound || limitExceeded || monopolisation.monopolised,
+                        calculatedPriority,
+                        suggestedAction: conflictFound
+                            ? 'Join transparent waiting list with priority ranking'
+                            : monopolisation.monopolised
+                                ? 'Monopolisation standby queue'
+                                : 'Direct booking',
                     },
                 },
             },
@@ -133,14 +253,15 @@ const preCheckBooking = async (req, res, next) => {
     }
 };
 exports.preCheckBooking = preCheckBooking;
-// 2. STEP 5: Submit Booking Request
+// 2. STEP 5: Submit Booking Request (Enforces Fairness, Eligibility, & Restricted Equipment Guard)
 const createBooking = async (req, res, next) => {
     try {
         if (!req.user) {
             res.status(401).json({ success: false, message: 'Authentication required' });
             return;
         }
-        const { resourceId, date, timeSlot, startTime, endTime, purpose, projectDescription, expectedDuration, additionalInformation, supervisorName, trainingAcknowledged, } = req.body;
+        const { resourceId, date, timeSlot, startTime, endTime, purpose, projectDescription, expectedDuration, additionalInformation, supervisorName, trainingAcknowledged, allowWaitlist = false, aiApproved, // Potential AI-bypass flag from client or automated script
+         } = req.body;
         if (!resourceId || !purpose) {
             res.status(400).json({
                 success: false,
@@ -153,6 +274,7 @@ const createBooking = async (req, res, next) => {
             res.status(404).json({ success: false, message: 'Resource not found' });
             return;
         }
+        const userProfile = await user_model_js_1.User.findById(req.user._id);
         // Parse and validate start and end times
         let parsedStart;
         let parsedEnd;
@@ -208,53 +330,111 @@ const createBooking = async (req, res, next) => {
             });
             return;
         }
-        // Active booking limits check for students
-        if (req.user.role === 'student') {
-            const activeCount = await booking_model_js_1.Booking.countDocuments({
-                userId: req.user._id,
-                status: { $in: ['pending', 'under_review', 'approved', 'checked_in', 'return_pending', 'active'] },
-            });
-            const fairPolicy = (await fairAllocation_model_js_1.FairAllocation.findOne()) || { maxActiveBookingsPerStudent: 3 };
-            if (activeCount >= fairPolicy.maxActiveBookingsPerStudent) {
-                res.status(429).json({
-                    success: false,
-                    message: `Active reservation limit reached (${activeCount}/${fairPolicy.maxActiveBookingsPerStudent}). Complete or cancel an existing session first.`,
-                });
-                return;
-            }
-        }
-        // ATOMIC DOUBLE-BOOKING CHECK
-        // Query for any approved or in-session booking overlapping the requested interval
+        // 1. ATOMIC DOUBLE-BOOKING CHECK
         const conflict = await booking_model_js_1.Booking.findOne({
             resourceId: resource._id,
             status: { $in: ['approved', 'checked_in', 'return_pending', 'active'] },
             startTime: { $lt: parsedEnd },
             endTime: { $gt: parsedStart },
         });
-        if (conflict) {
-            res.status(409).json({
-                success: false,
-                message: `Scheduling collision: This resource is already booked from ${new Date(conflict.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} to ${new Date(conflict.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} on this date.`,
+        const fairPolicy = (await fairAllocation_model_js_1.FairAllocation.findOne()) || {
+            maxActiveBookingsPerStudent: 3,
+            maxWeeklyHoursPerStudent: 16,
+            maxReservationsPerAssetPer14Days: 3,
+            cooldownPeriodDays: 14,
+        };
+        // 2. MONOPOLISATION DETECTION
+        const monopolisation = await (0, exports.checkMonopolisation)(req.user._id, resource._id, fairPolicy.cooldownPeriodDays || 14, fairPolicy.maxReservationsPerAssetPer14Days || 3);
+        // 3. ACTIVE BOOKING LIMITS CHECK FOR STUDENTS
+        let activeLimitExceeded = false;
+        let activeCount = 0;
+        if (req.user.role === 'student') {
+            activeCount = await booking_model_js_1.Booking.countDocuments({
+                userId: req.user._id,
+                status: { $in: ['pending', 'under_review', 'approved', 'checked_in', 'return_pending', 'active'] },
             });
-            return;
+            if (activeCount >= (fairPolicy.maxActiveBookingsPerStudent || 3)) {
+                activeLimitExceeded = true;
+            }
         }
-        // Determine initial status:
-        // If custodian approval is required, initial status is 'pending'
-        // If no approval is required, initial status is 'approved'
-        const initialStatus = resource.approvalRequired ? 'pending' : 'approved';
+        // Calculate priority score
+        const calculatedPriority = (0, exports.computeWaitlistPriority)(userProfile, resource, fairPolicy);
+        // If conflict, limit exceeded, or monopolisation detected:
+        // If client requested waitlist or if conflict/monopolisation dictates it:
+        let finalStatus = 'pending';
+        let waitlistReasonText = '';
+        if (conflict || activeLimitExceeded || monopolisation.monopolised) {
+            if (allowWaitlist || monopolisation.monopolised) {
+                finalStatus = 'waitlisted';
+                if (monopolisation.monopolised) {
+                    waitlistReasonText = monopolisation.reason || 'Monopolisation cooldown active.';
+                }
+                else if (conflict) {
+                    waitlistReasonText = `Timeslot collision with confirmed reservation (${new Date(conflict.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(conflict.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}). Placed on priority standby.`;
+                }
+                else {
+                    waitlistReasonText = `Active booking quota reached (${activeCount}/${fairPolicy.maxActiveBookingsPerStudent}). Queued for standby release.`;
+                }
+            }
+            else {
+                // Return structured 409 or 429
+                if (conflict) {
+                    res.status(409).json({
+                        success: false,
+                        message: `Scheduling collision: This resource is already booked from ${new Date(conflict.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} to ${new Date(conflict.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} on this date.`,
+                        canWaitlist: true,
+                        estimatedReleaseTime: conflict.endTime,
+                    });
+                    return;
+                }
+                if (activeLimitExceeded) {
+                    res.status(429).json({
+                        success: false,
+                        message: `Active reservation limit reached (${activeCount}/${fairPolicy.maxActiveBookingsPerStudent}). Complete or cancel an existing session first.`,
+                        canWaitlist: true,
+                    });
+                    return;
+                }
+            }
+        }
+        else {
+            // 4. RESTRICTED EQUIPMENT GOVERNANCE RULE:
+            // "Never automatically approve restricted equipment based only on an AI-generated result."
+            if (resource.isRestricted || resource.approvalRequired) {
+                finalStatus = 'pending'; // MUST BE PENDING FOR HUMAN CUSTODIAN
+            }
+            else {
+                finalStatus = 'approved';
+            }
+            // If an AI-generated approval was attempted on restricted equipment, strictly intercept it
+            if (aiApproved && (resource.isRestricted || resource.approvalRequired)) {
+                finalStatus = 'pending';
+            }
+        }
         const formattedDate = date || parsedStart.toISOString().split('T')[0];
         const formattedTimeSlot = timeSlot ||
             `${parsedStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${parsedEnd.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
         // Initial audit log entry
         const initialAudit = {
-            transition: 'RESERVATION_REQUESTED',
+            transition: finalStatus === 'waitlisted' ? 'ENQUEUED_IN_WAITLIST' : 'RESERVATION_REQUESTED',
             fromStatus: 'none',
-            toStatus: initialStatus,
+            toStatus: finalStatus,
             performedBy: req.user.name,
             performedByRole: req.user.role,
             timestamp: new Date(),
-            note: `Reservation requested for ${durationHours} hours: ${purpose}`,
+            note: finalStatus === 'waitlisted'
+                ? `Waitlisted: ${waitlistReasonText} (Priority ${calculatedPriority})`
+                : `Reservation requested for ${durationHours} hours: ${purpose}`,
         };
+        // Calculate queue position if waitlisted
+        let assignedQueuePos = 1;
+        if (finalStatus === 'waitlisted') {
+            const existingWaitlistCount = await booking_model_js_1.Booking.countDocuments({
+                resourceId: resource._id,
+                status: 'waitlisted',
+            });
+            assignedQueuePos = existingWaitlistCount + 1;
+        }
         const booking = await booking_model_js_1.Booking.create({
             userId: req.user._id,
             userName: req.user.name,
@@ -278,35 +458,75 @@ const createBooking = async (req, res, next) => {
             additionalInformation,
             supervisorName: supervisorName || 'Faculty Sponsor',
             trainingAcknowledged: !!trainingAcknowledged,
-            status: initialStatus,
+            status: finalStatus,
+            waitlistReason: waitlistReasonText || undefined,
+            waitlistPriority: calculatedPriority,
+            queuePosition: finalStatus === 'waitlisted' ? assignedQueuePos : undefined,
+            estimatedReleaseTime: conflict ? conflict.endTime : undefined,
+            monopolisationDetected: monopolisation.monopolised,
             auditTrail: [initialAudit],
         });
-        // STEP 6: Notify Owner
-        // Find owner if ownerId exists, or create notification for custodian role
+        // Immutable Audit Log in Central Ledger
+        await (0, auditLogger_js_1.recordAuditLog)({
+            action: finalStatus === 'waitlisted' ? 'WAITLIST_ENQUEUE' : 'BOOKING_REQUEST',
+            entityType: 'Booking',
+            entityId: booking._id,
+            entityTitle: resource.name,
+            actorId: req.user._id,
+            actorName: req.user.name,
+            actorEmail: req.user.email,
+            actorRole: req.user.role,
+            details: {
+                resourceId: resource._id,
+                durationHours,
+                status: finalStatus,
+                monopolisationDetected: monopolisation.monopolised,
+                priority: calculatedPriority,
+                queuePosition: assignedQueuePos,
+                isRestricted: resource.isRestricted,
+            },
+            reason: finalStatus === 'waitlisted' ? waitlistReasonText : purpose,
+        });
+        // Notify Resource Owner / Custodian
         if (resource.ownerId) {
             await notification_model_js_1.Notification.create({
                 userId: resource.ownerId,
-                title: 'New Booking Request Received',
-                message: `${req.user.name} submitted a reservation request for "${resource.name}" on ${formattedDate} (${formattedTimeSlot}).`,
+                title: finalStatus === 'waitlisted' ? 'Waitlist Entry Queued' : 'New Booking Request Received',
+                message: `${req.user.name} submitted a reservation request for "${resource.name}" on ${formattedDate} (${formattedTimeSlot}). Status: ${finalStatus}.`,
                 type: 'booking',
                 link: '/owner/requests',
+                metadata: { bookingId: booking._id },
             });
         }
-        // Confirmation notification to User
+        // In-app Notification to Borrower
+        let notifType = 'booking';
+        let notifTitle = 'Booking Request Submitted';
+        let notifMessage = `Your reservation request for "${resource.name}" is pending custodian review.`;
+        if (finalStatus === 'approved') {
+            notifType = 'booking_confirmed';
+            notifTitle = 'Booking Confirmed!';
+            notifMessage = `Your booking for "${resource.name}" on ${formattedDate} (${formattedTimeSlot}) is confirmed.`;
+        }
+        else if (finalStatus === 'waitlisted') {
+            notifType = 'waitlist_update';
+            notifTitle = 'Placed on Transparent Waiting List';
+            notifMessage = `You are #${assignedQueuePos} in line for "${resource.name}". Reason: ${waitlistReasonText}`;
+        }
         await notification_model_js_1.Notification.create({
             userId: req.user._id,
-            title: initialStatus === 'approved' ? 'Reservation Confirmed' : 'Booking Request Submitted',
-            message: initialStatus === 'approved'
-                ? `Your booking for "${resource.name}" on ${formattedDate} (${formattedTimeSlot}) is confirmed.`
-                : `Your request for "${resource.name}" has been routed to the laboratory custodian for review.`,
-            type: 'booking',
-            link: '/dashboard/bookings',
+            title: notifTitle,
+            message: notifMessage,
+            type: notifType,
+            link: finalStatus === 'waitlisted' ? '/dashboard/waitlist' : '/dashboard/bookings',
+            metadata: { bookingId: booking._id, queuePosition: assignedQueuePos },
         });
         res.status(201).json({
             success: true,
-            message: initialStatus === 'approved'
-                ? 'Booking confirmed instantly!'
-                : 'Booking request registered. Laboratory custodian has been notified.',
+            message: finalStatus === 'approved'
+                ? 'Reservation confirmed instantly.'
+                : finalStatus === 'waitlisted'
+                    ? `Queued on transparent waiting list (#${assignedQueuePos} in line).`
+                    : 'Booking request submitted. Awaiting custodian verification.',
             data: booking,
         });
     }
@@ -315,7 +535,7 @@ const createBooking = async (req, res, next) => {
     }
 };
 exports.createBooking = createBooking;
-// 3. Get User Bookings with Auto-Overdue Check
+// 3. List Current User's Bookings
 const getMyBookings = async (req, res, next) => {
     try {
         if (!req.user) {
@@ -323,43 +543,25 @@ const getMyBookings = async (req, res, next) => {
             return;
         }
         const { status } = req.query;
-        const query = {};
-        if (req.user.role === 'student') {
-            query.userId = req.user._id;
-        }
+        const filter = { userId: req.user._id };
         if (status && status !== 'all') {
-            if (status === 'active') {
-                query.status = { $in: ['approved', 'checked_in', 'active'] };
-            }
-            else {
-                query.status = status;
-            }
+            filter.status = status;
         }
-        const bookings = await booking_model_js_1.Booking.find(query).sort({ createdAt: -1 });
-        // Dynamic overdue check
+        const bookings = await booking_model_js_1.Booking.find(filter).sort({ createdAt: -1 });
         const now = new Date();
-        for (const b of bookings) {
-            if ((b.status === 'checked_in' || b.status === 'approved' || b.status === 'active') &&
-                b.endTime &&
+        const enrichedBookings = bookings.map((b) => {
+            const isOverdue = (b.status === 'checked_in' || b.status === 'return_pending') &&
                 new Date(b.endTime) < now &&
-                !b.checkedOut) {
-                b.isOverdue = true;
-                b.status = 'overdue';
-                b.auditTrail.push({
-                    transition: 'SESSION_FLAGGED_OVERDUE',
-                    fromStatus: 'checked_in',
-                    toStatus: 'overdue',
-                    performedBy: 'System Monitor',
-                    performedByRole: 'system',
-                    timestamp: now,
-                    note: `Booking exceeded scheduled end time (${new Date(b.endTime).toLocaleTimeString()}) without return initiation.`,
-                });
-                await b.save();
-            }
-        }
+                !b.checkedOut;
+            const obj = b.toObject();
+            return {
+                ...obj,
+                isOverdue,
+            };
+        });
         res.status(200).json({
             success: true,
-            data: bookings,
+            data: enrichedBookings,
         });
     }
     catch (error) {
@@ -367,7 +569,7 @@ const getMyBookings = async (req, res, next) => {
     }
 };
 exports.getMyBookings = getMyBookings;
-// 4. Get Single Booking with Full Visual Timeline & Audit History
+// 4. Get Single Booking with Timeline & Diagnostic Details
 const getBookingById = async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -376,45 +578,35 @@ const getBookingById = async (req, res, next) => {
             res.status(404).json({ success: false, message: 'Booking not found' });
             return;
         }
-        // Build timeline stages
         const timeline = [
-            {
-                step: 1,
-                key: 'pending',
-                label: 'Request Submitted',
-                completed: true,
-                date: booking.createdAt,
-                actor: booking.userName,
-            },
+            { step: 1, key: 'requested', label: 'Reservation Requested', completed: true, date: booking.createdAt },
             {
                 step: 2,
-                key: 'under_review',
+                key: 'review',
                 label: 'Custodian Review',
-                completed: ['under_review', 'approved', 'checked_in', 'return_pending', 'completed', 'active'].includes(booking.status),
+                completed: ['under_review', 'approved', 'checked_in', 'return_pending', 'completed'].includes(booking.status),
                 date: booking.updatedAt,
             },
             {
                 step: 3,
                 key: 'approved',
                 label: 'Approved & Confirmed',
-                completed: ['approved', 'checked_in', 'return_pending', 'completed', 'active'].includes(booking.status),
-                date: booking.status === 'approved' ? booking.updatedAt : undefined,
+                completed: ['approved', 'checked_in', 'return_pending', 'completed'].includes(booking.status),
+                date: booking.updatedAt,
             },
             {
                 step: 4,
-                key: 'checked_in',
-                label: 'Checked In (Initial Condition)',
-                completed: ['checked_in', 'return_pending', 'completed'].includes(booking.status) || !!booking.checkedIn,
+                key: 'check_in',
+                label: 'Checked-In & Initial Condition',
+                completed: booking.checkedIn || ['checked_in', 'return_pending', 'completed'].includes(booking.status),
                 date: booking.checkedInAt,
-                condition: booking.initialCondition,
             },
             {
                 step: 5,
-                key: 'return_pending',
+                key: 'return',
                 label: 'Return Initiated',
-                completed: ['return_pending', 'completed'].includes(booking.status) || !!booking.returnInitiated,
+                completed: booking.returnInitiated || ['return_pending', 'completed'].includes(booking.status),
                 date: booking.returnInitiatedAt,
-                condition: booking.returnCondition,
             },
             {
                 step: 6,
@@ -505,13 +697,31 @@ const approveBookingRequest = async (req, res, next) => {
             note: 'Custodian verified eligibility and approved session reservation.',
         });
         await booking.save();
-        // STEP 8: Send confirmation notification to user
+        // Immutable Audit Log
+        await (0, auditLogger_js_1.recordAuditLog)({
+            action: 'BOOKING_APPROVAL',
+            entityType: 'Booking',
+            entityId: booking._id,
+            entityTitle: booking.resourceName,
+            actorId: req.user?._id,
+            actorName: req.user?.name || 'Custodian',
+            actorEmail: req.user?.email,
+            actorRole: req.user?.role || 'owner',
+            details: {
+                previousStatus,
+                newStatus: 'approved',
+                userId: booking.userId,
+            },
+            reason: 'Custodian verified eligibility and approved session.',
+        });
+        // In-app Notification for Approval
         await notification_model_js_1.Notification.create({
             userId: booking.userId,
             title: 'Reservation Request Approved!',
             message: `Your booking for "${booking.resourceName}" on ${booking.date} (${booking.timeSlot}) has been approved. You may check in when your session starts.`,
             type: 'approval',
             link: '/dashboard/bookings',
+            metadata: { bookingId: booking._id },
         });
         res.status(200).json({
             success: true,
@@ -524,11 +734,11 @@ const approveBookingRequest = async (req, res, next) => {
     }
 };
 exports.approveBookingRequest = approveBookingRequest;
-// 7. STEP 7: Reject Booking Request with Reason
+// 7. STEP 7: Reject Booking Request with Mandatory Reason
 const rejectBookingRequest = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { reason } = req.body;
+        const reason = req.body.reason || req.body.rejectionReason;
         if (!reason || !reason.trim()) {
             res.status(400).json({
                 success: false,
@@ -554,13 +764,31 @@ const rejectBookingRequest = async (req, res, next) => {
             note: `Rejection justification: ${reason.trim()}`,
         });
         await booking.save();
-        // Notify user with reason
+        // Immutable Audit Log
+        await (0, auditLogger_js_1.recordAuditLog)({
+            action: 'BOOKING_REJECTION',
+            entityType: 'Booking',
+            entityId: booking._id,
+            entityTitle: booking.resourceName,
+            actorId: req.user?._id,
+            actorName: req.user?.name || 'Custodian',
+            actorEmail: req.user?.email,
+            actorRole: req.user?.role || 'owner',
+            details: {
+                previousStatus,
+                newStatus: 'rejected',
+                userId: booking.userId,
+            },
+            reason: reason.trim(),
+        });
+        // In-app Notification with Mandatory Reason
         await notification_model_js_1.Notification.create({
             userId: booking.userId,
             title: 'Reservation Request Rejected',
             message: `Your booking for "${booking.resourceName}" was rejected. Reason: ${reason.trim()}`,
-            type: 'maintenance',
+            type: 'rejection',
             link: '/dashboard/bookings',
+            metadata: { bookingId: booking._id, reason: reason.trim() },
         });
         res.status(200).json({
             success: true,
@@ -573,7 +801,7 @@ const rejectBookingRequest = async (req, res, next) => {
     }
 };
 exports.rejectBookingRequest = rejectBookingRequest;
-// 8. Move to Waitlist with Reason
+// 8. Move to Waitlist with Reason & Priority Scoring
 const waitlistBookingRequest = async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -583,10 +811,20 @@ const waitlistBookingRequest = async (req, res, next) => {
             res.status(404).json({ success: false, message: 'Booking not found' });
             return;
         }
+        const userProfile = await user_model_js_1.User.findById(booking.userId);
+        const resource = await resource_model_js_1.Resource.findById(booking.resourceId);
+        const fairPolicy = await fairAllocation_model_js_1.FairAllocation.findOne();
+        const waitlistReason = reason || 'Placed on standby queue due to high demand.';
+        const waitlistPriority = priority || (0, exports.computeWaitlistPriority)(userProfile, resource, fairPolicy);
+        const existingWaitlistCount = await booking_model_js_1.Booking.countDocuments({
+            resourceId: booking.resourceId,
+            status: 'waitlisted',
+        });
         const previousStatus = booking.status;
         booking.status = 'waitlisted';
-        booking.waitlistReason = reason || 'Placed on standby queue due to high demand.';
-        booking.waitlistPriority = priority || 1;
+        booking.waitlistReason = waitlistReason;
+        booking.waitlistPriority = waitlistPriority;
+        booking.queuePosition = existingWaitlistCount + 1;
         booking.auditTrail.push({
             transition: 'MOVED_TO_WAITLIST',
             fromStatus: previousStatus,
@@ -594,15 +832,34 @@ const waitlistBookingRequest = async (req, res, next) => {
             performedBy: req.user?.name || 'Lab Custodian',
             performedByRole: req.user?.role || 'owner',
             timestamp: new Date(),
-            note: `Waitlisted: ${booking.waitlistReason} (Priority ${booking.waitlistPriority})`,
+            note: `Waitlisted: ${waitlistReason} (Priority ${waitlistPriority}, Queue #${booking.queuePosition})`,
         });
         await booking.save();
+        // Immutable Audit Log
+        await (0, auditLogger_js_1.recordAuditLog)({
+            action: 'WAITLIST_ENQUEUE',
+            entityType: 'Booking',
+            entityId: booking._id,
+            entityTitle: booking.resourceName,
+            actorId: req.user?._id,
+            actorName: req.user?.name || 'Custodian',
+            actorEmail: req.user?.email,
+            actorRole: req.user?.role || 'owner',
+            details: {
+                queuePosition: booking.queuePosition,
+                priority: waitlistPriority,
+                userId: booking.userId,
+            },
+            reason: waitlistReason,
+        });
+        // In-app Notification for Waitlist Update
         await notification_model_js_1.Notification.create({
             userId: booking.userId,
             title: 'Placed on Priority Waitlist',
-            message: `Your booking for "${booking.resourceName}" has been waitlisted. If an earlier slot opens, you will be notified.`,
-            type: 'booking',
+            message: `Your booking for "${booking.resourceName}" is waitlisted (#${booking.queuePosition} in line). Reason: ${waitlistReason}`,
+            type: 'waitlist_update',
             link: '/dashboard/waitlist',
+            metadata: { bookingId: booking._id, queuePosition: booking.queuePosition },
         });
         res.status(200).json({
             success: true,
@@ -615,28 +872,34 @@ const waitlistBookingRequest = async (req, res, next) => {
     }
 };
 exports.waitlistBookingRequest = waitlistBookingRequest;
-// 9. STEP 9 & 10: Check-In & Initial Condition Recording
+// 9. STEP 9 & 10: Check-In & Condition Documentation (Before Use)
+// Requirement: Condition notes, photos if upload configured, timestamp, user confirmation
 const checkInBooking = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { conditionNotes, meterReading, cleanliness, operationalStatus } = req.body;
+        const { conditionNotes, meterReading, cleanliness, operationalStatus, photos = [], userConfirmation = true, } = req.body;
         const booking = await booking_model_js_1.Booking.findById(id);
         if (!booking) {
             res.status(404).json({ success: false, message: 'Booking not found' });
             return;
         }
         const previousStatus = booking.status;
+        const checkInTime = new Date();
         booking.checkedIn = true;
-        booking.checkedInAt = new Date();
+        booking.checkedInAt = checkInTime;
         booking.status = 'checked_in';
         booking.isOverdue = false;
+        const photoList = Array.isArray(photos) ? photos : [photos].filter(Boolean);
         booking.initialCondition = {
-            conditionNotes: conditionNotes || 'Equipment handed over in verified operational state.',
+            conditionNotes: conditionNotes || 'Equipment verified operational prior to handover.',
             meterReading: meterReading || '0 hrs',
             cleanliness: cleanliness || 'passed',
             operationalStatus: operationalStatus || 'optimal',
-            recordedBy: req.user?.name || 'Borrower/Custodian',
-            recordedAt: new Date(),
+            photos: photoList,
+            userConfirmation: Boolean(userConfirmation),
+            timestamp: checkInTime,
+            recordedBy: req.user?.name || booking.userName,
+            recordedAt: checkInTime,
         };
         booking.auditTrail.push({
             transition: 'CHECK_IN_PERFORMED',
@@ -644,28 +907,52 @@ const checkInBooking = async (req, res, next) => {
             toStatus: 'checked_in',
             performedBy: req.user?.name || booking.userName,
             performedByRole: req.user?.role || 'student',
-            timestamp: new Date(),
-            note: `Check-in completed. Condition: ${booking.initialCondition.operationalStatus}. Notes: ${booking.initialCondition.conditionNotes}`,
+            timestamp: checkInTime,
+            note: `Check-in completed. Condition: ${booking.initialCondition.operationalStatus}. Photos: ${photoList.length}. Notes: ${booking.initialCondition.conditionNotes}`,
         });
         await booking.save();
-        // STEP 10: Create Initial Condition Report
+        // Record Condition Documentation in ConditionReport
         await conditionReport_model_js_1.ConditionReport.create({
             resourceId: booking.resourceId,
             resourceName: booking.resourceName,
             bookingId: booking._id,
-            inspectorName: req.user?.name || 'Lab Staff',
-            inspectorRole: req.user?.role || 'owner',
+            inspectorName: req.user?.name || booking.userName,
+            inspectorRole: req.user?.role || 'student',
             type: 'check_in',
             operationalStatus: operationalStatus || 'optimal',
             cleanliness: cleanliness || 'passed',
             meterReading: meterReading || '0',
-            observations: conditionNotes || 'Initial check-in inspection passed.',
+            conditionNotes: conditionNotes || 'Initial check-in inspection signed off.',
+            observations: conditionNotes || 'Initial check-in inspection signed off.',
+            photos: photoList,
+            timestamp: checkInTime,
+            userConfirmation: Boolean(userConfirmation),
+            userConfirmedAt: checkInTime,
+            signoffConfirmed: true,
         });
         // Mark resource as in_use
         await resource_model_js_1.Resource.findByIdAndUpdate(booking.resourceId, { status: 'in_use' });
+        // Immutable Audit Log
+        await (0, auditLogger_js_1.recordAuditLog)({
+            action: 'CHECK_IN',
+            entityType: 'Booking',
+            entityId: booking._id,
+            entityTitle: booking.resourceName,
+            actorId: req.user?._id,
+            actorName: req.user?.name || booking.userName,
+            actorEmail: req.user?.email,
+            actorRole: req.user?.role || 'student',
+            details: {
+                operationalStatus: booking.initialCondition.operationalStatus,
+                photosCount: photoList.length,
+                userConfirmation: Boolean(userConfirmation),
+                timestamp: checkInTime,
+            },
+            reason: conditionNotes || 'Initial check-in condition documentation recorded.',
+        });
         res.status(200).json({
             success: true,
-            message: `Check-in verified! Initial condition recorded. Session active.`,
+            message: 'Check-in verified! Initial condition & borrower confirmation recorded. Session active.',
             data: booking,
         });
     }
@@ -674,28 +961,33 @@ const checkInBooking = async (req, res, next) => {
     }
 };
 exports.checkInBooking = checkInBooking;
-// 10. STEP 12: User Initiates Check-Out & Records Return Condition
+// 10. STEP 12: User Initiates Return & Condition Documentation (After Use - Borrower Handover)
 const initiateReturn = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { conditionNotes, meterReading, cleanliness, operationalStatus } = req.body;
+        const { conditionNotes, meterReading, cleanliness, operationalStatus, photos = [], userConfirmation = true, } = req.body;
         const booking = await booking_model_js_1.Booking.findById(id);
         if (!booking) {
             res.status(404).json({ success: false, message: 'Booking not found' });
             return;
         }
         const previousStatus = booking.status;
+        const returnTime = new Date();
         booking.returnInitiated = true;
-        booking.returnInitiatedAt = new Date();
+        booking.returnInitiatedAt = returnTime;
         booking.status = 'return_pending';
         booking.isOverdue = false;
+        const photoList = Array.isArray(photos) ? photos : [photos].filter(Boolean);
         booking.returnCondition = {
             conditionNotes: conditionNotes || 'Equipment session completed and ready for custodian handback.',
             meterReading: meterReading || '',
             cleanliness: cleanliness || 'passed',
             operationalStatus: operationalStatus || 'optimal',
+            photos: photoList,
+            userConfirmation: Boolean(userConfirmation),
+            timestamp: returnTime,
             recordedBy: req.user?.name || booking.userName,
-            recordedAt: new Date(),
+            recordedAt: returnTime,
         };
         booking.auditTrail.push({
             transition: 'RETURN_INITIATED',
@@ -703,24 +995,42 @@ const initiateReturn = async (req, res, next) => {
             toStatus: 'return_pending',
             performedBy: req.user?.name || booking.userName,
             performedByRole: req.user?.role || 'student',
-            timestamp: new Date(),
-            note: `Return initiated by borrower. Return condition: ${booking.returnCondition.operationalStatus}. Notes: ${booking.returnCondition.conditionNotes}`,
+            timestamp: returnTime,
+            note: `Return initiated by borrower. Return condition: ${booking.returnCondition.operationalStatus}. Photos: ${photoList.length}. Notes: ${booking.returnCondition.conditionNotes}`,
         });
         await booking.save();
+        // Immutable Audit Log
+        await (0, auditLogger_js_1.recordAuditLog)({
+            action: 'CONDITION_REPORT',
+            entityType: 'Booking',
+            entityId: booking._id,
+            entityTitle: booking.resourceName,
+            actorId: req.user?._id,
+            actorName: req.user?.name || booking.userName,
+            actorEmail: req.user?.email,
+            actorRole: req.user?.role || 'student',
+            details: {
+                stage: 'return_handover',
+                operationalStatus: booking.returnCondition.operationalStatus,
+                photosCount: photoList.length,
+            },
+            reason: conditionNotes || 'Borrower return condition logged.',
+        });
         // Alert owner to perform final sign-off inspection
         const resource = await resource_model_js_1.Resource.findById(booking.resourceId);
         if (resource?.ownerId) {
             await notification_model_js_1.Notification.create({
                 userId: resource.ownerId,
-                title: 'Return Inspection Requested',
+                title: 'Return Inspection Sign-off Required',
                 message: `${booking.userName} completed their session with "${booking.resourceName}" and requested return sign-off.`,
                 type: 'maintenance',
                 link: '/owner/checkin',
+                metadata: { bookingId: booking._id },
             });
         }
         res.status(200).json({
             success: true,
-            message: 'Return submitted successfully. Custodian notified for handover inspection.',
+            message: 'Return submitted successfully. Custodian notified for handover inspection sign-off.',
             data: booking,
         });
     }
@@ -729,33 +1039,35 @@ const initiateReturn = async (req, res, next) => {
     }
 };
 exports.initiateReturn = initiateReturn;
-// 11. STEP 13 & 14: Owner Confirms Return & Booking Becomes Completed
+// 11. STEP 13 & 14: Owner Confirms Return & Completes (After Use - Final Condition & Owner Confirmation)
 const confirmReturnAndComplete = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { finalNotes, meterReading, conditionStatus } = req.body;
+        const { finalNotes, meterReading, conditionStatus, photos = [], ownerConfirmation = true, } = req.body;
         const booking = await booking_model_js_1.Booking.findById(id);
         if (!booking) {
             res.status(404).json({ success: false, message: 'Booking not found' });
             return;
         }
         const previousStatus = booking.status;
+        const completeTime = new Date();
         booking.checkedOut = true;
-        booking.checkedOutAt = new Date();
+        booking.checkedOutAt = completeTime;
         booking.status = 'completed';
         booking.conditionOnCheckout = finalNotes || booking.returnCondition?.conditionNotes || 'Pristine return';
         booking.isOverdue = false;
+        const photoList = Array.isArray(photos) ? photos : [photos].filter(Boolean);
         booking.auditTrail.push({
             transition: 'RETURN_CONFIRMED_COMPLETED',
             fromStatus: previousStatus,
             toStatus: 'completed',
             performedBy: req.user?.name || 'Lab Custodian',
             performedByRole: req.user?.role || 'owner',
-            timestamp: new Date(),
-            note: `Return confirmed & inspected by custodian. Final condition: ${conditionStatus || 'optimal'}. ${finalNotes || ''}`,
+            timestamp: completeTime,
+            note: `Return confirmed & inspected by custodian. Final condition: ${conditionStatus || 'optimal'}. Owner Confirmed: ${ownerConfirmation}. Photos: ${photoList.length}. ${finalNotes || ''}`,
         });
         await booking.save();
-        // Create final condition report
+        // Create Final Condition Report with Photos & Owner Confirmation
         await conditionReport_model_js_1.ConditionReport.create({
             resourceId: booking.resourceId,
             resourceName: booking.resourceName,
@@ -766,24 +1078,101 @@ const confirmReturnAndComplete = async (req, res, next) => {
             operationalStatus: conditionStatus || 'optimal',
             cleanliness: 'passed',
             meterReading: meterReading || booking.returnCondition?.meterReading || '0',
+            conditionNotes: finalNotes || 'Return inspection finalized and signed off by custodian.',
             observations: finalNotes || 'Return inspection finalized and logged into institutional ledger.',
+            photos: photoList,
+            timestamp: completeTime,
+            ownerConfirmation: Boolean(ownerConfirmation),
+            ownerConfirmedAt: completeTime,
+            signoffConfirmed: true,
         });
-        // Reset resource status to available
+        // Reset resource status to available and increment bookings count
         await resource_model_js_1.Resource.findByIdAndUpdate(booking.resourceId, {
             status: 'available',
             $inc: { totalBookings: 1 },
         });
-        // Notify user of completed reservation
+        // Update Historical Resource Usage for the Student
+        await user_model_js_1.User.findByIdAndUpdate(booking.userId, {
+            $inc: {
+                'historicalUsage.totalCompletedBookings': 1,
+                'historicalUsage.totalHoursLogged': booking.durationHours || 1,
+                'historicalUsage.weeklyHoursUsed': booking.durationHours || 1,
+            },
+        });
+        // Immutable Audit Log
+        await (0, auditLogger_js_1.recordAuditLog)({
+            action: 'CHECK_OUT',
+            entityType: 'Booking',
+            entityId: booking._id,
+            entityTitle: booking.resourceName,
+            actorId: req.user?._id,
+            actorName: req.user?.name || 'Custodian',
+            actorEmail: req.user?.email,
+            actorRole: req.user?.role || 'owner',
+            details: {
+                finalStatus: 'completed',
+                conditionStatus: conditionStatus || 'optimal',
+                photosCount: photoList.length,
+                ownerConfirmation: Boolean(ownerConfirmation),
+                hoursLogged: booking.durationHours || 1,
+            },
+            reason: finalNotes || 'Session successfully signed off and completed.',
+        });
+        // In-app Notification to Borrower of Completed Session
         await notification_model_js_1.Notification.create({
             userId: booking.userId,
             title: 'Session Successfully Completed',
             message: `Your return of "${booking.resourceName}" was inspected and signed off. Thank you for maintaining campus equipment!`,
-            type: 'booking',
+            type: 'booking_confirmed',
             link: '/dashboard/bookings',
+            metadata: { bookingId: booking._id },
         });
+        // CHECK FOR HIGHEST PRIORITY WAITLISTED RESERVATION TO PROMOTE
+        const nextWaitlisted = await booking_model_js_1.Booking.findOne({
+            resourceId: booking.resourceId,
+            status: 'waitlisted',
+        }).sort({ waitlistPriority: -1, createdAt: 1 });
+        if (nextWaitlisted) {
+            nextWaitlisted.status = 'approved';
+            nextWaitlisted.auditTrail.push({
+                transition: 'PROMOTED_FROM_WAITLIST',
+                fromStatus: 'waitlisted',
+                toStatus: 'approved',
+                performedBy: 'Fairness Engine',
+                performedByRole: 'system',
+                timestamp: new Date(),
+                note: `Automatically promoted from waitlist upon resource release (Priority ${nextWaitlisted.waitlistPriority})`,
+            });
+            await nextWaitlisted.save();
+            // Audit Log for Promotion
+            await (0, auditLogger_js_1.recordAuditLog)({
+                action: 'WAITLIST_PROMOTION',
+                entityType: 'Booking',
+                entityId: nextWaitlisted._id,
+                entityTitle: nextWaitlisted.resourceName,
+                actorName: 'RENTORA Fairness Engine',
+                actorRole: 'system',
+                details: {
+                    previousStatus: 'waitlisted',
+                    newStatus: 'approved',
+                    priority: nextWaitlisted.waitlistPriority,
+                    promotedForUser: nextWaitlisted.userId,
+                },
+                reason: 'Asset slot freed upon session completion.',
+            });
+            // Notify promoted user
+            await notification_model_js_1.Notification.create({
+                userId: nextWaitlisted.userId,
+                title: 'Waitlist Promotion: Booking Confirmed!',
+                message: `Great news! A slot opened for "${nextWaitlisted.resourceName}". Your reservation is now approved and confirmed.`,
+                type: 'approval',
+                link: '/dashboard/bookings',
+                metadata: { bookingId: nextWaitlisted._id },
+            });
+        }
         res.status(200).json({
             success: true,
-            message: 'Return confirmed. Booking lifecycle successfully completed!',
+            message: 'Return confirmed and signed off. Booking lifecycle successfully completed!',
             data: booking,
         });
     }
@@ -792,7 +1181,7 @@ const confirmReturnAndComplete = async (req, res, next) => {
     }
 };
 exports.confirmReturnAndComplete = confirmReturnAndComplete;
-// 12. Cancel Booking with Stated Reason
+// 12. Cancel Booking with Mandatory Stated Reason
 const cancelBooking = async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -824,12 +1213,30 @@ const cancelBooking = async (req, res, next) => {
         await booking.save();
         // If resource was in_use, free it up
         await resource_model_js_1.Resource.findByIdAndUpdate(booking.resourceId, { status: 'available' });
-        // Notify user or owner
+        // Immutable Audit Log
+        await (0, auditLogger_js_1.recordAuditLog)({
+            action: 'BOOKING_CANCELLATION',
+            entityType: 'Booking',
+            entityId: booking._id,
+            entityTitle: booking.resourceName,
+            actorId: req.user?._id,
+            actorName: req.user?.name || 'User',
+            actorEmail: req.user?.email,
+            actorRole: req.user?.role || 'student',
+            details: {
+                previousStatus,
+                newStatus: 'cancelled',
+                userId: booking.userId,
+            },
+            reason: reason.trim(),
+        });
+        // Notify user
         await notification_model_js_1.Notification.create({
             userId: booking.userId,
             title: 'Reservation Cancelled',
             message: `Your booking for "${booking.resourceName}" has been cancelled. Reason: ${reason.trim()}`,
             type: 'booking',
+            metadata: { bookingId: booking._id },
         });
         res.status(200).json({
             success: true,
@@ -842,3 +1249,117 @@ const cancelBooking = async (req, res, next) => {
     }
 };
 exports.cancelBooking = cancelBooking;
+// 13. MANAGER OVERRIDE WITH MANDATORY REASON
+// Requirement: Provide manager override with a mandatory reason
+const managerOverrideBooking = async (req, res, next) => {
+    try {
+        if (req.user?.role !== 'manager' && req.user?.role !== 'admin') {
+            res.status(403).json({
+                success: false,
+                message: 'Manager or administrator credentials required to perform override.',
+            });
+            return;
+        }
+        const { id } = req.params;
+        const { mandatoryReason, action = 'approve' } = req.body;
+        if (!mandatoryReason || mandatoryReason.trim().length < 10) {
+            res.status(400).json({
+                success: false,
+                message: 'A mandatory, detailed justification (minimum 10 characters) is required for manager overrides.',
+            });
+            return;
+        }
+        const booking = await booking_model_js_1.Booking.findById(id);
+        if (!booking) {
+            res.status(404).json({ success: false, message: 'Booking not found.' });
+            return;
+        }
+        const previousStatus = booking.status;
+        booking.status = 'approved';
+        booking.managerOverrideReason = mandatoryReason.trim();
+        booking.managerOverriddenBy = req.user.name;
+        booking.auditTrail.push({
+            transition: 'MANAGER_OVERRIDE',
+            fromStatus: previousStatus,
+            toStatus: 'approved',
+            performedBy: req.user.name,
+            performedByRole: req.user.role,
+            timestamp: new Date(),
+            note: `Manager override executed (${action}): ${mandatoryReason.trim()}`,
+        });
+        await booking.save();
+        // Immutable Audit Log
+        await (0, auditLogger_js_1.recordAuditLog)({
+            action: 'MANAGER_OVERRIDE',
+            entityType: 'Booking',
+            entityId: booking._id,
+            entityTitle: booking.resourceName,
+            actorId: req.user._id,
+            actorName: req.user.name,
+            actorEmail: req.user.email,
+            actorRole: req.user.role,
+            details: {
+                action,
+                previousStatus,
+                newStatus: 'approved',
+                userId: booking.userId,
+            },
+            reason: mandatoryReason.trim(),
+        });
+        // In-app Notification for User
+        await notification_model_js_1.Notification.create({
+            userId: booking.userId,
+            title: 'Booking Approved via Manager Override',
+            message: `Your booking for "${booking.resourceName}" was authorized by institutional management: ${mandatoryReason.trim()}`,
+            type: 'approval',
+            link: '/dashboard/bookings',
+            metadata: { bookingId: booking._id, managerOverride: true },
+        });
+        res.status(200).json({
+            success: true,
+            message: 'Manager override applied successfully. Immutable audit log recorded.',
+            data: booking,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.managerOverrideBooking = managerOverrideBooking;
+// 14. GET TRANSPARENT WAITING LIST
+// Requirement: Implement transparent waiting lists, show users why they were waitlisted, exact queue position
+const getTransparentWaitlist = async (req, res, next) => {
+    try {
+        const query = { status: 'waitlisted' };
+        if (req.user?.role === 'student') {
+            query.userId = req.user._id;
+        }
+        const waitlistedBookings = await booking_model_js_1.Booking.find(query).sort({ waitlistPriority: -1, createdAt: 1 });
+        // Dynamic queue position and release calculation
+        const resourceQueues = {};
+        const enrichedWaitlist = await Promise.all(waitlistedBookings.map(async (b) => {
+            const resKey = b.resourceId.toString();
+            resourceQueues[resKey] = (resourceQueues[resKey] || 0) + 1;
+            const currentQueuePos = resourceQueues[resKey];
+            // Find active booking on this asset to estimate availability
+            const activeSession = await booking_model_js_1.Booking.findOne({
+                resourceId: b.resourceId,
+                status: { $in: ['approved', 'checked_in', 'return_pending'] },
+            }).sort({ endTime: -1 });
+            return {
+                ...b.toObject(),
+                queuePosition: currentQueuePos,
+                estimatedReleaseTime: activeSession ? activeSession.endTime : b.estimatedReleaseTime,
+                transparencyRationale: b.waitlistReason || 'High campus demand. Queued according to fair allocation priority.',
+            };
+        }));
+        res.status(200).json({
+            success: true,
+            data: enrichedWaitlist,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.getTransparentWaitlist = getTransparentWaitlist;

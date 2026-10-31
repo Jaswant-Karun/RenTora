@@ -6,5 +6,7 @@ const auth_middleware_js_1 = require("../middleware/auth.middleware.js");
 const router = (0, express_1.Router)();
 router.use(auth_middleware_js_1.authenticate);
 router.get('/', notification_controller_js_1.getNotifications);
+router.post('/mark-all-read', notification_controller_js_1.markAllNotificationsRead);
+router.post('/trigger-check', notification_controller_js_1.triggerNotificationCheck);
 router.patch('/:id/read', notification_controller_js_1.markNotificationRead);
 exports.default = router;

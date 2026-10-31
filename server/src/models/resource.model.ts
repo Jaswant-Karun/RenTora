@@ -253,4 +253,9 @@ resourceSchema.index({
   tags: 'text',
 });
 
+// High-speed compound filtering indexes
+resourceSchema.index({ category: 1, status: 1, institution: 1 });
+resourceSchema.index({ ownerId: 1, status: 1 });
+resourceSchema.index({ featured: 1, status: 1 });
+
 export const Resource = model<IResource>('Resource', resourceSchema);

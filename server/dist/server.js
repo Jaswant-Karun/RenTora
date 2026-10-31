@@ -15,14 +15,42 @@ dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 5000;
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
-// Middleware
+// Production-ready CORS Configuration
+const allowedOriginsList = [
+    CLIENT_URL,
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()) : []),
+];
 app.use((0, cors_1.default)({
-    origin: [CLIENT_URL, 'http://localhost:5173', 'http://127.0.0.1:5173'],
-    credentials: true, // Essential for httpOnly cookies transmission
+    origin: (origin, callback) => {
+        // Allow requests with no origin (e.g. mobile apps, curl, server-to-server health checks)
+        if (!origin)
+            return callback(null, true);
+        if (allowedOriginsList.includes(origin) ||
+            process.env.NODE_ENV !== 'production' ||
+            origin.endsWith('.vercel.app') ||
+            origin.endsWith('.onrender.com')) {
+            return callback(null, true);
+        }
+        return callback(new Error(`CORS error: Origin ${origin} not permitted.`));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 }));
 app.use((0, cookie_parser_1.default)());
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
+// Top-level /health check for cloud load-balancers & container orchestrators
+app.get('/health', (_req, res) => {
+    res.status(200).json({
+        status: 'ONLINE',
+        platform: 'RENTORA',
+        version: '1.0.0',
+        timestamp: new Date().toISOString(),
+    });
+});
 // Request logging in development
 if (process.env.NODE_ENV !== 'production') {
     app.use((req, _res, next) => {

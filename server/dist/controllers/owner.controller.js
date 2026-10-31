@@ -6,6 +6,7 @@ const booking_model_js_1 = require("../models/booking.model.js");
 const conditionReport_model_js_1 = require("../models/conditionReport.model.js");
 const incident_model_js_1 = require("../models/incident.model.js");
 const notification_model_js_1 = require("../models/notification.model.js");
+const auditLogger_js_1 = require("../utils/auditLogger.js");
 // 1. Get Owner Overview Stats & Summary
 const getOwnerOverview = async (req, res, next) => {
     try {
@@ -106,6 +107,23 @@ const addOwnerResource = async (req, res, next) => {
             status: 'available',
             availabilityText: 'Available for Bookings',
             tags: Array.isArray(tags) ? tags : [category],
+        });
+        await (0, auditLogger_js_1.recordAuditLog)({
+            action: 'RESOURCE_CREATION',
+            entityType: 'Resource',
+            entityId: newResource._id,
+            entityTitle: newResource.name,
+            actorId: user._id,
+            actorName: user.name,
+            actorEmail: user.email,
+            actorRole: user.role,
+            details: {
+                category: newResource.category,
+                institution: newResource.institution,
+                location: newResource.location,
+                approvalRequired: newResource.approvalRequired,
+            },
+            reason: 'New equipment resource catalogued by owner.',
         });
         res.status(201).json({
             success: true,

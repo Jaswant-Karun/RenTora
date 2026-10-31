@@ -139,4 +139,8 @@ auditLogSchema.pre('deleteMany', function (next) {
   next(new Error('IMMUTABILITY_VIOLATION: Audit log records are permanent and cannot be deleted.'));
 });
 
+// Non-repudiation chronological and entity investigation indexes
+auditLogSchema.index({ timestamp: -1, action: 1 });
+auditLogSchema.index({ entityType: 1, entityId: 1, timestamp: -1 });
+
 export const AuditLog = model<IAuditLog>('AuditLog', auditLogSchema);

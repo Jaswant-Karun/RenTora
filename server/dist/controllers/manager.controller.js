@@ -7,6 +7,7 @@ const user_model_js_1 = require("../models/user.model.js");
 const incident_model_js_1 = require("../models/incident.model.js");
 const dispute_model_js_1 = require("../models/dispute.model.js");
 const fairAllocation_model_js_1 = require("../models/fairAllocation.model.js");
+const auditLogger_js_1 = require("../utils/auditLogger.js");
 // 1. Institution-wide Resource Statistics
 const getManagerStats = async (req, res, next) => {
     try {
@@ -93,6 +94,18 @@ const updateResourceApproval = async (req, res, next) => {
             res.status(404).json({ success: false, message: 'Resource not found' });
             return;
         }
+        await (0, auditLogger_js_1.recordAuditLog)({
+            action: 'MANAGER_DECISION',
+            entityType: 'Resource',
+            entityId: resource._id,
+            entityTitle: resource.name,
+            actorId: req.user?._id,
+            actorName: req.user?.name || 'Manager',
+            actorEmail: req.user?.email,
+            actorRole: req.user?.role || 'manager',
+            details: { approvalStatus },
+            reason: `Resource listing ${approvalStatus} by institutional manager.`,
+        });
         res.status(200).json({
             success: true,
             message: `Resource "${resource.name}" has been marked as ${approvalStatus}.`,
@@ -119,11 +132,23 @@ const toggleUserVerification = async (req, res, next) => {
     try {
         const { id } = req.params;
         const { isVerified } = req.body;
-        const user = await user_model_js_1.User.findByIdAndUpdate(id, { isVerified }, { new: true }).select('-password');
+        const user = await user_model_js_1.User.findByIdAndUpdate(id, { isVerified, institutionMembershipVerified: isVerified }, { new: true }).select('-password');
         if (!user) {
             res.status(404).json({ success: false, message: 'User not found' });
             return;
         }
+        await (0, auditLogger_js_1.recordAuditLog)({
+            action: 'MANAGER_DECISION',
+            entityType: 'User',
+            entityId: user._id,
+            entityTitle: user.name,
+            actorId: req.user?._id,
+            actorName: req.user?.name || 'Manager',
+            actorEmail: req.user?.email,
+            actorRole: req.user?.role || 'manager',
+            details: { isVerified },
+            reason: `User membership verification set to ${isVerified}`,
+        });
         res.status(200).json({
             success: true,
             message: `User ${user.name} verification status updated to ${isVerified ? 'VERIFIED' : 'PENDING'}.`,
@@ -269,6 +294,17 @@ const updateFairAllocationSettings = async (req, res, next) => {
         const settings = await fairAllocation_model_js_1.FairAllocation.findOneAndUpdate({ institution }, req.body, {
             new: true,
             upsert: true,
+        });
+        await (0, auditLogger_js_1.recordAuditLog)({
+            action: 'MANAGER_DECISION',
+            entityType: 'Policy',
+            entityTitle: `Fair Allocation Policy (${institution})`,
+            actorId: req.user?._id,
+            actorName: req.user?.name || 'Manager',
+            actorEmail: req.user?.email,
+            actorRole: req.user?.role || 'manager',
+            details: req.body,
+            reason: 'Fair allocation parameters updated by institutional manager.',
         });
         res.status(200).json({
             success: true,

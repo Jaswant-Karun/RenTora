@@ -138,4 +138,7 @@ const incidentSchema = new Schema<IIncident>(
   }
 );
 
+incidentSchema.index({ status: 1, severity: 1, createdAt: -1 });
+incidentSchema.index({ resourceId: 1, status: 1 });
+
 export const Incident = model<IIncident>('Incident', incidentSchema);

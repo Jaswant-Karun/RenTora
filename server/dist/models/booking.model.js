@@ -16,6 +16,10 @@ const conditionSnapshotSchema = new mongoose_1.Schema({
     meterReading: String,
     cleanliness: { type: String, enum: ['passed', 'needs_cleaning'], default: 'passed' },
     operationalStatus: { type: String, enum: ['optimal', 'minor_wear', 'damaged', 'offline'], default: 'optimal' },
+    photos: { type: [String], default: [] },
+    userConfirmation: { type: Boolean, default: false },
+    ownerConfirmation: { type: Boolean, default: false },
+    timestamp: { type: Date, default: Date.now },
     recordedBy: { type: String, required: true },
     recordedAt: { type: Date, default: Date.now },
 }, { _id: false });
@@ -125,6 +129,14 @@ const bookingSchema = new mongoose_1.Schema({
         type: Number,
         default: 1,
     },
+    queuePosition: Number,
+    estimatedReleaseTime: Date,
+    monopolisationDetected: {
+        type: Boolean,
+        default: false,
+    },
+    managerOverrideReason: String,
+    managerOverriddenBy: String,
     notes: String,
     checkedIn: {
         type: Boolean,

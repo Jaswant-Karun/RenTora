@@ -94,6 +94,23 @@ const resourceSchema = new mongoose_1.Schema({
         default: 'All Enrolled Students & Faculty',
         index: true,
     },
+    isRestricted: {
+        type: Boolean,
+        default: false,
+        index: true,
+    },
+    requiredQualification: {
+        type: String,
+        default: 'None',
+    },
+    requiredCertifications: {
+        type: [String],
+        default: [],
+    },
+    conditionPhotosConfigured: {
+        type: Boolean,
+        default: true,
+    },
     approvalRequired: {
         type: Boolean,
         default: true,
@@ -177,4 +194,8 @@ resourceSchema.index({
     institution: 'text',
     tags: 'text',
 });
+// High-speed compound filtering indexes
+resourceSchema.index({ category: 1, status: 1, institution: 1 });
+resourceSchema.index({ ownerId: 1, status: 1 });
+resourceSchema.index({ featured: 1, status: 1 });
 exports.Resource = (0, mongoose_1.model)('Resource', resourceSchema);

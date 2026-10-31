@@ -16,6 +16,7 @@ const conditionReportSchema = new mongoose_1.Schema({
     bookingId: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: 'Booking',
+        index: true,
     },
     inspectorName: {
         type: String,
@@ -29,6 +30,7 @@ const conditionReportSchema = new mongoose_1.Schema({
         type: String,
         enum: ['check_in', 'check_out', 'routine'],
         default: 'check_out',
+        index: true,
     },
     operationalStatus: {
         type: String,
@@ -40,10 +42,40 @@ const conditionReportSchema = new mongoose_1.Schema({
         enum: ['passed', 'needs_cleaning'],
         default: 'passed',
     },
-    meterReading: String,
+    meterReading: {
+        type: String,
+        default: '0',
+    },
+    conditionNotes: {
+        type: String,
+        default: '',
+    },
     observations: {
         type: String,
         required: true,
+    },
+    photos: {
+        type: [String],
+        default: [],
+    },
+    timestamp: {
+        type: Date,
+        default: Date.now,
+        index: true,
+    },
+    userConfirmation: {
+        type: Boolean,
+        default: false,
+    },
+    userConfirmedAt: {
+        type: Date,
+    },
+    ownerConfirmation: {
+        type: Boolean,
+        default: false,
+    },
+    ownerConfirmedAt: {
+        type: Date,
     },
     signoffConfirmed: {
         type: Boolean,

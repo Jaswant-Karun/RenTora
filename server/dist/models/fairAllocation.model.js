@@ -36,6 +36,22 @@ const fairAllocationSchema = new mongoose_1.Schema({
         type: Number,
         default: 2,
     },
+    maxReservationsPerAssetPer14Days: {
+        type: Number,
+        default: 3,
+    },
+    cooldownPeriodDays: {
+        type: Number,
+        default: 14,
+    },
+    priorityScoring: {
+        phdScholarPoints: { type: Number, default: 30 },
+        finalYearPoints: { type: Number, default: 20 },
+        undergradPoints: { type: Number, default: 10 },
+        deptPriorityPoints: { type: Number, default: 15 },
+        lowUsageBonusPoints: { type: Number, default: 25 },
+        penaltyDeductionPoints: { type: Number, default: 15 },
+    },
 }, {
     timestamps: true,
 });

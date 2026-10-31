@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.requireRole = exports.authenticate = void 0;
+exports.optionalAuth = exports.requireRole = exports.authenticate = void 0;
 const jwt_js_1 = require("../utils/jwt.js");
 const user_model_js_1 = require("../models/user.model.js");
 const authenticate = async (req, res, next) => {
@@ -63,3 +63,27 @@ const requireRole = (allowedRoles) => {
     };
 };
 exports.requireRole = requireRole;
+const optionalAuth = async (req, _res, next) => {
+    try {
+        let token;
+        if (req.cookies && req.cookies.rentora_token) {
+            token = req.cookies.rentora_token;
+        }
+        if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+            token = req.headers.authorization.split(' ')[1];
+        }
+        if (token) {
+            const decoded = (0, jwt_js_1.verifyToken)(token);
+            const user = await user_model_js_1.User.findById(decoded.userId);
+            if (user) {
+                req.user = user;
+                req.tokenPayload = decoded;
+            }
+        }
+    }
+    catch (_e) {
+        // Session token invalid or expired, continue as unauthenticated guest
+    }
+    next();
+};
+exports.optionalAuth = optionalAuth;

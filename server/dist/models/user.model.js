@@ -56,9 +56,48 @@ const userSchema = new mongoose_1.Schema({
         type: Boolean,
         default: true,
     },
+    institutionMembershipVerified: {
+        type: Boolean,
+        default: true,
+    },
+    academicQualification: {
+        type: String,
+        default: 'Undergraduate',
+        enum: ['Undergraduate', 'Graduate Student', 'Final Year Student', 'PhD Scholar', 'Faculty', 'Postdoctoral Researcher'],
+    },
+    trainingCertifications: {
+        type: [
+            {
+                name: { type: String, required: true },
+                certifiedDate: { type: Date, default: Date.now },
+                expiresAt: { type: Date },
+                credentialId: { type: String, required: true },
+            },
+        ],
+        default: [
+            {
+                name: 'Basic Lab Safety Induction',
+                certifiedDate: new Date('2025-01-15'),
+                credentialId: 'CERT-SAF-001',
+            },
+            {
+                name: 'Equipment Handling Clearance',
+                certifiedDate: new Date('2025-02-01'),
+                credentialId: 'CERT-EHC-042',
+            },
+        ],
+    },
+    historicalUsage: {
+        weeklyHoursUsed: { type: Number, default: 0 },
+        totalHoursLogged: { type: Number, default: 0 },
+        totalCompletedBookings: { type: Number, default: 0 },
+        penaltyPoints: { type: Number, default: 0 },
+        monopolisationCooldownUntil: { type: Date },
+    },
 }, {
     timestamps: true,
 });
+userSchema.index({ role: 1, institution: 1 });
 // Hash password before saving
 userSchema.pre('save', async function (next) {
     if (!this.isModified('password'))
