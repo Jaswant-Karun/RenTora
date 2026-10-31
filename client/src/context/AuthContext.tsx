@@ -68,7 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     refreshProfile();
   }, []);
 
-  const login = async (email: string, password: string, rememberMe?: boolean) => {
+  const login = async (email: string, password: string, rememberMe?: boolean): Promise<User> => {
     setLoading(true);
     try {
       const res = await loginApi({ email, password, rememberMe });
@@ -78,13 +78,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setToken(res.data.token);
         }
         setUser(res.data.user);
+        return res.data.user;
       }
+      throw new Error(res.message || 'Login failed');
     } finally {
       setLoading(false);
     }
   };
 
-  const register = async (userData: any) => {
+  const register = async (userData: any): Promise<User> => {
     setLoading(true);
     try {
       const res = await registerApi(userData);
@@ -94,7 +96,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setToken(res.data.token);
         }
         setUser(res.data.user);
+        return res.data.user;
       }
+      throw new Error(res.message || 'Registration failed');
     } finally {
       setLoading(false);
     }
@@ -117,12 +121,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return res.message;
   };
 
-  const switchDemoRole = async (targetRole: UserRole) => {
+  const switchDemoRole = async (targetRole: UserRole): Promise<User> => {
     const targetDemo = demoAccounts.find((d) => d.role === targetRole);
     if (!targetDemo) {
       throw new Error(`Demo account for role ${targetRole} not found`);
     }
-    await login(targetDemo.email, targetDemo.password);
+    return await login(targetDemo.email, targetDemo.password);
   };
 
   return (
