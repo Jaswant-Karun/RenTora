@@ -808,6 +808,24 @@ export const ManagerDashboardPage: React.FC = () => {
                   )}
 
                   <div className="pt-2 border-t border-slate-800 flex items-center justify-end gap-2">
+                    <button
+                      onClick={() =>
+                        setSelectedAiIncident({
+                          incidentId: inc._id,
+                          description: inc.description,
+                          category: inc.category || 'equipment_damage',
+                          resourceName: inc.resource?.name || inc.resourceName || 'Institutional Equipment',
+                          reportedBy: inc.reportedBy?.name || inc.reportedBy || 'Student Researcher',
+                          severity: inc.severity || 'medium',
+                          evidence: inc.evidence || [],
+                        })
+                      }
+                      className="px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                      AI Review Assistant
+                    </button>
+
                     {inc.status !== 'resolved' ? (
                       <button
                         onClick={() => handleUpdateIncident(inc._id, 'resolved')}
@@ -1058,6 +1076,15 @@ export const ManagerDashboardPage: React.FC = () => {
             showToast('Manager override applied successfully and committed to permanent ledger.');
             await fetchAllData();
           }}
+        />
+      )}
+
+      {/* AI Incident Summary Assistant Modal */}
+      {selectedAiIncident && (
+        <IncidentSummaryModal
+          isOpen={!!selectedAiIncident}
+          incidentData={selectedAiIncident}
+          onClose={() => setSelectedAiIncident(null)}
         />
       )}
     </div>

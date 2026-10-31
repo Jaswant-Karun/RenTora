@@ -7,6 +7,7 @@ import { DashboardStats, CategoryDistribution, BookingActivityItem } from '../ty
 import { Resource, Booking, NotificationItem } from '../types/resource';
 import { ResourceCard } from '../components/resources/ResourceCard';
 import { BookingModal } from '../components/resources/BookingModal';
+import { SmartResourceMatcherModal } from '../components/ai/SmartResourceMatcherModal';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { Badge } from '../components/common/Badge';
 import {
