@@ -14,6 +14,7 @@ import fairShareRoutes from './fairShare.routes.js';
 import trustPassRoutes from './trustPass.routes.js';
 import conditionGuardRoutes from './conditionGuard.routes.js';
 import uploadRoutes from './upload.routes.js';
+import resourcePulseRoutes from './resourcePulse.routes.js';
 import { getDBStatus } from '../config/db.js';
 
 const router = Router();
@@ -55,5 +56,6 @@ router.use('/fairshare', fairShareRoutes);
 router.use('/trustpass', trustPassRoutes);
 router.use('/condition-guard', conditionGuardRoutes);
 router.use('/upload', uploadRoutes);
+router.use('/resource-pulse', resourcePulseRoutes);
 
 export default router;
