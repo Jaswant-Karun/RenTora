@@ -738,8 +738,26 @@ export const seedDatabase = async () => {
       },
     ];
 
+    const createdBookings: any[] = [];
     for (const bData of sampleBookings) {
-      await Booking.create(bData);
+      const b = await Booking.create({
+        ...bData,
+        startTime: new Date(`${bData.date}T09:00:00`),
+        endTime: new Date(`${bData.date}T12:00:00`),
+        durationHours: 3,
+        auditTrail: [
+          {
+            transition: 'INITIAL_SEED',
+            fromStatus: 'none',
+            toStatus: bData.status,
+            performedBy: 'System Seed',
+            performedByRole: 'system',
+            timestamp: new Date(),
+            note: 'Seeded initial booking.',
+          },
+        ],
+      });
+      createdBookings.push(b);
     }
     console.log(` -> Created ${sampleBookings.length} representative user bookings`);
 
@@ -781,7 +799,7 @@ export const seedDatabase = async () => {
       {
         resourceId: createdResources[0]._id,
         resourceName: createdResources[0].name,
-        bookingId: sampleBookings[0]._id,
+        bookingId: createdBookings[0]?._id,
         inspectorName: 'Dr. Meera Raman',
         type: 'check_out',
         operationalStatus: 'optimal',

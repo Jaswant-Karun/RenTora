@@ -4,8 +4,30 @@ const express_1 = require("express");
 const booking_controller_js_1 = require("../controllers/booking.controller.js");
 const auth_middleware_js_1 = require("../middleware/auth.middleware.js");
 const router = (0, express_1.Router)();
+// All booking operations require an authenticated session
 router.use(auth_middleware_js_1.authenticate);
-router.get('/', booking_controller_js_1.getMyBookings);
+// Pre-check system diagnostics before submission (Step 3)
+router.post('/pre-check', booking_controller_js_1.preCheckBooking);
+// Submit booking request (Step 4 & 5)
 router.post('/', booking_controller_js_1.createBooking);
-router.patch('/:id/status', booking_controller_js_1.updateBookingStatus);
+// List current user's bookings (with dynamic overdue detection)
+router.get('/', booking_controller_js_1.getMyBookings);
+// Get single booking with full visual timeline & audit logs
+router.get('/:id', booking_controller_js_1.getBookingById);
+// Step 7: Custodian marks request under review
+router.post('/:id/review', booking_controller_js_1.putBookingUnderReview);
+// Step 7 & 8: Custodian approves request
+router.post('/:id/approve', booking_controller_js_1.approveBookingRequest);
+// Step 7: Custodian rejects request with mandatory reason
+router.post('/:id/reject', booking_controller_js_1.rejectBookingRequest);
+// Move request to priority waitlist
+router.post('/:id/waitlist', booking_controller_js_1.waitlistBookingRequest);
+// Step 9 & 10: Check-In & record initial condition
+router.post('/:id/check-in', booking_controller_js_1.checkInBooking);
+// Step 12: User initiates check-out & records return condition
+router.post('/:id/initiate-return', booking_controller_js_1.initiateReturn);
+// Step 13 & 14: Custodian confirms return inspection & marks completed
+router.post('/:id/confirm-return', booking_controller_js_1.confirmReturnAndComplete);
+// Cancel booking with stated reason
+router.post('/:id/cancel', booking_controller_js_1.cancelBooking);
 exports.default = router;

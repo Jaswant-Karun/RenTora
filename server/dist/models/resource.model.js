@@ -98,6 +98,32 @@ const resourceSchema = new mongoose_1.Schema({
         type: Boolean,
         default: true,
     },
+    approvalStatus: {
+        type: String,
+        enum: ['approved', 'pending_manager', 'rejected'],
+        default: 'approved',
+        index: true,
+    },
+    availabilitySchedule: {
+        type: String,
+        default: 'Monday - Friday (09:00 - 18:00)',
+    },
+    minBookingDuration: {
+        type: String,
+        default: '1 hour',
+    },
+    maxBookingDuration: {
+        type: String,
+        default: '4 hours',
+    },
+    supervisionRequirement: {
+        type: String,
+        default: 'Self-Operated after training clearance',
+    },
+    depositConditions: {
+        type: String,
+        default: 'None',
+    },
     specifications: {
         type: Map,
         of: String,

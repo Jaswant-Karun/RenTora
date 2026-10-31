@@ -51,6 +51,38 @@ export interface Resource {
   updatedAt: string;
 }
 
+export type BookingStatus =
+  | 'pending'
+  | 'under_review'
+  | 'approved'
+  | 'rejected'
+  | 'waitlisted'
+  | 'checked_in'
+  | 'return_pending'
+  | 'completed'
+  | 'cancelled'
+  | 'overdue'
+  | 'active';
+
+export interface AuditEntry {
+  transition: string;
+  fromStatus: string;
+  toStatus: string;
+  performedBy: string;
+  performedByRole: string;
+  timestamp: string;
+  note?: string;
+}
+
+export interface ConditionSnapshot {
+  conditionNotes: string;
+  meterReading?: string;
+  cleanliness: 'passed' | 'needs_cleaning';
+  operationalStatus: 'optimal' | 'minor_wear' | 'damaged' | 'offline';
+  recordedBy: string;
+  recordedAt: string;
+}
+
 export interface Booking {
   _id: string;
   userId?: string;
@@ -84,20 +116,33 @@ export interface Booking {
   timeSlot?: string;
   startTime: string;
   endTime: string;
+  durationHours?: number;
   purpose: string;
+  projectDescription?: string;
+  expectedDuration?: string;
+  additionalInformation?: string;
   supervisorName?: string;
-  status: 'active' | 'pending' | 'completed' | 'cancelled' | 'rejected' | 'waitlisted';
+  trainingAcknowledged?: boolean;
+  status: BookingStatus;
   rejectionReason?: string;
   cancellationReason?: string;
+  waitlistReason?: string;
+  waitlistPriority?: number;
   checkedIn?: boolean;
   checkedInAt?: string;
+  initialCondition?: ConditionSnapshot;
+  returnInitiated?: boolean;
+  returnInitiatedAt?: string;
+  returnCondition?: ConditionSnapshot;
   checkedOut?: boolean;
   checkedOutAt?: string;
-  conditionNotes?: string;
-  meterReading?: string;
+  conditionOnCheckout?: string;
   conflictDetected?: boolean;
+  isOverdue?: boolean;
+  auditTrail?: AuditEntry[];
   notes?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface NotificationItem {

@@ -9,6 +9,8 @@ const resource_routes_js_1 = __importDefault(require("./resource.routes.js"));
 const booking_routes_js_1 = __importDefault(require("./booking.routes.js"));
 const dashboard_routes_js_1 = __importDefault(require("./dashboard.routes.js"));
 const notification_routes_js_1 = __importDefault(require("./notification.routes.js"));
+const owner_routes_js_1 = __importDefault(require("./owner.routes.js"));
+const manager_routes_js_1 = __importDefault(require("./manager.routes.js"));
 const db_js_1 = require("../config/db.js");
 const router = (0, express_1.Router)();
 // Health Check
@@ -36,4 +38,6 @@ router.use('/resources', resource_routes_js_1.default);
 router.use('/bookings', booking_routes_js_1.default);
 router.use('/dashboard', dashboard_routes_js_1.default);
 router.use('/notifications', notification_routes_js_1.default);
+router.use('/owner', owner_routes_js_1.default);
+router.use('/manager', manager_routes_js_1.default);
 exports.default = router;

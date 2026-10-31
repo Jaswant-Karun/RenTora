@@ -11,6 +11,10 @@ const user_model_js_1 = require("../models/user.model.js");
 const resource_model_js_1 = require("../models/resource.model.js");
 const booking_model_js_1 = require("../models/booking.model.js");
 const notification_model_js_1 = require("../models/notification.model.js");
+const conditionReport_model_js_1 = require("../models/conditionReport.model.js");
+const incident_model_js_1 = require("../models/incident.model.js");
+const dispute_model_js_1 = require("../models/dispute.model.js");
+const fairAllocation_model_js_1 = require("../models/fairAllocation.model.js");
 dotenv_1.default.config();
 const demoUsers = [
     {
@@ -629,6 +633,10 @@ const seedDatabase = async () => {
         await resource_model_js_1.Resource.deleteMany({});
         await booking_model_js_1.Booking.deleteMany({});
         await notification_model_js_1.Notification.deleteMany({});
+        await conditionReport_model_js_1.ConditionReport.deleteMany({});
+        await incident_model_js_1.Incident.deleteMany({});
+        await dispute_model_js_1.Dispute.deleteMany({});
+        await fairAllocation_model_js_1.FairAllocation.deleteMany({});
         console.log('[Seed] Creating demo role accounts...');
         const createdUsers = {};
         for (const userData of demoUsers) {
@@ -705,8 +713,26 @@ const seedDatabase = async () => {
                 notes: 'Print inspected and validated by lab supervisor',
             },
         ];
+        const createdBookings = [];
         for (const bData of sampleBookings) {
-            await booking_model_js_1.Booking.create(bData);
+            const b = await booking_model_js_1.Booking.create({
+                ...bData,
+                startTime: new Date(`${bData.date}T09:00:00`),
+                endTime: new Date(`${bData.date}T12:00:00`),
+                durationHours: 3,
+                auditTrail: [
+                    {
+                        transition: 'INITIAL_SEED',
+                        fromStatus: 'none',
+                        toStatus: bData.status,
+                        performedBy: 'System Seed',
+                        performedByRole: 'system',
+                        timestamp: new Date(),
+                        note: 'Seeded initial booking.',
+                    },
+                ],
+            });
+            createdBookings.push(b);
         }
         console.log(` -> Created ${sampleBookings.length} representative user bookings`);
         console.log('[Seed] Generating system notifications...');
@@ -740,6 +766,67 @@ const seedDatabase = async () => {
             await notification_model_js_1.Notification.create(nData);
         }
         console.log(` -> Created ${sampleNotifications.length} system notifications`);
+        console.log('[Seed] Generating sample condition reports...');
+        await conditionReport_model_js_1.ConditionReport.create([
+            {
+                resourceId: createdResources[0]._id,
+                resourceName: createdResources[0].name,
+                bookingId: createdBookings[0]?._id,
+                inspectorName: 'Dr. Meera Raman',
+                type: 'check_out',
+                operationalStatus: 'optimal',
+                cleanliness: 'passed',
+                meterReading: '124 hrs',
+                observations: 'Sputter chamber base pressure reached 1.2e-6 Torr. Nitrogen lines purged and secured.',
+            },
+            {
+                resourceId: createdResources[4]._id,
+                resourceName: createdResources[4].name,
+                inspectorName: 'Dr. Meera Raman',
+                type: 'routine',
+                operationalStatus: 'optimal',
+                cleanliness: 'passed',
+                meterReading: '2,450 GPU-hrs',
+                observations: 'All 8x A100 GPU nodes thermal telemetry normal at 42°C under Slurm idle load.',
+            },
+        ]);
+        console.log('[Seed] Generating sample safety incidents...');
+        await incident_model_js_1.Incident.create([
+            {
+                resourceId: createdResources[8]._id, // CNC
+                resourceName: createdResources[8].name,
+                reportedBy: 'Arun Kumar',
+                userEmail: 'student@rentora.edu',
+                severity: 'medium',
+                title: 'Emergency E-Stop Activated during High-Feed Aluminum Cut',
+                description: 'Workpiece clamp loosened slightly causing minor tool chatter. Operator hit emergency stop immediately. No structural damage.',
+                status: 'investigating',
+                resolutionNotes: 'Spindle runout inspected with dial indicator. Operator cleared for re-machining with mandatory technician supervision.',
+            },
+        ]);
+        console.log('[Seed] Generating sample dispute...');
+        await dispute_model_js_1.Dispute.create([
+            {
+                resourceName: 'Haas Mini Mill 3-Axis CNC Machining Center',
+                userName: 'Arun Kumar',
+                userEmail: 'student@rentora.edu',
+                ownerName: 'Dr. Meera Raman',
+                reason: 'Timeslot delayed by 30 mins due to previous user late cleanout. Requested 30-min compensatory extension.',
+                status: 'open',
+                resolution: '',
+            },
+        ]);
+        console.log('[Seed] Initializing institutional fair allocation policy...');
+        await fairAllocation_model_js_1.FairAllocation.create({
+            institution: 'National Institute of Technology',
+            maxWeeklyHoursPerStudent: 16,
+            maxActiveBookingsPerStudent: 3,
+            peakHourThrottling: true,
+            emergencyBypassEnabled: true,
+            priorityTiers: ['Research Scholar', 'Final Year Student', 'Graduate Student', 'Undergraduate'],
+            advanceBookingDays: 14,
+            cancellationGraceHours: 2,
+        });
         console.log('\n✅ Demo users, resources, bookings, and notifications seeded successfully!');
         console.log('-----------------------------------------------------');
         demoUsers.forEach((u) => {

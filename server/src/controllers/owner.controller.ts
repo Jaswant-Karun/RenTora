@@ -228,11 +228,24 @@ export const getOwnerBookings = async (req: AuthenticatedRequest, res: Response,
 export const approveBooking = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
-    const booking = await Booking.findByIdAndUpdate(id, { status: 'active' }, { new: true });
+    const booking = await Booking.findById(id);
     if (!booking) {
       res.status(404).json({ success: false, message: 'Booking request not found' });
       return;
     }
+
+    const previousStatus = booking.status;
+    booking.status = 'approved';
+    booking.auditTrail.push({
+      transition: 'RESERVATION_APPROVED',
+      fromStatus: previousStatus,
+      toStatus: 'approved',
+      performedBy: req.user?.name || 'Lab Custodian',
+      performedByRole: req.user?.role || 'owner',
+      timestamp: new Date(),
+      note: 'Approved by laboratory custodian.',
+    });
+    await booking.save();
 
     // Notify user
     await Notification.create({
@@ -267,19 +280,25 @@ export const rejectBooking = async (req: AuthenticatedRequest, res: Response, ne
       return;
     }
 
-    const booking = await Booking.findByIdAndUpdate(
-      id,
-      {
-        status: 'rejected',
-        rejectionReason: reason.trim(),
-      },
-      { new: true }
-    );
-
+    const booking = await Booking.findById(id);
     if (!booking) {
       res.status(404).json({ success: false, message: 'Booking request not found' });
       return;
     }
+
+    const previousStatus = booking.status;
+    booking.status = 'rejected';
+    booking.rejectionReason = reason.trim();
+    booking.auditTrail.push({
+      transition: 'RESERVATION_REJECTED',
+      fromStatus: previousStatus,
+      toStatus: 'rejected',
+      performedBy: req.user?.name || 'Lab Custodian',
+      performedByRole: req.user?.role || 'owner',
+      timestamp: new Date(),
+      note: `Rejected by owner. Reason: ${reason.trim()}`,
+    });
+    await booking.save();
 
     // Notify user
     await Notification.create({
@@ -314,19 +333,25 @@ export const cancelBookingByOwner = async (req: AuthenticatedRequest, res: Respo
       return;
     }
 
-    const booking = await Booking.findByIdAndUpdate(
-      id,
-      {
-        status: 'cancelled',
-        cancellationReason: reason.trim(),
-      },
-      { new: true }
-    );
-
+    const booking = await Booking.findById(id);
     if (!booking) {
       res.status(404).json({ success: false, message: 'Booking not found' });
       return;
     }
+
+    const previousStatus = booking.status;
+    booking.status = 'cancelled';
+    booking.cancellationReason = reason.trim();
+    booking.auditTrail.push({
+      transition: 'RESERVATION_CANCELLED',
+      fromStatus: previousStatus,
+      toStatus: 'cancelled',
+      performedBy: req.user?.name || 'Lab Custodian',
+      performedByRole: req.user?.role || 'owner',
+      timestamp: new Date(),
+      note: `Cancelled by custodian. Reason: ${reason.trim()}`,
+    });
+    await booking.save();
 
     // Notify user
     await Notification.create({
@@ -351,19 +376,27 @@ export const cancelBookingByOwner = async (req: AuthenticatedRequest, res: Respo
 export const moveBookingToWaitlist = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
-    const booking = await Booking.findByIdAndUpdate(
-      id,
-      {
-        status: 'waitlisted',
-        notes: 'Placed on priority standby queue by lab owner.',
-      },
-      { new: true }
-    );
+    const { reason } = req.body;
 
+    const booking = await Booking.findById(id);
     if (!booking) {
       res.status(404).json({ success: false, message: 'Booking not found' });
       return;
     }
+
+    const previousStatus = booking.status;
+    booking.status = 'waitlisted';
+    booking.waitlistReason = reason || 'Placed on priority standby queue by lab owner.';
+    booking.auditTrail.push({
+      transition: 'MOVED_TO_WAITLIST',
+      fromStatus: previousStatus,
+      toStatus: 'waitlisted',
+      performedBy: req.user?.name || 'Lab Custodian',
+      performedByRole: req.user?.role || 'owner',
+      timestamp: new Date(),
+      note: `Moved to waitlist: ${booking.waitlistReason}`,
+    });
+    await booking.save();
 
     // Notify user
     await Notification.create({
@@ -396,9 +429,28 @@ export const handleCheckInCheckOut = async (req: AuthenticatedRequest, res: Resp
     }
 
     if (action === 'check_in') {
+      const previousStatus = booking.status;
       booking.checkedIn = true;
       booking.checkedInAt = new Date();
-      booking.status = 'active';
+      booking.status = 'checked_in';
+      booking.isOverdue = false;
+      booking.initialCondition = {
+        conditionNotes: conditionNotes || 'Equipment handed over in verified operational condition.',
+        meterReading: meterReading || '0 hrs',
+        cleanliness: 'passed',
+        operationalStatus: 'optimal',
+        recordedBy: req.user?.name || 'Lab Custodian',
+        recordedAt: new Date(),
+      };
+      booking.auditTrail.push({
+        transition: 'CHECK_IN_PERFORMED',
+        fromStatus: previousStatus,
+        toStatus: 'checked_in',
+        performedBy: req.user?.name || 'Lab Custodian',
+        performedByRole: req.user?.role || 'owner',
+        timestamp: new Date(),
+        note: `Check-in logged by custodian. Meter: ${meterReading || '0'}. Notes: ${conditionNotes || 'Clean'}`,
+      });
       await booking.save();
 
       // Create condition report
@@ -420,10 +472,21 @@ export const handleCheckInCheckOut = async (req: AuthenticatedRequest, res: Resp
         data: booking,
       });
     } else {
+      const previousStatus = booking.status;
       booking.checkedOut = true;
       booking.checkedOutAt = new Date();
       booking.status = 'completed';
       booking.conditionOnCheckout = conditionNotes || 'Satisfactory';
+      booking.isOverdue = false;
+      booking.auditTrail.push({
+        transition: 'RETURN_CONFIRMED_COMPLETED',
+        fromStatus: previousStatus,
+        toStatus: 'completed',
+        performedBy: req.user?.name || 'Lab Custodian',
+        performedByRole: req.user?.role || 'owner',
+        timestamp: new Date(),
+        note: `Check-out finalized by custodian. Condition: ${conditionNotes || 'Clean'}. Meter: ${meterReading || 'N/A'}`,
+      });
       await booking.save();
 
       // Create check-out condition report
@@ -438,6 +501,9 @@ export const handleCheckInCheckOut = async (req: AuthenticatedRequest, res: Resp
         meterReading: meterReading || '4 hrs',
         observations: conditionNotes || 'Equipment returned in clean, operational condition. Session logged.',
       });
+
+      // Free up resource
+      await Resource.findByIdAndUpdate(booking.resourceId, { status: 'available' });
 
       res.status(200).json({
         success: true,
