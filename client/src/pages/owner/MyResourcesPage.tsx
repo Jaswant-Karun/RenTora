@@ -11,13 +11,9 @@ import {
   ExternalLink,
   MapPin,
   Building,
-  CheckCircle2,
-  Clock,
   ShieldAlert,
   Search,
   Filter,
-  Sliders,
-  CheckCircle,
 } from 'lucide-react';
 
 export const MyResourcesPage: React.FC = () => {
@@ -68,17 +64,17 @@ export const MyResourcesPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-            <Cpu className="w-8 h-8 text-brand-400" />
+          <h1 className="text-2xl font-bold text-[#172033] tracking-tight flex items-center gap-2.5">
+            <Cpu className="w-6 h-6 text-[#1769D2]" />
             My Resources & Facilities
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-xs sm:text-sm text-[#64748B] mt-1">
             Manage your registered campus assets, view telemetry, and configure booking parameters.
           </p>
         </div>
         <Link
           to="/owner/add-resource"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-medium shadow-lg shadow-brand-500/20 text-sm transition-all"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1769D2] hover:bg-[#1256B0] text-white text-xs font-semibold shadow-sm transition-all"
         >
           <PlusCircle className="w-4 h-4" />
           Add New Resource
@@ -86,30 +82,30 @@ export const MyResourcesPage: React.FC = () => {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="p-4 rounded-xl bg-white border border-[#E2E8F0] shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="relative w-full md:w-80">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+          <Search className="w-4 h-4 text-[#64748B] absolute left-3 top-2.5" />
           <input
             type="text"
             placeholder="Search by name, category, lab location..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-slate-950/80 border border-slate-800 rounded-xl text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-brand-500"
+            className="w-full pl-9 pr-4 py-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs text-[#172033] placeholder-[#64748B] focus:outline-none focus:border-[#1769D2] focus:bg-white"
           />
         </div>
 
-        <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
-          <span className="text-xs text-slate-400 flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
+          <span className="text-xs text-[#64748B] flex items-center gap-1 shrink-0">
             <Filter className="w-3.5 h-3.5" /> Filter Status:
           </span>
           {(['all', 'available', 'maintenance', 'in-use'] as const).map((st) => (
             <button
               key={st}
               onClick={() => setStatusFilter(st)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors shrink-0 ${
+              className={`px-3 py-1 rounded-lg text-xs font-medium uppercase tracking-wider transition-colors shrink-0 ${
                 statusFilter === st
-                  ? 'bg-brand-600 text-white shadow'
-                  : 'bg-slate-800/80 text-slate-400 hover:text-white'
+                  ? 'bg-[#1769D2] text-white shadow-sm'
+                  : 'bg-[#F8FAFC] border border-[#E2E8F0] text-[#64748B] hover:text-[#172033]'
               }`}
             >
               {st}
@@ -124,10 +120,10 @@ export const MyResourcesPage: React.FC = () => {
           <LoadingSpinner message="Querying registered equipment..." size="md" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="py-16 text-center rounded-2xl border border-dashed border-slate-800 bg-slate-900/30">
-          <Cpu className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-          <h3 className="text-base font-semibold text-slate-300">No resources found</h3>
-          <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+        <div className="py-16 text-center rounded-xl border border-dashed border-[#E2E8F0] bg-white">
+          <Cpu className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+          <h3 className="text-sm font-semibold text-[#172033]">No resources found</h3>
+          <p className="text-xs text-[#64748B] mt-1 max-w-sm mx-auto">
             {search || statusFilter !== 'all'
               ? 'No assets match your search and filter criteria.'
               : 'You have not listed any resources yet. Get started by registering your first lab or equipment.'}
@@ -135,7 +131,7 @@ export const MyResourcesPage: React.FC = () => {
           <div className="mt-4">
             <Link
               to="/owner/add-resource"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-800 text-brand-300 text-xs font-medium hover:bg-slate-700"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#EFF6FF] text-[#1769D2] border border-[#1769D2]/20 text-xs font-semibold hover:bg-blue-100"
             >
               <PlusCircle className="w-3.5 h-3.5" />
               Add Resource Now
@@ -149,32 +145,31 @@ export const MyResourcesPage: React.FC = () => {
               key={res._id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="rounded-2xl border border-slate-800/80 bg-slate-900/60 overflow-hidden flex flex-col hover:border-slate-700/80 transition-all duration-300 group shadow-lg"
+              className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden flex flex-col hover:shadow-md transition-all duration-200 group shadow-sm"
             >
               {/* Image banner */}
-              <div className="h-44 relative overflow-hidden bg-slate-950">
+              <div className="h-44 relative overflow-hidden bg-slate-100">
                 <img
                   src={
                     res.images?.[0] ||
                     'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop'
                   }
                   alt={res.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-black/30" />
                 <div className="absolute top-3 left-3">
-                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-950/80 backdrop-blur-md text-brand-300 border border-brand-500/30">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-white/90 text-[#1769D2] border border-[#E2E8F0] shadow-sm">
                     {res.category}
                   </span>
                 </div>
                 <div className="absolute top-3 right-3 flex items-center gap-1">
                   <span
-                    className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide ${
+                    className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide ${
                       res.status === 'available'
-                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                        ? 'bg-emerald-50 text-[#16834A] border border-emerald-200'
                         : res.status === 'maintenance'
-                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                        : 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
+                        ? 'bg-amber-50 text-[#D97706] border border-amber-200'
+                        : 'bg-indigo-50 text-indigo-700 border border-indigo-200'
                     }`}
                   >
                     {res.status}
@@ -185,45 +180,45 @@ export const MyResourcesPage: React.FC = () => {
               {/* Body */}
               <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                 <div>
-                  <h3 className="text-base font-bold text-white group-hover:text-brand-300 transition-colors line-clamp-1">
+                  <h3 className="text-sm font-bold text-[#172033] group-hover:text-[#1769D2] transition-colors line-clamp-1">
                     {res.name}
                   </h3>
-                  <p className="text-xs text-slate-400 mt-1 line-clamp-2">{res.description}</p>
+                  <p className="text-xs text-[#64748B] mt-1 line-clamp-2">{res.description}</p>
 
-                  <div className="mt-3 space-y-1.5 text-xs text-slate-400">
+                  <div className="mt-3 space-y-1.5 text-xs text-[#64748B]">
                     <div className="flex items-center gap-2">
-                      <Building className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                      <Building className="w-3.5 h-3.5 text-[#64748B] shrink-0" />
                       <span className="truncate">{res.institution}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                      <MapPin className="w-3.5 h-3.5 text-[#64748B] shrink-0" />
                       <span className="truncate">{res.location}</span>
                     </div>
                   </div>
 
                   {/* Badges / specifications preview */}
-                  <div className="mt-4 pt-3 border-t border-slate-800/80 flex flex-wrap gap-1.5">
+                  <div className="mt-4 pt-3 border-t border-[#E2E8F0] flex flex-wrap gap-1.5">
                     {res.approvalRequired && (
-                      <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                      <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-amber-50 text-[#D97706] border border-amber-200">
                         <ShieldAlert className="w-3 h-3" /> Approval Req
                       </span>
                     )}
                     {res.supervisionRequirement && (
-                      <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                      <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-[#EFF6FF] text-[#1769D2] border border-[#1769D2]/20">
                         Supervised
                       </span>
                     )}
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300">
-                      Duration: {res.minBookingDuration || 1}h - {res.maxBookingDuration || 8}h
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-[#F8FAFC] border border-[#E2E8F0] text-[#64748B]">
+                      {res.minBookingDuration || 1}h - {res.maxBookingDuration || 8}h
                     </span>
                   </div>
                 </div>
 
                 {/* Card Actions */}
-                <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                <div className="pt-3 border-t border-[#E2E8F0] flex items-center justify-between gap-2">
                   <Link
                     to={`/dashboard/resources/${res._id}`}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-400 hover:text-brand-300 transition-colors"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#1769D2] hover:text-[#1256B0] transition-colors"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
                     Borrower View
@@ -231,7 +226,7 @@ export const MyResourcesPage: React.FC = () => {
 
                   <button
                     onClick={() => handleDelete(res._id, res.name)}
-                    className="inline-flex items-center gap-1 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 px-2 py-1 rounded transition-colors"
+                    className="inline-flex items-center gap-1 text-xs text-[#DC2626] hover:bg-red-50 px-2 py-1 rounded transition-colors"
                     title="Decommission Resource"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -246,3 +241,5 @@ export const MyResourcesPage: React.FC = () => {
     </div>
   );
 };
+
+export default MyResourcesPage;
