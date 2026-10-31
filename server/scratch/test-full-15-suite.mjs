@@ -229,9 +229,33 @@ async function runTestSuite() {
   }
   console.log(`✅ Test 8 Passed: Booking rejected with documented reason: "${rejectData.data.rejectionReason}"\n`);
 
-  // 9. WAITING LISTS
-  console.log('--- TEST 9: Transparent Waiting Lists ---');
-  // Request overlapping slot on already approved booking (2026-11-15T10:00:00)
+  // 9. WAITING LISTS & DOUBLE-BOOKING PREVENTION
+  console.log('--- TEST 9: Double-Booking Prevention & Transparent Waiting Lists ---');
+  // Attempt to book an overlapping slot without waitlist: must return 409 Conflict
+  const collisionRes = await fetch(`${API_BASE}/bookings`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${testStudentToken}`,
+    },
+    body: JSON.stringify({
+      resourceId: createdResourceId,
+      date: bookingDate,
+      timeSlot: '10:00 - 13:00',
+      startTime: `${bookingDate}T10:00:00`,
+      endTime: `${bookingDate}T13:00:00`,
+      purpose: 'Parallel diffraction study collision test',
+      allowWaitlist: false,
+    }),
+  });
+  const collisionData = await collisionRes.json();
+  console.log('Collision detection response HTTP status:', collisionRes.status, 'Message:', collisionData.message);
+  if (collisionRes.status !== 409 || !collisionData.canWaitlist) {
+    throw new Error('Test 9 Failed: Double booking was not prevented with 409 Conflict!');
+  }
+  console.log('🛡️ Double-booking collision prevented atomically by backend.');
+
+  // Now submit with allowWaitlist: true to join the queue transparently
   const waitlistRes = await fetch(`${API_BASE}/bookings`, {
     method: 'POST',
     headers: {
@@ -245,10 +269,14 @@ async function runTestSuite() {
       startTime: `${bookingDate}T10:00:00`,
       endTime: `${bookingDate}T13:00:00`,
       purpose: 'Parallel diffraction study - standby queue entry',
+      allowWaitlist: true,
     }),
   });
   const waitlistData = await waitlistRes.json();
   console.log('Waitlist response status:', waitlistRes.status, 'Status:', waitlistData.data?.status);
+  if (!waitlistData.success || waitlistData.data?.status !== 'waitlisted') {
+    throw new Error(`Test 9 Failed: Booking could not be waitlisted: ${waitlistData.message}`);
+  }
   waitlistedBookingId = waitlistData.data._id;
 
   // Query transparent waitlist endpoint
