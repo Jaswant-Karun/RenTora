@@ -8,6 +8,7 @@ import ownerRoutes from './owner.routes.js';
 import managerRoutes from './manager.routes.js';
 import incidentRoutes from './incident.routes.js';
 import auditLogRoutes from './auditLog.routes.js';
+import aiRoutes from './ai.routes.js';
 import { getDBStatus } from '../config/db.js';
 
 const router = Router();
@@ -43,5 +44,6 @@ router.use('/owner', ownerRoutes);
 router.use('/manager', managerRoutes);
 router.use('/incidents', incidentRoutes);
 router.use('/audit-logs', auditLogRoutes);
+router.use('/ai', aiRoutes);
 
 export default router;
