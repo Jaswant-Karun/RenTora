@@ -175,7 +175,7 @@ async function runTestSuite() {
   // 7. OWNER APPROVALS
   console.log('--- TEST 7: Owner Approval ---');
   const approveRes = await fetch(`${API_BASE}/bookings/${approvedBookingId}/approve`, {
-    method: 'PATCH',
+    method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${ownerToken}`,
@@ -210,14 +210,15 @@ async function runTestSuite() {
   const req2Data = await req2Res.json();
   rejectedBookingId = req2Data.data._id;
 
-  // Attempt rejection without reason (must fail or require documented reason)
+  // Attempt rejection with documented reason
   const rejectRes = await fetch(`${API_BASE}/bookings/${rejectedBookingId}/reject`, {
-    method: 'PATCH',
+    method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${ownerToken}`,
     },
     body: JSON.stringify({
+      reason: 'Mandatory annual radiation sensor recalibration scheduled during this timeframe.',
       rejectionReason: 'Mandatory annual radiation sensor recalibration scheduled during this timeframe.',
     }),
   });
@@ -262,7 +263,7 @@ async function runTestSuite() {
 
   // 10. CHECK-IN
   console.log('--- TEST 10: Check-In with Initial Condition Verification ---');
-  const checkinRes = await fetch(`${API_BASE}/bookings/${approvedBookingId}/checkin`, {
+  const checkinRes = await fetch(`${API_BASE}/bookings/${approvedBookingId}/check-in`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

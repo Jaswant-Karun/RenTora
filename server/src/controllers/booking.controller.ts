@@ -882,7 +882,7 @@ export const rejectBookingRequest = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const { reason } = req.body;
+    const reason = req.body.reason || req.body.rejectionReason;
 
     if (!reason || !reason.trim()) {
       res.status(400).json({
