@@ -49,7 +49,7 @@ export const ManagerOverrideModal: React.FC<ManagerOverrideModalProps> = ({
           onClose();
         }, 1500);
       } else {
-        setErrorMessage(data.message || 'Error executing manager override.');
+        setErrorMessage(res.data.message || 'Error executing manager override.');
       }
     } catch (err: any) {
       setErrorMessage(err.message || 'Network error applying override.');

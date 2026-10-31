@@ -11,6 +11,7 @@ import {
   X,
 } from 'lucide-react';
 import { LoadingSpinner } from '../common/LoadingSpinner';
+import apiClient from '../../api/client';
 
 export type IncidentCategory =
   | 'equipment_damage'
@@ -82,35 +83,26 @@ export const IncidentReportModal: React.FC<IncidentReportModalProps> = ({
     setSuccessMsg('');
 
     try {
-      const token = localStorage.getItem('rentora_token');
-      const res = await fetch('http://localhost:5000/api/incidents', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          category,
-          title: title.trim() || `${category.replace(/_/g, ' ').toUpperCase()}: ${resourceName || 'Asset'}`,
-          description: description.trim(),
-          evidence,
-          severity,
-          bookingId: defaultBookingId,
-          bookingReference: bookingRef,
-          resourceId: defaultResourceId,
-          resourceName: resourceName || 'Institutional Asset',
-        }),
+      const res = await apiClient.post('/incidents', {
+        category,
+        title: title.trim() || `${category.replace(/_/g, ' ').toUpperCase()}: ${resourceName || 'Asset'}`,
+        description: description.trim(),
+        evidence,
+        severity,
+        bookingId: defaultBookingId,
+        bookingReference: bookingRef,
+        resourceId: defaultResourceId,
+        resourceName: resourceName || 'Institutional Asset',
       });
 
-      const data = await res.json();
-      if (data.success) {
+      if (res.data.success) {
         setSuccessMsg('Incident reported successfully. Safety coordinators notified.');
         setTimeout(() => {
           if (onSuccess) onSuccess();
           onClose();
         }, 1500);
       } else {
-        setErrorMsg(data.message || 'Error creating incident ticket.');
+        setErrorMsg(res.data.message || 'Error creating incident ticket.');
       }
     } catch (err: any) {
       setErrorMsg('Network error connecting to incident registry.');
