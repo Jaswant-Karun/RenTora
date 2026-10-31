@@ -277,17 +277,39 @@ export const MyBookingsPage: React.FC = () => {
 
                     {/* Status Badge */}
                     <td className="py-3 px-4 whitespace-nowrap">
-                      <StatusBadge status={b.status} size="sm" />
-                      {b.isOverdue && (
-                        <span className="ml-1 text-[10px] font-bold text-[#DC2626] bg-red-50 border border-red-200 px-1.5 py-0.5 rounded">
-                          Overdue
-                        </span>
-                      )}
+                      <div className="flex flex-col gap-1 items-start">
+                        <div className="flex items-center space-x-1">
+                          <StatusBadge status={b.status} size="sm" />
+                          {b.isOverdue && (
+                            <span className="text-[10px] font-bold text-[#DC2626] bg-red-50 border border-red-200 px-1.5 py-0.5 rounded">
+                              Overdue
+                            </span>
+                          )}
+                        </div>
+                        {b.status === 'waitlisted' && (
+                          <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded flex items-center">
+                            <Clock className="w-2.5 h-2.5 mr-1" />
+                            Queue #{b.queuePosition || 1}
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     {/* Action Column */}
                     <td className="py-3 px-4 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end space-x-1.5">
+                        {/* FairShare Transparency Trigger */}
+                        {b.fairShareExplanation && (
+                          <button
+                            type="button"
+                            onClick={() => setFairShareModalBooking(b)}
+                            className="p-1.5 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-md transition-colors"
+                            title="View FairShare Allocation Transparency Breakdown"
+                          >
+                            <ShieldCheck className="w-4 h-4" />
+                          </button>
+                        )}
+
                         {/* Details Drawer Trigger */}
                         <button
                           type="button"
