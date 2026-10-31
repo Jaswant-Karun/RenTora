@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Resource } from '../../types/resource';
 import { preCheckBookingApi, createBookingApi, PreCheckResult } from '../../api/booking.api';
+import { detectSchedulingConflictsApi, ConflictDetectionResponse } from '../../api/ai.api';
+import { SchedulingConflictAlert } from '../ai/SchedulingConflictAlert';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 import {
   Calendar,
@@ -18,6 +20,7 @@ import {
   Check,
   AlertCircle,
   HelpCircle,
+  Sparkles,
 } from 'lucide-react';
 
 interface BookingWizardModalProps {
@@ -44,9 +47,45 @@ export const BookingWizardModal: React.FC<BookingWizardModalProps> = ({
   const [startTimeStr, setStartTimeStr] = useState<string>('09:00');
   const [endTimeStr, setEndTimeStr] = useState<string>('12:00');
 
+  // AI Conflict Detection State
+  const [aiConflictData, setAiConflictData] = useState<ConflictDetectionResponse | null>(null);
+  const [checkingConflict, setCheckingConflict] = useState(false);
+
   // Step 3 State (Pre-check result)
   const [preCheckLoading, setPreCheckLoading] = useState(false);
   const [preCheckData, setPreCheckData] = useState<PreCheckResult | null>(null);
+
+  // AI Conflict Scanning
+  const checkAiConflicts = async (dateVal = selectedDate, startVal = startTimeStr, endVal = endTimeStr) => {
+    setCheckingConflict(true);
+    try {
+      const startIso = `${dateVal}T${startVal}:00`;
+      const endIso = `${dateVal}T${endVal}:00`;
+      const res = await detectSchedulingConflictsApi({
+        resourceId: resource._id,
+        startTime: startIso,
+        endTime: endIso,
+        date: dateVal,
+        timeSlot: `${startVal} - ${endVal}`,
+      });
+      if (res.success) {
+        setAiConflictData(res.data);
+      }
+    } catch (err) {
+      console.error('Error scanning AI conflicts:', err);
+    } finally {
+      setCheckingConflict(false);
+    }
+  };
+
+  useEffect(() => {
+    if (currentStep === 2 && selectedDate && startTimeStr && endTimeStr) {
+      const timer = setTimeout(() => {
+        checkAiConflicts(selectedDate, startTimeStr, endTimeStr);
+      }, 400);
+      return () => clearTimeout(timer);
+    }
+  }, [currentStep, selectedDate, startTimeStr, endTimeStr]);
 
   // Step 4 State (User input fields)
   const [purpose, setPurpose] = useState('');
