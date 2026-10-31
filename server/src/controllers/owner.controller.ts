@@ -6,6 +6,7 @@ import { ConditionReport } from '../models/conditionReport.model.js';
 import { Incident } from '../models/incident.model.js';
 import { Notification } from '../models/notification.model.js';
 import { recordAuditLog } from '../utils/auditLogger.js';
+import { FairShareService } from '../services/fairShare.service.js';
 
 // 1. Get Owner Overview Stats & Summary
 export const getOwnerOverview = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
@@ -561,6 +562,9 @@ export const rejectBooking = async (req: AuthenticatedRequest, res: Response, ne
       },
       reason: reason.trim(),
     });
+
+    // Advance waitlist and notify next eligible user
+    await FairShareService.advanceWaitlist(booking.resourceId, booking.date, booking.timeSlot, booking._id?.toString());
 
     res.status(200).json({
       success: true,
