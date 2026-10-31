@@ -13,6 +13,7 @@ import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { EmptyState } from '../components/common/EmptyState';
 import { Button } from '../components/common/Button';
 import { cancelBookingApi, getWaitlistBookingsApi } from '../api/booking.api';
+import { useToast } from '../context/ToastContext';
 
 interface WaitlistItem {
   _id: string;
@@ -33,12 +34,12 @@ interface WaitlistItem {
 }
 
 export const WaitlistPage: React.FC = () => {
+  const { toast } = useToast();
   const [waitlist, setWaitlist] = useState<WaitlistItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState('Found alternate lab arrangement');
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
 
   const fetchWaitlist = async () => {
     setLoading(true);
@@ -63,14 +64,14 @@ export const WaitlistPage: React.FC = () => {
     try {
       const res = await cancelBookingApi(cancellingId, cancelReason);
       if (res.success) {
-        setToastMessage('Waitlist entry cancelled. Queue position released.');
+        toast.success('Waitlist entry cancelled. Queue position released.');
         setShowCancelModal(false);
         setCancellingId(null);
         await fetchWaitlist();
-        setTimeout(() => setToastMessage(''), 4000);
       }
     } catch (err) {
       console.error('Error cancelling waitlist entry:', err);
+      toast.error('Could not cancel waitlist entry');
     }
   };
 

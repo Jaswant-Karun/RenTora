@@ -217,7 +217,7 @@ export const App: React.FC = () => {
             <Route
               path="/owner"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['owner', 'manager', 'admin']}>
                   <OwnerOverviewPage />
                 </ProtectedRoute>
               }
@@ -225,7 +225,7 @@ export const App: React.FC = () => {
             <Route
               path="/owner/resources"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['owner', 'manager', 'admin']}>
                   <MyResourcesPage />
                 </ProtectedRoute>
               }
@@ -233,7 +233,7 @@ export const App: React.FC = () => {
             <Route
               path="/owner/add-resource"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['owner', 'manager', 'admin']}>
                   <AddResourcePage />
                 </ProtectedRoute>
               }
@@ -241,7 +241,7 @@ export const App: React.FC = () => {
             <Route
               path="/owner/requests"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['owner', 'manager', 'admin']}>
                   <OwnerBookingsPage />
                 </ProtectedRoute>
               }
@@ -249,7 +249,7 @@ export const App: React.FC = () => {
             <Route
               path="/owner/approved"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['owner', 'manager', 'admin']}>
                   <OwnerBookingsPage />
                 </ProtectedRoute>
               }
@@ -257,7 +257,7 @@ export const App: React.FC = () => {
             <Route
               path="/owner/checkin"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['owner', 'manager', 'admin']}>
                   <CheckInOutPage />
                 </ProtectedRoute>
               }
@@ -265,7 +265,7 @@ export const App: React.FC = () => {
             <Route
               path="/owner/condition-reports"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['owner', 'manager', 'admin']}>
                   <ConditionReportsPage />
                 </ProtectedRoute>
               }
@@ -273,7 +273,7 @@ export const App: React.FC = () => {
             <Route
               path="/owner/incidents"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['owner', 'manager', 'admin']}>
                   <OwnerIncidentsPage />
                 </ProtectedRoute>
               }
@@ -281,7 +281,7 @@ export const App: React.FC = () => {
             <Route
               path="/owner/calendar"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['owner', 'manager', 'admin']}>
                   <OwnerCalendarPage />
                 </ProtectedRoute>
               }
@@ -289,7 +289,7 @@ export const App: React.FC = () => {
             <Route
               path="/owner/analytics"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['owner', 'manager', 'admin']}>
                   <OwnerAnalyticsPage />
                 </ProtectedRoute>
               }
@@ -297,7 +297,7 @@ export const App: React.FC = () => {
             <Route
               path="/owner/audit"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['owner', 'manager', 'admin']}>
                   <OwnerAuditPage />
                 </ProtectedRoute>
               }
@@ -305,7 +305,7 @@ export const App: React.FC = () => {
             <Route
               path="/owner/settings"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['owner', 'manager', 'admin']}>
                   <OwnerSettingsPage />
                 </ProtectedRoute>
               }
@@ -315,7 +315,7 @@ export const App: React.FC = () => {
             <Route
               path="/manager"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['manager', 'admin']}>
                   <ManagerDashboardPage />
                 </ProtectedRoute>
               }
@@ -323,7 +323,7 @@ export const App: React.FC = () => {
             <Route
               path="/manager/*"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['manager', 'admin']}>
                   <ManagerDashboardPage />
                 </ProtectedRoute>
               }
@@ -333,7 +333,7 @@ export const App: React.FC = () => {
             <Route
               path="/admin"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['admin']}>
                   <AdminDashboardPage />
                 </ProtectedRoute>
               }
@@ -341,7 +341,7 @@ export const App: React.FC = () => {
             <Route
               path="/admin/*"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['admin']}>
                   <AdminDashboardPage />
                 </ProtectedRoute>
               }
@@ -351,8 +351,9 @@ export const App: React.FC = () => {
           </Routes>
         </AppLayout>
       </ErrorBoundary>
-    </AuthProvider>
-  </Router>
+    </ToastProvider>
+  </AuthProvider>
+</Router>
 );
 };
 
