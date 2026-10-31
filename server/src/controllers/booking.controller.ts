@@ -532,9 +532,43 @@ export const createBooking = async (
     if (finalStatus === 'waitlisted') {
       const existingWaitlistCount = await Booking.countDocuments({
         resourceId: resource._id,
-        status: 'waitlisted',
+    // FairShare Transparent Resource Allocation Engine Evaluation
+    const fairShareEval = await FairShareService.evaluateAllocation({
+      userId: req.user._id,
+      resourceId: resource._id,
+      date: formattedDate,
+      timeSlot: formattedTimeSlot,
+      startTime: parsedStart,
+      endTime: parsedEnd,
+      allowWaitlist,
+    });
+
+    // Database-level race safeguard for simultaneous concurrent booking attempts
+    if (finalStatus !== 'waitlisted') {
+      const raceConflict = await Booking.findOne({
+        resourceId: resource._id,
+        status: { $in: ['approved', 'checked_in', 'return_pending', 'active'] },
+        startTime: { $lt: parsedEnd },
+        endTime: { $gt: parsedStart },
       });
-      assignedQueuePos = existingWaitlistCount + 1;
+      if (raceConflict) {
+        if (!allowWaitlist) {
+          res.status(409).json({
+            success: false,
+            message: `Simultaneous booking collision: Slot was just reserved by another user.`,
+            canWaitlist: true,
+            estimatedReleaseTime: raceConflict.endTime,
+          });
+          return;
+        }
+        finalStatus = 'waitlisted';
+        waitlistReasonText = 'Simultaneous booking collision detected. Queued in priority standby.';
+        const existingCount = await Booking.countDocuments({
+          resourceId: resource._id,
+          status: 'waitlisted',
+        });
+        assignedQueuePos = existingCount + 1;
+      }
     }
 
     const booking = await Booking.create({
@@ -566,8 +600,12 @@ export const createBooking = async (
       queuePosition: finalStatus === 'waitlisted' ? assignedQueuePos : undefined,
       estimatedReleaseTime: conflict ? conflict.endTime : undefined,
       monopolisationDetected: monopolisation.monopolised,
+      fairShareExplanation: fairShareEval.explanation,
       auditTrail: [initialAudit],
     });
+
+    // Record in permanent FairShare Decision Ledger
+    await FairShareService.recordDecision(booking, fairShareEval.explanation, req.user);
 
     // Immutable Audit Log in Central Ledger
     await recordAuditLog({
