@@ -1,6 +1,36 @@
 import { Schema, model, Document, Types } from 'mongoose';
 
-export type BookingStatus = 'active' | 'pending' | 'completed' | 'cancelled' | 'rejected' | 'waitlisted';
+export type BookingStatus =
+  | 'pending'
+  | 'under_review'
+  | 'approved'
+  | 'rejected'
+  | 'waitlisted'
+  | 'checked_in'
+  | 'return_pending'
+  | 'completed'
+  | 'cancelled'
+  | 'overdue'
+  | 'active'; // Legacy alias for 'approved'
+
+export interface IAuditEntry {
+  transition: string;
+  fromStatus: string;
+  toStatus: string;
+  performedBy: string;
+  performedByRole: string;
+  timestamp: Date;
+  note?: string;
+}
+
+export interface IConditionSnapshot {
+  conditionNotes: string;
+  meterReading?: string;
+  cleanliness: 'passed' | 'needs_cleaning';
+  operationalStatus: 'optimal' | 'minor_wear' | 'damaged' | 'offline';
+  recordedBy: string;
+  recordedAt: Date;
+}
 
 export interface IBooking extends Document {
   userId: Types.ObjectId;
@@ -14,23 +44,80 @@ export interface IBooking extends Document {
   resourceCategory: string;
   resourceLocation: string;
   resourceImage: string;
+  
+  // Date & Time Scheduling
   date: string;
   timeSlot: string;
+  startTime: Date;
+  endTime: Date;
+  durationHours: number;
+  
+  // Step 4 User Specifications
   purpose: string;
+  projectDescription?: string;
+  expectedDuration?: string;
+  additionalInformation?: string;
   supervisorName?: string;
+  trainingAcknowledged?: boolean;
+
+  // Lifecycle Status & Reasons
   status: BookingStatus;
-  notes?: string;
   rejectionReason?: string;
   cancellationReason?: string;
-  checkedIn?: boolean;
+  waitlistReason?: string;
+  waitlistPriority?: number;
+  notes?: string;
+
+  // Step 9 & 10: Check-In & Initial Condition
+  checkedIn: boolean;
   checkedInAt?: Date;
-  checkedOut?: boolean;
+  initialCondition?: IConditionSnapshot;
+
+  // Step 12: Return Initiation & Return Condition
+  returnInitiated: boolean;
+  returnInitiatedAt?: Date;
+  returnCondition?: IConditionSnapshot;
+
+  // Step 13 & 14: Completed & Checked Out
+  checkedOut: boolean;
   checkedOutAt?: Date;
   conditionOnCheckout?: string;
+
+  // Audit History Trail
+  auditTrail: IAuditEntry[];
+
+  // Flags
   conflictDetected?: boolean;
+  isOverdue?: boolean;
+
   createdAt: Date;
   updatedAt: Date;
 }
+
+const auditEntrySchema = new Schema<IAuditEntry>(
+  {
+    transition: { type: String, required: true },
+    fromStatus: { type: String, required: true },
+    toStatus: { type: String, required: true },
+    performedBy: { type: String, required: true },
+    performedByRole: { type: String, required: true },
+    timestamp: { type: Date, default: Date.now },
+    note: String,
+  },
+  { _id: false }
+);
+
+const conditionSnapshotSchema = new Schema<IConditionSnapshot>(
+  {
+    conditionNotes: { type: String, required: true },
+    meterReading: String,
+    cleanliness: { type: String, enum: ['passed', 'needs_cleaning'], default: 'passed' },
+    operationalStatus: { type: String, enum: ['optimal', 'minor_wear', 'damaged', 'offline'], default: 'optimal' },
+    recordedBy: { type: String, required: true },
+    recordedAt: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
 
 const bookingSchema = new Schema<IBooking>(
   {
@@ -85,28 +172,73 @@ const bookingSchema = new Schema<IBooking>(
       type: String,
       required: true,
     },
+    startTime: {
+      type: Date,
+      required: true,
+      index: true,
+    },
+    endTime: {
+      type: Date,
+      required: true,
+      index: true,
+    },
+    durationHours: {
+      type: Number,
+      default: 1,
+    },
     purpose: {
       type: String,
       required: [true, 'Purpose of reservation is required'],
     },
+    projectDescription: String,
+    expectedDuration: String,
+    additionalInformation: String,
     supervisorName: {
       type: String,
-      default: 'Faculty Advisor',
+      default: 'Faculty Sponsor',
+    },
+    trainingAcknowledged: {
+      type: Boolean,
+      default: true,
     },
     status: {
       type: String,
-      enum: ['active', 'pending', 'completed', 'cancelled', 'rejected', 'waitlisted'],
+      enum: [
+        'pending',
+        'under_review',
+        'approved',
+        'rejected',
+        'waitlisted',
+        'checked_in',
+        'return_pending',
+        'completed',
+        'cancelled',
+        'overdue',
+        'active', // legacy compatibility
+      ],
       default: 'pending',
       index: true,
     },
-    notes: String,
     rejectionReason: String,
     cancellationReason: String,
+    waitlistReason: String,
+    waitlistPriority: {
+      type: Number,
+      default: 1,
+    },
+    notes: String,
     checkedIn: {
       type: Boolean,
       default: false,
     },
     checkedInAt: Date,
+    initialCondition: conditionSnapshotSchema,
+    returnInitiated: {
+      type: Boolean,
+      default: false,
+    },
+    returnInitiatedAt: Date,
+    returnCondition: conditionSnapshotSchema,
     checkedOut: {
       type: Boolean,
       default: false,
@@ -117,10 +249,22 @@ const bookingSchema = new Schema<IBooking>(
       type: Boolean,
       default: false,
     },
+    isOverdue: {
+      type: Boolean,
+      default: false,
+    },
+    auditTrail: {
+      type: [auditEntrySchema],
+      default: [],
+    },
   },
   {
     timestamps: true,
   }
 );
+
+// Compound index for high performance overlap checks and preventing concurrent double booking
+bookingSchema.index({ resourceId: 1, startTime: 1, endTime: 1, status: 1 });
+bookingSchema.index({ userId: 1, status: 1 });
 
 export const Booking = model<IBooking>('Booking', bookingSchema);
