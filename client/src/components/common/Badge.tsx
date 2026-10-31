@@ -3,9 +3,10 @@ import { UserRole } from '../../types/auth';
 
 interface BadgeProps {
   children?: React.ReactNode;
-  variant?: 'brand' | 'success' | 'warning' | 'danger' | 'slate';
+  variant?: 'brand' | 'success' | 'warning' | 'danger' | 'slate' | 'info';
   role?: UserRole;
   size?: 'sm' | 'md';
+  className?: string;
 }
 
 export const Badge: React.FC<BadgeProps> = ({
@@ -13,32 +14,32 @@ export const Badge: React.FC<BadgeProps> = ({
   variant = 'brand',
   role,
   size = 'md',
+  className = '',
 }) => {
-  // If role is passed, map to predefined role styling
   if (role) {
     const roleConfig: Record<UserRole, { label: string; style: string }> = {
       student: {
-        label: 'Student / User',
-        style: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+        label: 'Student / Researcher',
+        style: 'bg-emerald-50 text-[#16834A] border-emerald-200',
       },
       owner: {
-        label: 'Resource Owner',
-        style: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+        label: 'Lab Custodian',
+        style: 'bg-[#EFF6FF] text-[#1769D2] border-blue-200',
       },
       manager: {
-        label: 'Institution Manager',
-        style: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+        label: 'Campus Manager',
+        style: 'bg-amber-50 text-[#D97706] border-amber-200',
       },
       admin: {
-        label: 'Administrator',
-        style: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+        label: 'Platform Admin',
+        style: 'bg-purple-50 text-purple-700 border-purple-200',
       },
     };
 
     const config = roleConfig[role];
     return (
       <span
-        className={`inline-flex items-center font-medium rounded-full border px-2.5 py-0.5 text-xs capitalize ${config.style}`}
+        className={`inline-flex items-center font-medium rounded-full border px-2.5 py-0.5 text-xs ${config.style} ${className}`}
       >
         <span className="w-1.5 h-1.5 rounded-full bg-current mr-1.5 shrink-0" />
         {children || config.label}
@@ -47,21 +48,22 @@ export const Badge: React.FC<BadgeProps> = ({
   }
 
   const variants = {
-    brand: 'bg-brand-500/10 text-brand-300 border-brand-500/20',
-    success: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    warning: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    danger: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
-    slate: 'bg-slate-800 text-slate-300 border-slate-700',
+    brand: 'bg-[#EFF6FF] text-[#1769D2] border-blue-200',
+    info: 'bg-[#EFF6FF] text-[#1769D2] border-blue-200',
+    success: 'bg-emerald-50 text-[#16834A] border-emerald-200',
+    warning: 'bg-amber-50 text-[#D97706] border-amber-200',
+    danger: 'bg-red-50 text-[#DC2626] border-red-200',
+    slate: 'bg-slate-100 text-[#64748B] border-slate-200',
   };
 
   const sizes = {
     sm: 'text-[11px] px-2 py-0.5',
-    md: 'text-xs px-2.5 py-1',
+    md: 'text-xs px-2.5 py-0.5',
   };
 
   return (
     <span
-      className={`inline-flex items-center font-medium rounded-full border ${variants[variant]} ${sizes[size]}`}
+      className={`inline-flex items-center font-medium rounded-full border ${variants[variant]} ${sizes[size]} ${className}`}
     >
       {children}
     </span>

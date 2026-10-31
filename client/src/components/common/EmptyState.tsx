@@ -8,6 +8,7 @@ interface EmptyStateProps {
   description: string;
   actionLabel?: string;
   onAction?: () => void;
+  className?: string;
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
@@ -16,16 +17,17 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   description,
   actionLabel,
   onAction,
+  className = '',
 }) => {
   return (
-    <div className="flex flex-col items-center justify-center p-12 text-center border-2 border-dashed border-slate-800 rounded-3xl bg-slate-900/40">
-      <div className="w-14 h-14 rounded-2xl bg-brand-500/10 text-brand-400 flex items-center justify-center mb-4">
-        {icon || <PackageOpen className="w-7 h-7" />}
+    <div className={`flex flex-col items-center justify-center p-10 text-center border border-[#E2E8F0] rounded-xl bg-white shadow-sm ${className}`}>
+      <div className="w-12 h-12 rounded-xl bg-[#EFF6FF] text-[#1769D2] flex items-center justify-center mb-3">
+        {icon || <PackageOpen className="w-6 h-6" />}
       </div>
-      <h3 className="text-lg font-bold text-slate-200">{title}</h3>
-      <p className="text-sm text-slate-400 mt-1 max-w-sm">{description}</p>
+      <h3 className="text-base font-semibold text-[#172033]">{title}</h3>
+      <p className="text-xs text-[#64748B] mt-1 max-w-sm">{description}</p>
       {actionLabel && onAction && (
-        <div className="mt-6">
+        <div className="mt-4">
           <Button variant="primary" size="sm" onClick={onAction}>
             {actionLabel}
           </Button>

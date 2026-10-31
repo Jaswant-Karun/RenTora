@@ -38,21 +38,21 @@ export class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-[60vh] flex items-center justify-center p-6">
-          <div className="w-full max-w-lg p-8 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl text-center space-y-5">
-            <div className="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center justify-center mx-auto shadow-lg shadow-rose-500/20">
-              <AlertTriangle className="w-7 h-7" />
+        <div className="min-h-[60vh] flex items-center justify-center p-6 bg-[#F8FAFC]">
+          <div className="w-full max-w-lg p-8 rounded-xl bg-white border border-[#E2E8F0] shadow-md text-center space-y-4">
+            <div className="w-12 h-12 rounded-xl bg-red-50 text-[#DC2626] border border-red-200 flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-6 h-6" />
             </div>
 
             <div>
-              <h2 className="text-xl font-bold text-white">
-                {this.props.fallbackTitle || 'A Client Interface Anomaly Occurred'}
+              <h2 className="text-lg font-semibold text-[#172033]">
+                {this.props.fallbackTitle || 'A Client Interface Error Occurred'}
               </h2>
-              <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+              <p className="text-xs text-[#64748B] mt-1.5 leading-relaxed">
                 The application encountered an unexpected runtime state. Your database transactions and session credentials remain fully intact.
               </p>
               {this.state.error && (
-                <div className="mt-3 p-3 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-mono text-rose-300 text-left overflow-x-auto">
+                <div className="mt-3 p-3 rounded-lg bg-slate-50 border border-slate-200 text-[11px] font-mono text-[#DC2626] text-left overflow-x-auto">
                   {this.state.error.message}
                 </div>
               )}
@@ -61,16 +61,16 @@ export class ErrorBoundary extends Component<Props, State> {
             <div className="flex items-center justify-center gap-3 pt-2">
               <button
                 onClick={this.handleReset}
-                className="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold shadow-lg shadow-brand-500/20 transition-all flex items-center gap-2"
+                className="px-4 py-2 rounded-lg bg-[#1769D2] hover:bg-[#1256B0] text-white text-xs font-medium shadow-sm transition-colors flex items-center gap-2"
               >
-                <RefreshCw className="w-4 h-4" />
+                <RefreshCw className="w-3.5 h-3.5" />
                 Reload View
               </button>
               <button
                 onClick={this.handleGoHome}
-                className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold border border-slate-700 transition-all flex items-center gap-2"
+                className="px-4 py-2 rounded-lg bg-white hover:bg-slate-50 text-[#172033] text-xs font-medium border border-[#E2E8F0] shadow-sm transition-colors flex items-center gap-2"
               >
-                <Home className="w-4 h-4" />
+                <Home className="w-3.5 h-3.5" />
                 Return to Dashboard
               </button>
             </div>

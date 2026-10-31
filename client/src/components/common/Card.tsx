@@ -4,21 +4,21 @@ interface CardProps {
   children: React.ReactNode;
   className?: string;
   hoverEffect?: boolean;
+  onClick?: () => void;
 }
 
 export const Card: React.FC<CardProps> = ({
   children,
   className = '',
   hoverEffect = false,
+  onClick,
 }) => {
   return (
     <div
-      className={`bg-slate-900/70 backdrop-blur-md border border-slate-800/80 rounded-2xl p-6 shadow-xl transition-all duration-300
-        ${
-          hoverEffect
-            ? 'hover:border-slate-700 hover:shadow-2xl hover:shadow-brand-500/5 hover:-translate-y-1'
-            : ''
-        } ${className}`}
+      onClick={onClick}
+      className={`bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm transition-all duration-200 text-[#172033] ${
+        hoverEffect ? 'hover:border-[#CBD5E1] hover:shadow-md cursor-pointer' : ''
+      } ${className}`}
     >
       {children}
     </div>

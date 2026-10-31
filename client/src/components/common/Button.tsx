@@ -2,7 +2,7 @@ import React from 'react';
 import { Loader2 } from 'lucide-react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'light-blue';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
@@ -21,25 +21,27 @@ export const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   const baseStyles =
-    'inline-flex items-center justify-center font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none disabled:active:scale-100';
+    'inline-flex items-center justify-center font-medium rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white disabled:opacity-50 disabled:pointer-events-none';
 
   const variants = {
     primary:
-      'bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white shadow-lg shadow-brand-500/25 focus:ring-brand-500 border border-brand-400/20',
+      'bg-[#1769D2] hover:bg-[#1256B0] text-white shadow-sm focus:ring-[#1769D2] border border-transparent',
     secondary:
-      'bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700/60 focus:ring-slate-500',
+      'bg-white hover:bg-slate-50 text-[#172033] border border-[#E2E8F0] shadow-sm focus:ring-[#1769D2]',
     outline:
-      'border-2 border-brand-500/50 hover:border-brand-400 text-brand-300 hover:text-white hover:bg-brand-500/10 focus:ring-brand-500',
+      'bg-transparent border border-[#1769D2] text-[#1769D2] hover:bg-[#EFF6FF] focus:ring-[#1769D2]',
     ghost:
-      'text-slate-300 hover:text-white hover:bg-slate-800/60 focus:ring-slate-500',
+      'text-[#64748B] hover:text-[#172033] hover:bg-slate-100 focus:ring-slate-300',
     danger:
-      'bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/20 focus:ring-rose-500',
+      'bg-[#DC2626] hover:bg-red-700 text-white shadow-sm focus:ring-[#DC2626] border border-transparent',
+    'light-blue':
+      'bg-[#EFF6FF] hover:bg-blue-100 text-[#1769D2] border border-blue-200 focus:ring-[#1769D2]',
   };
 
   const sizes = {
-    sm: 'text-xs px-3 py-1.5 gap-1.5',
-    md: 'text-sm px-4 py-2.5 gap-2',
-    lg: 'text-base px-6 py-3.5 gap-2.5 font-semibold',
+    sm: 'text-xs px-2.5 py-1.5 gap-1.5',
+    md: 'text-sm px-3.5 py-2 gap-2',
+    lg: 'text-base px-5 py-2.5 gap-2 font-medium',
   };
 
   return (
