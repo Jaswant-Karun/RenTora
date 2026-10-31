@@ -126,6 +126,12 @@ export const ManagerDashboardPage: React.FC = () => {
   const [bookingFilterStatus, setBookingFilterStatus] = useState<string>('all');
   const [bookingSearch, setBookingSearch] = useState<string>('');
 
+  // FairShare Transparency Ledger States
+  const [fairShareDecisions, setFairShareDecisions] = useState<FairShareDecisionItem[]>([]);
+  const [selectedFairShareExplanation, setSelectedFairShareExplanation] = useState<any | null>(null);
+  const [fairShareDecisionFilter, setFairShareDecisionFilter] = useState<string>('all');
+  const [fairShareSearch, setFairShareSearch] = useState<string>('');
+
   // User & Owner Verification Filter States
   const [userRoleFilter, setUserRoleFilter] = useState<'all' | 'student' | 'owner'>('all');
   const [userVerifyFilter, setUserVerifyFilter] = useState<'all' | 'verified' | 'unverified'>('all');
