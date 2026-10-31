@@ -34,6 +34,10 @@ import { OwnerSettingsPage } from './pages/owner/OwnerSettingsPage';
 // Manager Pages
 import { ManagerDashboardPage } from './pages/manager/ManagerDashboardPage';
 
+// Admin Pages
+import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
+
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
 
@@ -74,8 +78,9 @@ export const App: React.FC = () => {
   return (
     <Router>
       <AuthProvider>
-        <AppLayout>
-          <Routes>
+        <ErrorBoundary>
+          <AppLayout>
+            <Routes>
             {/* First Screen: Animated Introduction Screen */}
             <Route path="/" element={<IntroScreen />} />
             <Route path="/intro" element={<IntroScreen />} />
@@ -307,12 +312,31 @@ export const App: React.FC = () => {
               }
             />
 
+            {/* Global System Administrator Console */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AdminDashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/*"
+              element={
+                <ProtectedRoute>
+                  <AdminDashboardPage />
+                </ProtectedRoute>
+              }
+            />
+
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </AppLayout>
-      </AuthProvider>
-    </Router>
-  );
+      </ErrorBoundary>
+    </AuthProvider>
+  </Router>
+);
 };
 
 export default App;

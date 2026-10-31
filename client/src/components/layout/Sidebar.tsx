@@ -36,6 +36,7 @@ export const Sidebar: React.FC = () => {
   const role = user.role;
   const isOwnerPath = location.pathname.startsWith('/owner');
   const isManagerPath = location.pathname.startsWith('/manager');
+  const isAdminPath = location.pathname.startsWith('/admin');
 
   // Exact 12 Owner items requested
   const ownerNavItems = [
@@ -51,6 +52,16 @@ export const Sidebar: React.FC = () => {
     { label: 'Analytics', to: '/owner/analytics', icon: BarChart3 },
     { label: 'Audit History', to: '/owner/audit', icon: History },
     { label: 'Settings', to: '/owner/settings', icon: Settings },
+  ];
+
+  // Admin items
+  const adminNavItems = [
+    { label: 'Platform Overview', to: '/admin', icon: LayoutDashboard },
+    { label: 'User Management', to: '/admin', icon: Users },
+    { label: 'Resource Governance', to: '/admin', icon: Cpu },
+    { label: 'Institutions', to: '/admin', icon: Building2 },
+    { label: 'Audit Ledger', to: '/admin', icon: History },
+    { label: 'System Settings', to: '/admin', icon: Settings },
   ];
 
   // Manager items
@@ -79,10 +90,13 @@ export const Sidebar: React.FC = () => {
   let navItems = userNavItems;
   let sectionTitle = 'Main Workspace';
 
-  if (role === 'owner' || isOwnerPath) {
+  if (role === 'admin' || isAdminPath) {
+    navItems = adminNavItems;
+    sectionTitle = 'System Admin Console';
+  } else if (role === 'owner' || isOwnerPath) {
     navItems = ownerNavItems;
     sectionTitle = 'Owner Custodian Console';
-  } else if ((role === 'manager' || role === 'admin') && isManagerPath) {
+  } else if (role === 'manager' && isManagerPath) {
     navItems = managerNavItems;
     sectionTitle = 'Institutional Governance';
   }
@@ -114,7 +128,7 @@ export const Sidebar: React.FC = () => {
               to="/dashboard"
               className={({ isActive }) =>
                 `p-1.5 rounded-lg text-center transition-colors ${
-                  !isOwnerPath && !isManagerPath
+                  !isOwnerPath && !isManagerPath && !isAdminPath
                     ? 'bg-slate-800 text-white shadow'
                     : 'text-slate-400 hover:text-white'
                 }`
@@ -123,16 +137,16 @@ export const Sidebar: React.FC = () => {
               Borrower View
             </NavLink>
             <NavLink
-              to={role === 'owner' ? '/owner' : '/manager'}
+              to={role === 'admin' ? '/admin' : role === 'owner' ? '/owner' : '/manager'}
               className={({ isActive }) =>
                 `p-1.5 rounded-lg text-center transition-colors ${
-                  isOwnerPath || isManagerPath
+                  isOwnerPath || isManagerPath || isAdminPath
                     ? 'bg-brand-600 text-white shadow'
                     : 'text-slate-400 hover:text-white'
                 }`
               }
             >
-              {role === 'owner' ? 'Owner Console' : 'Manager Hub'}
+              {role === 'admin' ? 'Admin Hub' : role === 'owner' ? 'Owner Console' : 'Manager Hub'}
             </NavLink>
           </div>
         )}

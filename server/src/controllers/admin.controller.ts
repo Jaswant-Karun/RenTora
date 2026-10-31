@@ -135,16 +135,16 @@ export const updateAdminUserRole = async (
     await user.save();
 
     await recordAuditLog({
-      action: 'manager_decision',
-      entityType: 'user',
+      action: 'MANAGER_DECISION',
+      entityType: 'User',
       entityId: user._id.toString(),
-      entityName: user.name,
-      userId: req.user!._id.toString(),
-      userName: req.user!.name,
-      userRole: req.user!.role,
-      userEmail: req.user!.email,
-      details: `Administrator updated user ${user.email}: Role transitioned from ${previousRole} to ${user.role}. Verified: ${user.isVerified}`,
-      metadata: { previousRole, newRole: user.role, isVerified: user.isVerified },
+      entityTitle: user.name,
+      actorId: req.user!._id,
+      actorName: req.user!.name,
+      actorRole: req.user!.role,
+      actorEmail: req.user!.email,
+      reason: `Role transitioned from ${previousRole} to ${user.role}`,
+      details: { previousRole, newRole: user.role, isVerified: user.isVerified },
     });
 
     res.status(200).json({
@@ -177,15 +177,16 @@ export const deleteAdminUser = async (
     }
 
     await recordAuditLog({
-      action: 'manager_decision',
-      entityType: 'user',
+      action: 'MANAGER_DECISION',
+      entityType: 'User',
       entityId: user._id.toString(),
-      entityName: user.name,
-      userId: req.user!._id.toString(),
-      userName: req.user!.name,
-      userRole: req.user!.role,
-      userEmail: req.user!.email,
-      details: `Administrator purged user account ${user.email} (${user.role}) from institutional registry.`,
+      entityTitle: user.name,
+      actorId: req.user!._id,
+      actorName: req.user!.name,
+      actorRole: req.user!.role,
+      actorEmail: req.user!.email,
+      reason: `Purged user account ${user.email} from registry`,
+      details: { email: user.email, role: user.role, institution: user.institution },
     });
 
     res.status(200).json({
@@ -268,15 +269,20 @@ export const updateAdminResource = async (
     await resource.save();
 
     await recordAuditLog({
-      action: 'resource_updated',
-      entityType: 'resource',
+      action: 'RESOURCE_UPDATE',
+      entityType: 'Resource',
       entityId: resource._id.toString(),
-      entityName: resource.name,
-      userId: req.user!._id.toString(),
-      userName: req.user!.name,
-      userRole: req.user!.role,
-      userEmail: req.user!.email,
-      details: `Administrator modified resource governance: Status=${resource.status}, Approval=${resource.approvalStatus}, Restricted=${resource.isRestricted}`,
+      entityTitle: resource.name,
+      actorId: req.user!._id,
+      actorName: req.user!.name,
+      actorRole: req.user!.role,
+      actorEmail: req.user!.email,
+      reason: 'Administrator updated resource governance and operational status',
+      details: {
+        status: resource.status,
+        approvalStatus: resource.approvalStatus,
+        isRestricted: resource.isRestricted,
+      },
     });
 
     res.status(200).json({
@@ -304,15 +310,16 @@ export const deleteAdminResource = async (
     }
 
     await recordAuditLog({
-      action: 'manager_decision',
-      entityType: 'resource',
+      action: 'MANAGER_DECISION',
+      entityType: 'Resource',
       entityId: resource._id.toString(),
-      entityName: resource.name,
-      userId: req.user!._id.toString(),
-      userName: req.user!.name,
-      userRole: req.user!.role,
-      userEmail: req.user!.email,
-      details: `Administrator decommissioned resource ${resource.name} from campus sharing catalog.`,
+      entityTitle: resource.name,
+      actorId: req.user!._id,
+      actorName: req.user!.name,
+      actorRole: req.user!.role,
+      actorEmail: req.user!.email,
+      reason: `Decommissioned resource ${resource.name} from catalog`,
+      details: { category: resource.category, location: resource.location },
     });
 
     res.status(200).json({
@@ -407,15 +414,16 @@ export const createAdminInstitution = async (
     });
 
     await recordAuditLog({
-      action: 'resource_created',
-      entityType: 'resource',
+      action: 'RESOURCE_CREATION',
+      entityType: 'Resource',
       entityId: institution._id.toString(),
-      entityName: institution.name,
-      userId: req.user!._id.toString(),
-      userName: req.user!.name,
-      userRole: req.user!.role,
-      userEmail: req.user!.email,
-      details: `Registered new partner institution: ${institution.name} (${institution.code}).`,
+      entityTitle: institution.name,
+      actorId: req.user!._id,
+      actorName: req.user!.name,
+      actorRole: req.user!.role,
+      actorEmail: req.user!.email,
+      reason: `Registered new partner institution: ${institution.name} (${institution.code})`,
+      details: { code: institution.code, domain: institution.domain, tier: institution.partnershipTier },
     });
 
     res.status(201).json({
@@ -476,15 +484,16 @@ export const updateAdminSettings = async (
     await settings.save();
 
     await recordAuditLog({
-      action: 'manager_decision',
-      entityType: 'resource',
+      action: 'MANAGER_DECISION',
+      entityType: 'System',
       entityId: settings._id.toString(),
-      entityName: 'System Configuration',
-      userId: req.user!._id.toString(),
-      userName: req.user!.name,
-      userRole: req.user!.role,
-      userEmail: req.user!.email,
-      details: `Administrator updated platform configuration settings (Maintenance: ${settings.maintenanceMode}, MaxActive: ${settings.maxActiveBookingsPerUser}).`,
+      entityTitle: 'System Configuration',
+      actorId: req.user!._id,
+      actorName: req.user!.name,
+      actorRole: req.user!.role,
+      actorEmail: req.user!.email,
+      reason: `Updated platform configuration (Maintenance: ${settings.maintenanceMode}, MaxActive: ${settings.maxActiveBookingsPerUser})`,
+      details: { maintenanceMode: settings.maintenanceMode, maxActive: settings.maxActiveBookingsPerUser },
     });
 
     res.status(200).json({
