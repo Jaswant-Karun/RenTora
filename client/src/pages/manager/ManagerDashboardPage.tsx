@@ -180,9 +180,6 @@ export const ManagerDashboardPage: React.FC = () => {
       }
       if (bookingsRes.success) setInstitutionalBookings(bookingsRes.data);
       if (waitlistRes.success) setWaitlistBookings(waitlistRes.data);
-    } catch (e) {
-      console.error('Error fetching manager data:', e);
-      }
     } catch (err) {
       console.error('Error loading manager dashboard data:', err);
     } finally {
