@@ -11,6 +11,7 @@ import { TableRowSkeleton } from '../components/common/SkeletonLoader';
 import { EmptyState } from '../components/common/EmptyState';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
+import { useToast } from '../context/ToastContext';
 import {
   CalendarCheck,
   Clock,
@@ -35,6 +36,7 @@ import {
 
 export const MyBookingsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -87,10 +89,14 @@ export const MyBookingsPage: React.FC = () => {
       const res = await cancelBookingApi(cancelBookingId, cancelReason.trim());
       if (res.success) {
         setCancelBookingId(null);
+        toast.success('Reservation cancelled successfully. Slot freed for waiting peers.');
         await fetchBookings();
+      } else {
+        toast.error('Unable to cancel booking: ' + (res.message || 'Server error'));
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error cancelling reservation:', err);
+      toast.error(err.response?.data?.message || 'Error cancelling reservation');
     } finally {
       setCancelling(false);
     }

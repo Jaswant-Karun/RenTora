@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { getOwnerOverviewApi, deleteOwnerResourceApi } from '../../api/owner.api';
 import { OwnerOverviewData } from '../../api/owner.api';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { useToast } from '../../context/ToastContext';
 import {
   Cpu,
   Inbox,
@@ -15,6 +16,7 @@ import {
 } from 'lucide-react';
 
 export const OwnerOverviewPage: React.FC = () => {
+  const { toast } = useToast();
   const [data, setData] = useState<OwnerOverviewData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -40,9 +42,11 @@ export const OwnerOverviewPage: React.FC = () => {
     if (!window.confirm(`Are you sure you want to decommission "${name}"?`)) return;
     try {
       await deleteOwnerResourceApi(id);
+      toast.success(`Resource "${name}" decommissioned successfully.`);
       await fetchOverview();
     } catch (err) {
       console.error('Error deleting resource:', err);
+      toast.error('Failed to decommission resource.');
     }
   };
 

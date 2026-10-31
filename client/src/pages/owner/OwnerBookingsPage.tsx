@@ -11,6 +11,7 @@ import {
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { Button } from '../../components/common/Button';
 import { BookingTimeline } from '../../components/booking/BookingTimeline';
+import { useToast } from '../../context/ToastContext';
 import {
   Inbox,
   CheckCircle2,
@@ -42,7 +43,7 @@ export const OwnerBookingsPage: React.FC<{ initialTab?: string }> = ({ initialTa
   }, [location.pathname]);
 
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [actionFeedback, setActionFeedback] = useState<string | null>(null);
+  const { toast } = useToast();
 
   // Reject / Cancel Modal states
   const [modalMode, setModalMode] = useState<'reject' | 'cancel' | null>(null);
@@ -72,11 +73,10 @@ export const OwnerBookingsPage: React.FC<{ initialTab?: string }> = ({ initialTa
     setActionLoading(id);
     try {
       const res = await approveBookingApi(id);
-      setActionFeedback(res.message);
+      toast.success(res.message || 'Reservation approved successfully.');
       await fetchBookings();
-      setTimeout(() => setActionFeedback(null), 3000);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Error approving booking');
+      toast.error(err.response?.data?.message || 'Error approving booking');
     } finally {
       setActionLoading(null);
     }
@@ -86,11 +86,10 @@ export const OwnerBookingsPage: React.FC<{ initialTab?: string }> = ({ initialTa
     setActionLoading(id);
     try {
       const res = await moveBookingToWaitlistApi(id);
-      setActionFeedback(res.message);
+      toast.success(res.message || 'Booking moved to waitlist.');
       await fetchBookings();
-      setTimeout(() => setActionFeedback(null), 3000);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Error moving to waiting list');
+      toast.error(err.response?.data?.message || 'Error moving to waiting list');
     } finally {
       setActionLoading(null);
     }
@@ -121,17 +120,18 @@ export const OwnerBookingsPage: React.FC<{ initialTab?: string }> = ({ initialTa
     try {
       if (modalMode === 'reject') {
         const res = await rejectBookingApi(selectedBooking._id, modalReason);
-        setActionFeedback(res.message);
+        toast.success(res.message || 'Booking rejected with specified rationale.');
       } else if (modalMode === 'cancel') {
         const res = await cancelBookingByOwnerApi(selectedBooking._id, modalReason);
-        setActionFeedback(res.message);
+        toast.success(res.message || 'Booking cancelled by custodian.');
       }
       setModalMode(null);
       setSelectedBooking(null);
       await fetchBookings();
-      setTimeout(() => setActionFeedback(null), 3000);
     } catch (err: any) {
-      setModalError(err.response?.data?.message || 'Operation failed');
+      const msg = err.response?.data?.message || 'Operation failed';
+      setModalError(msg);
+      toast.error(msg);
     } finally {
       setActionLoading(null);
     }
@@ -163,18 +163,6 @@ export const OwnerBookingsPage: React.FC<{ initialTab?: string }> = ({ initialTa
           Review borrower eligibility credentials, detect scheduling conflicts, approve reservation passes, or manage priority waitlists.
         </p>
       </div>
-
-      {actionFeedback && (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          className="fixed top-6 right-6 z-50 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-[#16834A] text-xs font-semibold flex items-center gap-2 shadow-lg"
-        >
-          <CheckCircle2 className="w-4 h-4 text-[#16834A] shrink-0" />
-          <span>{actionFeedback}</span>
-        </motion.div>
-      )}
 
       {/* Tabs */}
       <div className="flex items-center gap-2 border-b border-[#E2E8F0] pb-2 overflow-x-auto">
