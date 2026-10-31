@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getHealthApi } from '../api/auth';
 import { Card } from '../components/common/Card';
 import { Badge } from '../components/common/Badge';
 import { Button } from '../components/common/Button';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Cpu,
   Building,
@@ -17,6 +19,8 @@ import {
   Activity,
   Layers,
   ShieldAlert,
+  Sparkles,
+  X,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -30,7 +34,15 @@ import {
 
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [healthData, setHealthData] = useState<any>(null);
+  const [showWelcomeNotice, setShowWelcomeNotice] = useState(searchParams.get('new') === 'true');
+
+  useEffect(() => {
+    if (searchParams.get('new') === 'true') {
+      setShowWelcomeNotice(true);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const fetchHealth = async () => {
@@ -61,6 +73,43 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-7xl mx-auto">
+      {/* Registration Welcome Banner */}
+      <AnimatePresence>
+        {showWelcomeNotice && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, height: 0, opacity: 0 }}
+            className="p-4 rounded-2xl bg-gradient-to-r from-brand-600/20 via-indigo-600/20 to-cyan-500/20 border border-brand-500/40 backdrop-blur-md flex items-center justify-between gap-4 text-white shadow-xl shadow-brand-500/10"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-brand-500/20 border border-brand-400/30 flex items-center justify-center shrink-0 text-brand-300">
+                <Sparkles className="w-5 h-5 text-brand-400" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">
+                  Welcome to RENTORA Institutional Resource Network!
+                </p>
+                <p className="text-xs text-slate-300">
+                  Your account is registered, verified, and secured. You have full access to the{' '}
+                  <span className="font-semibold text-brand-300">{user.role.toUpperCase()}</span> workspace.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                setShowWelcomeNotice(false);
+                searchParams.delete('new');
+                setSearchParams(searchParams);
+              }}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Welcome Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-3xl bg-gradient-to-r from-slate-900 via-brand-950/40 to-slate-900 border border-slate-800/80 shadow-2xl">
         <div className="space-y-1.5">
