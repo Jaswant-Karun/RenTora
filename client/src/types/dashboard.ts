@@ -1,0 +1,35 @@
+import { Resource, Booking, NotificationItem } from './resource';
+
+export interface DashboardStats {
+  availableResources: number;
+  activeBookings: number;
+  pendingRequests: number;
+  completedBookings: number;
+  totalCampusResources: number;
+}
+
+export interface CategoryDistribution {
+  category: string;
+  count: number;
+  availableCount: number;
+}
+
+export interface BookingActivityItem {
+  day: string;
+  bookings: number;
+  hours: number;
+  activeUsers: number;
+}
+
+export interface DashboardSummaryResponse {
+  success: boolean;
+  data: {
+    stats: DashboardStats;
+    recentlyAdded: Resource[];
+    recommended: Resource[];
+    upcomingBookings: Booking[];
+    bookingActivity: BookingActivityItem[];
+    categoryDistribution: CategoryDistribution[];
+    notifications: NotificationItem[];
+  };
+}

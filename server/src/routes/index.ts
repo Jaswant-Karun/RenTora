@@ -1,5 +1,9 @@
 import { Router } from 'express';
 import authRoutes from './auth.routes.js';
+import resourceRoutes from './resource.routes.js';
+import bookingRoutes from './booking.routes.js';
+import dashboardRoutes from './dashboard.routes.js';
+import notificationRoutes from './notification.routes.js';
 import { getDBStatus } from '../config/db.js';
 
 const router = Router();
@@ -25,7 +29,11 @@ router.get('/db-status', (_req, res) => {
   });
 });
 
-// Auth Routes
+// API Endpoints
 router.use('/auth', authRoutes);
+router.use('/resources', resourceRoutes);
+router.use('/bookings', bookingRoutes);
+router.use('/dashboard', dashboardRoutes);
+router.use('/notifications', notificationRoutes);
 
 export default router;
