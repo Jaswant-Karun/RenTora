@@ -47,6 +47,16 @@ const systemSettingSchema = new mongoose_1.Schema({
         type: String,
         default: 'RENTORA Embedded Intelligence Engine',
     },
+    sustainabilityConfig: {
+        costAvoidedPerHourINR: { type: Number, default: 1850 },
+        purchaseAvoidanceThresholdHours: { type: Number, default: 80 },
+        averageApparatusCapitalCostINR: { type: Number, default: 250000 },
+        lifecycleEmbodiedCarbonEstimateKgPerUnit: { type: Number, default: 350 },
+        methodologyNotes: {
+            type: String,
+            default: 'Estimates reflect avoided duplicate institutional procurement based on amortized laboratory apparatus usage. These figures represent engineering estimates and are not certified carbon offsets.',
+        },
+    },
     updatedBy: {
         type: String,
         default: 'Platform Administrator',

@@ -20,6 +20,7 @@ const trustPass_routes_js_1 = __importDefault(require("./trustPass.routes.js"));
 const conditionGuard_routes_js_1 = __importDefault(require("./conditionGuard.routes.js"));
 const upload_routes_js_1 = __importDefault(require("./upload.routes.js"));
 const resourcePulse_routes_js_1 = __importDefault(require("./resourcePulse.routes.js"));
+const ecoShare_routes_js_1 = __importDefault(require("./ecoShare.routes.js"));
 const db_js_1 = require("../config/db.js");
 const router = (0, express_1.Router)();
 // Health Check
@@ -58,4 +59,5 @@ router.use('/trustpass', trustPass_routes_js_1.default);
 router.use('/condition-guard', conditionGuard_routes_js_1.default);
 router.use('/upload', upload_routes_js_1.default);
 router.use('/resource-pulse', resourcePulse_routes_js_1.default);
+router.use('/ecoshare', ecoShare_routes_js_1.default);
 exports.default = router;

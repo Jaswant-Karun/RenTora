@@ -15,6 +15,7 @@ import trustPassRoutes from './trustPass.routes.js';
 import conditionGuardRoutes from './conditionGuard.routes.js';
 import uploadRoutes from './upload.routes.js';
 import resourcePulseRoutes from './resourcePulse.routes.js';
+import ecoShareRoutes from './ecoShare.routes.js';
 import { getDBStatus } from '../config/db.js';
 
 const router = Router();
@@ -57,5 +58,6 @@ router.use('/trustpass', trustPassRoutes);
 router.use('/condition-guard', conditionGuardRoutes);
 router.use('/upload', uploadRoutes);
 router.use('/resource-pulse', resourcePulseRoutes);
+router.use('/ecoshare', ecoShareRoutes);
 
 export default router;
