@@ -226,24 +226,150 @@ export const getOwnerResources = async (req: AuthenticatedRequest, res: Response
 // 4. Update Resource
 export const updateOwnerResource = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
+    const user = req.user!;
     const { id } = req.params;
-    const updated = await Resource.findByIdAndUpdate(id, req.body, { new: true });
-    if (!updated) {
+    const resource = await Resource.findById(id);
+
+    if (!resource) {
       res.status(404).json({ success: false, message: 'Resource not found' });
       return;
     }
-    res.status(200).json({ success: true, message: 'Resource updated successfully', data: updated });
+
+    // Backend RBAC: Ensure owner owns this resource or has admin/manager privileges
+    const isOwner = (resource.ownerId && resource.ownerId.toString() === user._id.toString()) || resource.ownerEmail === user.email;
+    const isAuthorized = isOwner || user.role === 'admin' || user.role === 'manager';
+
+    if (!isAuthorized) {
+      res.status(403).json({
+        success: false,
+        message: 'Forbidden: You do not have permission to modify resources belonging to another owner or institution.',
+      });
+      return;
+    }
+
+    const {
+      name,
+      category,
+      description,
+      location,
+      images,
+      availabilitySchedule,
+      minBookingDuration,
+      maxBookingDuration,
+      eligibility,
+      trainingRequired,
+      safetyInstructions,
+      supervisionRequirement,
+      depositConditions,
+      approvalRequired,
+      resourceType,
+      specifications,
+      tags,
+      status,
+    } = req.body;
+
+    if (name) resource.name = name;
+    if (category) resource.category = category;
+    if (description) resource.description = description;
+    if (location) resource.location = location;
+    if (images && Array.isArray(images)) resource.images = images;
+    if (availabilitySchedule) resource.availabilitySchedule = availabilitySchedule;
+    if (minBookingDuration) resource.minBookingDuration = minBookingDuration;
+    if (maxBookingDuration) resource.maxBookingDuration = maxBookingDuration;
+    if (eligibility) resource.eligibility = eligibility;
+    if (trainingRequired) resource.trainingRequired = trainingRequired;
+    if (safetyInstructions) resource.safetyInstructions = Array.isArray(safetyInstructions) ? safetyInstructions : [safetyInstructions];
+    if (supervisionRequirement) resource.supervisionRequirement = supervisionRequirement;
+    if (depositConditions) resource.depositConditions = depositConditions;
+    if (approvalRequired !== undefined) resource.approvalRequired = approvalRequired;
+    if (resourceType) resource.resourceType = resourceType;
+    if (specifications) resource.specifications = specifications;
+    if (tags && Array.isArray(tags)) resource.tags = tags;
+    if (status) {
+      resource.status = status;
+      if (status === 'maintenance') resource.availabilityText = 'Under Maintenance';
+      else if (status === 'disabled') resource.availabilityText = 'Temporarily Disabled';
+      else if (status === 'available') resource.availabilityText = 'Available for Bookings';
+    }
+
+    await resource.save();
+
+    await recordAuditLog({
+      action: status === 'disabled' || status === 'maintenance' ? 'RESOURCE_DISABLED' : 'RESOURCE_UPDATE',
+      entityType: 'Resource',
+      entityId: resource._id,
+      entityTitle: resource.name,
+      actorId: user._id,
+      actorName: user.name,
+      actorEmail: user.email,
+      actorRole: user.role,
+      details: {
+        updatedFields: Object.keys(req.body),
+        newStatus: resource.status,
+      },
+      reason: req.body.reason || 'Resource attributes and configuration updated by custodian.',
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `Resource "${resource.name}" updated successfully.`,
+      data: resource,
+    });
   } catch (error) {
     next(error);
   }
 };
 
-// 5. Delete / Decommission Resource
+// 5. Delete / Archive Resource (Preserves historical booking records)
 export const deleteOwnerResource = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
+    const user = req.user!;
     const { id } = req.params;
-    await Resource.findByIdAndDelete(id);
-    res.status(200).json({ success: true, message: 'Resource decommissioned successfully' });
+    const resource = await Resource.findById(id);
+
+    if (!resource) {
+      res.status(404).json({ success: false, message: 'Resource not found' });
+      return;
+    }
+
+    const isOwner = (resource.ownerId && resource.ownerId.toString() === user._id.toString()) || resource.ownerEmail === user.email;
+    const isAuthorized = isOwner || user.role === 'admin' || user.role === 'manager';
+
+    if (!isAuthorized) {
+      res.status(403).json({
+        success: false,
+        message: 'Forbidden: You do not have permission to archive resources belonging to another owner or institution.',
+      });
+      return;
+    }
+
+    // Soft-archive resource so historical bookings remain fully intact
+    resource.isArchived = true;
+    resource.status = 'archived';
+    resource.availabilityText = 'Archived - Decommissioned';
+    await resource.save();
+
+    await recordAuditLog({
+      action: 'RESOURCE_ARCHIVED',
+      entityType: 'Resource',
+      entityId: resource._id,
+      entityTitle: resource.name,
+      actorId: user._id,
+      actorName: user.name,
+      actorEmail: user.email,
+      actorRole: user.role,
+      details: {
+        previousStatus: resource.status,
+        archivedAt: new Date(),
+      },
+      reason: req.body.reason || 'Resource archived by custodian. Historical booking records preserved.',
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `Resource "${resource.name}" archived successfully. All historical booking logs remain preserved.`,
+      data: resource,
+    });
   } catch (error) {
     next(error);
   }
@@ -289,10 +415,24 @@ export const getOwnerBookings = async (req: AuthenticatedRequest, res: Response,
 // 7. Approve Booking Request
 export const approveBooking = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
+    const user = req.user!;
     const { id } = req.params;
     const booking = await Booking.findById(id);
     if (!booking) {
       res.status(404).json({ success: false, message: 'Booking request not found' });
+      return;
+    }
+
+    const resource = await Resource.findById(booking.resourceId);
+    const isOwner = resource && ((resource.ownerId && resource.ownerId.toString() === user._id.toString()) || resource.ownerEmail === user.email);
+    const isSupervisor = booking.supervisorName === user.name;
+    const isAuthorized = isOwner || isSupervisor || user.role === 'admin' || user.role === 'manager';
+
+    if (!isAuthorized) {
+      res.status(403).json({
+        success: false,
+        message: 'Forbidden: You do not have permission to approve bookings for resources of another owner or institution.',
+      });
       return;
     }
 
@@ -302,10 +442,10 @@ export const approveBooking = async (req: AuthenticatedRequest, res: Response, n
       transition: 'RESERVATION_APPROVED',
       fromStatus: previousStatus,
       toStatus: 'approved',
-      performedBy: req.user?.name || 'Lab Custodian',
-      performedByRole: req.user?.role || 'owner',
+      performedBy: user.name,
+      performedByRole: user.role,
       timestamp: new Date(),
-      note: 'Approved by laboratory custodian.',
+      note: req.body.note || 'Approved by laboratory custodian.',
     });
     await booking.save();
 
@@ -316,6 +456,24 @@ export const approveBooking = async (req: AuthenticatedRequest, res: Response, n
       message: `Your reservation for "${booking.resourceName}" on ${booking.date} (${booking.timeSlot}) has been approved. Access pass is now valid.`,
       type: 'approval',
       link: '/dashboard/bookings',
+    });
+
+    await recordAuditLog({
+      action: 'BOOKING_APPROVAL',
+      entityType: 'Booking',
+      entityId: booking._id,
+      entityTitle: `${booking.resourceName} - ${booking.userName}`,
+      actorId: user._id,
+      actorName: user.name,
+      actorEmail: user.email,
+      actorRole: user.role,
+      details: {
+        date: booking.date,
+        timeSlot: booking.timeSlot,
+        userId: booking.userId,
+        resourceId: booking.resourceId,
+      },
+      reason: req.body.note || 'Booking approved by owner/custodian.',
     });
 
     res.status(200).json({
@@ -331,6 +489,7 @@ export const approveBooking = async (req: AuthenticatedRequest, res: Response, n
 // 8. Reject Booking Request with Reason
 export const rejectBooking = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
+    const user = req.user!;
     const { id } = req.params;
     const { reason } = req.body;
 
@@ -348,6 +507,19 @@ export const rejectBooking = async (req: AuthenticatedRequest, res: Response, ne
       return;
     }
 
+    const resource = await Resource.findById(booking.resourceId);
+    const isOwner = resource && ((resource.ownerId && resource.ownerId.toString() === user._id.toString()) || resource.ownerEmail === user.email);
+    const isSupervisor = booking.supervisorName === user.name;
+    const isAuthorized = isOwner || isSupervisor || user.role === 'admin' || user.role === 'manager';
+
+    if (!isAuthorized) {
+      res.status(403).json({
+        success: false,
+        message: 'Forbidden: You do not have permission to reject bookings for resources of another owner or institution.',
+      });
+      return;
+    }
+
     const previousStatus = booking.status;
     booking.status = 'rejected';
     booking.rejectionReason = reason.trim();
@@ -355,8 +527,8 @@ export const rejectBooking = async (req: AuthenticatedRequest, res: Response, ne
       transition: 'RESERVATION_REJECTED',
       fromStatus: previousStatus,
       toStatus: 'rejected',
-      performedBy: req.user?.name || 'Lab Custodian',
-      performedByRole: req.user?.role || 'owner',
+      performedBy: user.name,
+      performedByRole: user.role,
       timestamp: new Date(),
       note: `Rejected by owner. Reason: ${reason.trim()}`,
     });
@@ -369,6 +541,25 @@ export const rejectBooking = async (req: AuthenticatedRequest, res: Response, ne
       message: `Your request for "${booking.resourceName}" on ${booking.date} was declined. Reason: ${reason}`,
       type: 'booking',
       link: '/dashboard/bookings',
+    });
+
+    await recordAuditLog({
+      action: 'BOOKING_REJECTION',
+      entityType: 'Booking',
+      entityId: booking._id,
+      entityTitle: `${booking.resourceName} - ${booking.userName}`,
+      actorId: user._id,
+      actorName: user.name,
+      actorEmail: user.email,
+      actorRole: user.role,
+      details: {
+        date: booking.date,
+        timeSlot: booking.timeSlot,
+        userId: booking.userId,
+        resourceId: booking.resourceId,
+        rejectionReason: reason.trim(),
+      },
+      reason: reason.trim(),
     });
 
     res.status(200).json({
@@ -384,6 +575,7 @@ export const rejectBooking = async (req: AuthenticatedRequest, res: Response, ne
 // 9. Cancel Booking with Reason
 export const cancelBookingByOwner = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
+    const user = req.user!;
     const { id } = req.params;
     const { reason } = req.body;
 
@@ -401,6 +593,19 @@ export const cancelBookingByOwner = async (req: AuthenticatedRequest, res: Respo
       return;
     }
 
+    const resource = await Resource.findById(booking.resourceId);
+    const isOwner = resource && ((resource.ownerId && resource.ownerId.toString() === user._id.toString()) || resource.ownerEmail === user.email);
+    const isSupervisor = booking.supervisorName === user.name;
+    const isAuthorized = isOwner || isSupervisor || user.role === 'admin' || user.role === 'manager';
+
+    if (!isAuthorized) {
+      res.status(403).json({
+        success: false,
+        message: 'Forbidden: You do not have permission to cancel bookings for resources of another owner or institution.',
+      });
+      return;
+    }
+
     const previousStatus = booking.status;
     booking.status = 'cancelled';
     booking.cancellationReason = reason.trim();
@@ -408,8 +613,8 @@ export const cancelBookingByOwner = async (req: AuthenticatedRequest, res: Respo
       transition: 'RESERVATION_CANCELLED',
       fromStatus: previousStatus,
       toStatus: 'cancelled',
-      performedBy: req.user?.name || 'Lab Custodian',
-      performedByRole: req.user?.role || 'owner',
+      performedBy: user.name,
+      performedByRole: user.role,
       timestamp: new Date(),
       note: `Cancelled by custodian. Reason: ${reason.trim()}`,
     });
@@ -437,6 +642,7 @@ export const cancelBookingByOwner = async (req: AuthenticatedRequest, res: Respo
 // 10. Move User to Waiting List
 export const moveBookingToWaitlist = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
+    const user = req.user!;
     const { id } = req.params;
     const { reason } = req.body;
 
@@ -446,17 +652,36 @@ export const moveBookingToWaitlist = async (req: AuthenticatedRequest, res: Resp
       return;
     }
 
+    const resource = await Resource.findById(booking.resourceId);
+    const isOwner = resource && ((resource.ownerId && resource.ownerId.toString() === user._id.toString()) || resource.ownerEmail === user.email);
+    const isSupervisor = booking.supervisorName === user.name;
+    const isAuthorized = isOwner || isSupervisor || user.role === 'admin' || user.role === 'manager';
+
+    if (!isAuthorized) {
+      res.status(403).json({
+        success: false,
+        message: 'Forbidden: You do not have permission to manage bookings for resources of another owner or institution.',
+      });
+      return;
+    }
+
+    const existingWaitlisted = await Booking.countDocuments({
+      resourceId: booking.resourceId,
+      status: 'waitlisted',
+    });
+
     const previousStatus = booking.status;
     booking.status = 'waitlisted';
     booking.waitlistReason = reason || 'Placed on priority standby queue by lab owner.';
+    booking.queuePosition = existingWaitlisted + 1;
     booking.auditTrail.push({
       transition: 'MOVED_TO_WAITLIST',
       fromStatus: previousStatus,
       toStatus: 'waitlisted',
-      performedBy: req.user?.name || 'Lab Custodian',
-      performedByRole: req.user?.role || 'owner',
+      performedBy: user.name,
+      performedByRole: user.role,
       timestamp: new Date(),
-      note: `Moved to waitlist: ${booking.waitlistReason}`,
+      note: `Moved to waitlist (Queue pos #${booking.queuePosition}): ${booking.waitlistReason}`,
     });
     await booking.save();
 
@@ -464,14 +689,110 @@ export const moveBookingToWaitlist = async (req: AuthenticatedRequest, res: Resp
     await Notification.create({
       userId: booking.userId,
       title: 'Placed on Resource Priority Waiting List',
-      message: `Due to scheduling demand, your request for "${booking.resourceName}" is now in the priority waitlist.`,
+      message: `Due to scheduling demand, your request for "${booking.resourceName}" is now in the priority waitlist (Queue position #${booking.queuePosition}).`,
       type: 'booking',
       link: '/dashboard/waitlist',
     });
 
+    await recordAuditLog({
+      action: 'WAITLIST_PROMOTION',
+      entityType: 'Booking',
+      entityId: booking._id,
+      entityTitle: `${booking.resourceName} - ${booking.userName}`,
+      actorId: user._id,
+      actorName: user.name,
+      actorEmail: user.email,
+      actorRole: user.role,
+      details: { queuePosition: booking.queuePosition, reason: booking.waitlistReason },
+      reason: booking.waitlistReason,
+    });
+
     res.status(200).json({
       success: true,
-      message: `User ${booking.userName} transferred to the priority waiting list.`,
+      message: `User ${booking.userName} transferred to the priority waiting list (Position #${booking.queuePosition}).`,
+      data: booking,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 10b. Suggest Alternative Dates
+export const suggestAlternativeDates = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const user = req.user!;
+    const { id } = req.params;
+    const { suggestedDate, suggestedTimeSlot, note } = req.body;
+
+    if (!suggestedDate || !suggestedTimeSlot) {
+      res.status(400).json({
+        success: false,
+        message: 'Suggested date and time slot are required.',
+      });
+      return;
+    }
+
+    const booking = await Booking.findById(id);
+    if (!booking) {
+      res.status(404).json({ success: false, message: 'Booking request not found' });
+      return;
+    }
+
+    const resource = await Resource.findById(booking.resourceId);
+    const isOwner = resource && ((resource.ownerId && resource.ownerId.toString() === user._id.toString()) || resource.ownerEmail === user.email);
+    const isSupervisor = booking.supervisorName === user.name;
+    const isAuthorized = isOwner || isSupervisor || user.role === 'admin' || user.role === 'manager';
+
+    if (!isAuthorized) {
+      res.status(403).json({
+        success: false,
+        message: 'Forbidden: You do not have permission to manage bookings for resources of another owner or institution.',
+      });
+      return;
+    }
+
+    booking.suggestedAlternative = {
+      date: suggestedDate,
+      timeSlot: suggestedTimeSlot,
+      note: note || '',
+      offeredAt: new Date(),
+    };
+
+    booking.auditTrail.push({
+      transition: 'ALTERNATIVE_DATE_SUGGESTED',
+      fromStatus: booking.status,
+      toStatus: booking.status,
+      performedBy: user.name,
+      performedByRole: user.role,
+      timestamp: new Date(),
+      note: `Owner suggested alternative date: ${suggestedDate} at ${suggestedTimeSlot}. ${note ? `Note: ${note}` : ''}`,
+    });
+    await booking.save();
+
+    await Notification.create({
+      userId: booking.userId,
+      title: 'Alternative Schedule Suggested for Your Request',
+      message: `The custodian for "${booking.resourceName}" suggested an alternative slot on ${suggestedDate} (${suggestedTimeSlot}): ${note || 'Please review your booking details.'}`,
+      type: 'booking',
+      link: '/dashboard/bookings',
+    });
+
+    await recordAuditLog({
+      action: 'BOOKING_ALTERNATIVE_SUGGESTED',
+      entityType: 'Booking',
+      entityId: booking._id,
+      entityTitle: `${booking.resourceName} - ${booking.userName}`,
+      actorId: user._id,
+      actorName: user.name,
+      actorEmail: user.email,
+      actorRole: user.role,
+      details: { suggestedDate, suggestedTimeSlot, note },
+      reason: 'Owner offered alternative scheduling slot.',
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `Alternative date suggestion dispatched to ${booking.userName}.`,
       data: booking,
     });
   } catch (error) {

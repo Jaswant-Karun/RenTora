@@ -10,6 +10,7 @@ import {
   rejectBooking,
   cancelBookingByOwner,
   moveBookingToWaitlist,
+  suggestAlternativeDates,
   handleCheckInCheckOut,
   getConditionReports,
   createConditionReport,
@@ -39,6 +40,7 @@ router.post('/bookings/:id/approve', approveBooking);
 router.post('/bookings/:id/reject', rejectBooking);
 router.post('/bookings/:id/cancel', cancelBookingByOwner);
 router.post('/bookings/:id/waitlist', moveBookingToWaitlist);
+router.post('/bookings/:id/suggest-dates', suggestAlternativeDates);
 
 // Check-in / Check-out
 router.post('/checkin-checkout', handleCheckInCheckOut);
