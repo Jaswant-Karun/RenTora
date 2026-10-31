@@ -69,7 +69,6 @@ export const ManagerDashboardPage: React.FC = () => {
   const [waitlistBookings, setWaitlistBookings] = useState<any[]>([]);
   const [selectedOverrideBooking, setSelectedOverrideBooking] = useState<any | null>(null);
   const [selectedAiIncident, setSelectedAiIncident] = useState<any | null>(null);
-  const [selectedOverrideBooking, setSelectedOverrideBooking] = useState<any | null>(null);
 
   // Module States
   const [approvals, setApprovals] = useState<any[]>([]);
@@ -261,6 +260,7 @@ export const ManagerDashboardPage: React.FC = () => {
 
   const navTabs = [
     { id: 'stats' as ManagerTab, label: 'Institution Stats', icon: BarChart3, count: null },
+    { id: 'ai-analytics' as ManagerTab, label: 'AI Utilization & Demand', icon: Sparkles, count: null },
     { id: 'approvals' as ManagerTab, label: 'Resource Approvals', icon: CheckCircle2, count: approvals.filter((a) => a.approvalStatus === 'pending').length },
     { id: 'users' as ManagerTab, label: 'User Verification', icon: Users, count: usersList.filter((u) => !u.isVerified).length },
     { id: 'eligibility' as ManagerTab, label: 'Eligibility Management', icon: ShieldCheck, count: null },
@@ -397,6 +397,13 @@ export const ManagerDashboardPage: React.FC = () => {
               ))}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Tab AI: Campus Resource Utilization & Peak Demand Intelligence */}
+      {activeTab === 'ai-analytics' && (
+        <div className="space-y-4">
+          <ResourceUtilizationDashboard />
         </div>
       )}
 
