@@ -1,25 +1,32 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateFairAllocationSettings = exports.getFairAllocationSettings = exports.resolveDispute = exports.getManagerDisputes = exports.updateIncidentStatus = exports.getManagerIncidents = exports.resolveConflict = exports.getSchedulingConflicts = exports.toggleUserVerification = exports.getUsersForVerification = exports.updateResourceApproval = exports.getResourceApprovals = exports.getManagerStats = void 0;
+exports.getManagerAuditLogs = exports.promoteWaitlistBooking = exports.getManagerWaitlists = exports.getManagerBookings = exports.updateFairAllocationSettings = exports.getFairAllocationSettings = exports.resolveDispute = exports.getManagerDisputes = exports.updateIncidentStatus = exports.getManagerIncidents = exports.resolveConflict = exports.getSchedulingConflicts = exports.toggleUserVerification = exports.getUsersForVerification = exports.updateResourceApproval = exports.getResourceApprovals = exports.getManagerStats = void 0;
 const resource_model_js_1 = require("../models/resource.model.js");
 const booking_model_js_1 = require("../models/booking.model.js");
 const user_model_js_1 = require("../models/user.model.js");
 const incident_model_js_1 = require("../models/incident.model.js");
 const dispute_model_js_1 = require("../models/dispute.model.js");
 const fairAllocation_model_js_1 = require("../models/fairAllocation.model.js");
+const notification_model_js_1 = require("../models/notification.model.js");
 const auditLogger_js_1 = require("../utils/auditLogger.js");
-// 1. Institution-wide Resource Statistics
+const auditLog_model_js_1 = require("../models/auditLog.model.js");
+// 1. Institution-wide Resource Statistics & Analytics
 const getManagerStats = async (req, res, next) => {
     try {
         const institution = req.user?.institution || 'National Institute of Technology';
-        const [totalResources, activeBookings, totalUsers, unverifiedUsers, incidentsCount, disputesCount, pendingResourceApprovals,] = await Promise.all([
-            resource_model_js_1.Resource.countDocuments(),
+        const [totalResources, availableResources, activeBookings, totalUsers, studentUsers, ownerUsers, unverifiedUsers, incidentsCount, disputesCount, pendingResourceApprovals, completedBookings, waitlistedBookings,] = await Promise.all([
+            resource_model_js_1.Resource.countDocuments({ isArchived: { $ne: true } }),
+            resource_model_js_1.Resource.countDocuments({ status: 'available', isArchived: { $ne: true } }),
             booking_model_js_1.Booking.countDocuments({ status: 'active' }),
             user_model_js_1.User.countDocuments(),
+            user_model_js_1.User.countDocuments({ role: 'student' }),
+            user_model_js_1.User.countDocuments({ role: 'owner' }),
             user_model_js_1.User.countDocuments({ isVerified: false }),
             incident_model_js_1.Incident.countDocuments({ status: { $ne: 'resolved' } }),
             dispute_model_js_1.Dispute.countDocuments({ status: { $ne: 'resolved' } }),
-            resource_model_js_1.Resource.countDocuments({ approvalStatus: 'pending_manager' }),
+            resource_model_js_1.Resource.countDocuments({ approvalStatus: 'pending_manager', isArchived: { $ne: true } }),
+            booking_model_js_1.Booking.countDocuments({ status: 'completed' }),
+            booking_model_js_1.Booking.countDocuments({ status: 'waitlisted' }),
         ]);
         // Department utilization aggregation
         const deptUtilization = await resource_model_js_1.Resource.aggregate([
@@ -48,14 +55,20 @@ const getManagerStats = async (req, res, next) => {
             data: {
                 stats: {
                     totalResources,
+                    availableResources,
                     activeBookings,
+                    completedBookings,
+                    waitlistedBookings,
                     totalUsers,
+                    studentUsers,
+                    ownerUsers,
                     unverifiedUsers,
                     incidentsCount,
                     disputesCount,
                     pendingResourceApprovals,
                     campusSafetyScore: '99.8%',
                     utilizationAvoidedCost: '₹4,80,000',
+                    utilizationRate: totalResources > 0 ? `${Math.round(((activeBookings) / totalResources) * 100)}%` : '0%',
                 },
                 deptUtilization: deptUtilization.map((d) => ({
                     department: d._id || 'General Faculty',
@@ -117,10 +130,25 @@ const updateResourceApproval = async (req, res, next) => {
     }
 };
 exports.updateResourceApproval = updateResourceApproval;
-// 3. User Verification
-const getUsersForVerification = async (_req, res, next) => {
+// 3. User & Owner Verification
+const getUsersForVerification = async (req, res, next) => {
     try {
-        const users = await user_model_js_1.User.find().select('-password').sort({ createdAt: -1 });
+        const { role, isVerified, search } = req.query;
+        const filter = {};
+        if (role && role !== 'all') {
+            filter.role = role;
+        }
+        if (isVerified !== undefined && isVerified !== 'all') {
+            filter.isVerified = isVerified === 'true';
+        }
+        if (search) {
+            filter.$or = [
+                { name: { $regex: String(search), $options: 'i' } },
+                { email: { $regex: String(search), $options: 'i' } },
+                { department: { $regex: String(search), $options: 'i' } },
+            ];
+        }
+        const users = await user_model_js_1.User.find(filter).select('-password').sort({ createdAt: -1 });
         res.status(200).json({ success: true, data: users });
     }
     catch (error) {
@@ -317,3 +345,109 @@ const updateFairAllocationSettings = async (req, res, next) => {
     }
 };
 exports.updateFairAllocationSettings = updateFairAllocationSettings;
+// 8. Institutional Booking Oversight
+const getManagerBookings = async (req, res, next) => {
+    try {
+        const { status, search, date } = req.query;
+        const filter = {};
+        if (status && status !== 'all') {
+            filter.status = status;
+        }
+        if (date) {
+            filter.date = date;
+        }
+        if (search) {
+            filter.$or = [
+                { resourceName: { $regex: String(search), $options: 'i' } },
+                { userName: { $regex: String(search), $options: 'i' } },
+                { userEmail: { $regex: String(search), $options: 'i' } },
+            ];
+        }
+        const bookings = await booking_model_js_1.Booking.find(filter).sort({ createdAt: -1 });
+        res.status(200).json({ success: true, data: bookings });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.getManagerBookings = getManagerBookings;
+// 9. Institutional Waitlist Management
+const getManagerWaitlists = async (_req, res, next) => {
+    try {
+        const waitlists = await booking_model_js_1.Booking.find({ status: 'waitlisted' }).sort({ queuePosition: 1, createdAt: 1 });
+        res.status(200).json({ success: true, data: waitlists });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.getManagerWaitlists = getManagerWaitlists;
+const promoteWaitlistBooking = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const booking = await booking_model_js_1.Booking.findById(id);
+        if (!booking) {
+            res.status(404).json({ success: false, message: 'Waitlist record not found' });
+            return;
+        }
+        const previousStatus = booking.status;
+        booking.status = 'approved';
+        booking.auditTrail.push({
+            transition: 'WAITLIST_PROMOTED_BY_MANAGER',
+            fromStatus: previousStatus,
+            toStatus: 'approved',
+            performedBy: req.user?.name || 'Manager',
+            performedByRole: req.user?.role || 'manager',
+            timestamp: new Date(),
+            note: 'Manager promoted booking from standby queue.',
+        });
+        await booking.save();
+        await notification_model_js_1.Notification.create({
+            userId: booking.userId,
+            title: 'Waitlist Promoted: Reservation Confirmed',
+            message: `Your waitlisted reservation for "${booking.resourceName}" on ${booking.date} (${booking.timeSlot}) has been approved by the institution manager.`,
+            type: 'approval',
+            link: '/dashboard/bookings',
+        });
+        await (0, auditLogger_js_1.recordAuditLog)({
+            action: 'WAITLIST_PROMOTION',
+            entityType: 'Booking',
+            entityId: booking._id,
+            entityTitle: `${booking.resourceName} - ${booking.userName}`,
+            actorId: req.user?._id,
+            actorName: req.user?.name || 'Manager',
+            actorEmail: req.user?.email,
+            actorRole: req.user?.role || 'manager',
+            details: { date: booking.date, timeSlot: booking.timeSlot },
+            reason: 'Promoted from waitlist by institution manager.',
+        });
+        res.status(200).json({
+            success: true,
+            message: `Booking for ${booking.userName} promoted from waitlist to approved.`,
+            data: booking,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.promoteWaitlistBooking = promoteWaitlistBooking;
+// 10. Institutional Compliance Audit Logs
+const getManagerAuditLogs = async (req, res, next) => {
+    try {
+        const { action, entityType, limit } = req.query;
+        const filter = {};
+        if (action && action !== 'all')
+            filter.action = action;
+        if (entityType && entityType !== 'all')
+            filter.entityType = entityType;
+        const auditLogs = await auditLog_model_js_1.AuditLog.find(filter)
+            .sort({ timestamp: -1 })
+            .limit(Number(limit) || 100);
+        res.status(200).json({ success: true, data: auditLogs });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.getManagerAuditLogs = getManagerAuditLogs;

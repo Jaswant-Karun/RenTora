@@ -3,14 +3,20 @@ import apiClient from './client';
 export interface ManagerStatsData {
   stats: {
     totalResources: number;
+    availableResources?: number;
     activeBookings: number;
+    completedBookings?: number;
+    waitlistedBookings?: number;
     totalUsers: number;
+    studentUsers?: number;
+    ownerUsers?: number;
     unverifiedUsers: number;
     incidentsCount: number;
     disputesCount: number;
     pendingResourceApprovals: number;
     campusSafetyScore: string;
     utilizationAvoidedCost: string;
+    utilizationRate?: string;
   };
   deptUtilization: {
     department: string;
@@ -35,13 +41,33 @@ export const updateResourceApprovalApi = async (id: string, approvalStatus: 'app
   return res.data;
 };
 
-export const getUsersForVerificationApi = async () => {
-  const res = await apiClient.get<{ success: boolean; data: any[] }>('/manager/users');
+export const getUsersForVerificationApi = async (params?: { role?: string; isVerified?: boolean | string; search?: string }) => {
+  const res = await apiClient.get<{ success: boolean; data: any[] }>('/manager/users', { params });
   return res.data;
 };
 
 export const toggleUserVerificationApi = async (id: string, isVerified: boolean) => {
   const res = await apiClient.patch<{ success: boolean; message: string; data: any }>(`/manager/users/${id}/verify`, { isVerified });
+  return res.data;
+};
+
+export const getManagerBookingsApi = async (params?: { status?: string; search?: string; date?: string }) => {
+  const res = await apiClient.get<{ success: boolean; data: any[] }>('/manager/bookings', { params });
+  return res.data;
+};
+
+export const getManagerWaitlistsApi = async () => {
+  const res = await apiClient.get<{ success: boolean; data: any[] }>('/manager/waitlists');
+  return res.data;
+};
+
+export const promoteWaitlistBookingApi = async (id: string) => {
+  const res = await apiClient.post<{ success: boolean; message: string; data: any }>(`/manager/waitlists/${id}/promote`);
+  return res.data;
+};
+
+export const getManagerAuditLogsApi = async (params?: { action?: string; entityType?: string; limit?: number }) => {
+  const res = await apiClient.get<{ success: boolean; data: any[] }>('/manager/audit-logs', { params });
   return res.data;
 };
 

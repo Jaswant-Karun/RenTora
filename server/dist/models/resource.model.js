@@ -77,8 +77,13 @@ const resourceSchema = new mongoose_1.Schema({
     },
     status: {
         type: String,
-        enum: ['available', 'reserved', 'maintenance', 'in_use'],
+        enum: ['available', 'reserved', 'maintenance', 'in_use', 'archived', 'disabled'],
         default: 'available',
+        index: true,
+    },
+    isArchived: {
+        type: Boolean,
+        default: false,
         index: true,
     },
     availabilityText: {

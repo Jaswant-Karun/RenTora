@@ -3,16 +3,34 @@ import { Resource, Booking } from '../types/resource';
 
 export interface OwnerOverviewData {
   stats: {
-    totalListedResources: number;
-    pendingRequestsCount: number;
-    activeBookingsCount: number;
-    completedBookingsCount: number;
-    totalHoursLogged: number;
-    utilizationRate: string;
-    activeIncidents: number;
+    totalResources: number;
+    availableResources: number;
+    currentlyBookedResources: number;
+    pendingBookingRequests: number;
+    activeReservations: number;
+    completedBookings: number;
+    utilizationPercentage: string;
+    totalListedResources?: number;
+    pendingRequestsCount?: number;
+    activeBookingsCount?: number;
+    completedBookingsCount?: number;
+    totalHoursLogged?: number;
+    utilizationRate?: string;
+    activeIncidents?: number;
   };
   myResources: Resource[];
   recentBookings: (Booking & { conflictDetected?: boolean })[];
+  upcomingReservations: (Booking & { conflictDetected?: boolean })[];
+  recentActivity: Array<{
+    id: string;
+    bookingId: string;
+    resourceName: string;
+    transition: string;
+    performedBy: string;
+    performedByRole: string;
+    timestamp: string;
+    note?: string;
+  }>;
   conditionReports: any[];
   incidents: any[];
 }
@@ -47,8 +65,8 @@ export const getOwnerBookingsApi = async () => {
   return res.data;
 };
 
-export const approveBookingApi = async (bookingId: string) => {
-  const res = await apiClient.post<{ success: boolean; message: string; data: Booking }>(`/owner/bookings/${bookingId}/approve`);
+export const approveBookingApi = async (bookingId: string, note?: string) => {
+  const res = await apiClient.post<{ success: boolean; message: string; data: Booking }>(`/owner/bookings/${bookingId}/approve`, { note });
   return res.data;
 };
 
@@ -62,8 +80,19 @@ export const cancelBookingByOwnerApi = async (bookingId: string, reason: string)
   return res.data;
 };
 
-export const moveBookingToWaitlistApi = async (bookingId: string) => {
-  const res = await apiClient.post<{ success: boolean; message: string; data: Booking }>(`/owner/bookings/${bookingId}/waitlist`);
+export const moveBookingToWaitlistApi = async (bookingId: string, reason?: string) => {
+  const res = await apiClient.post<{ success: boolean; message: string; data: Booking }>(`/owner/bookings/${bookingId}/waitlist`, { reason });
+  return res.data;
+};
+
+export const suggestAlternativeDatesApi = async (
+  bookingId: string,
+  data: { suggestedDate: string; suggestedTimeSlot: string; note?: string }
+) => {
+  const res = await apiClient.post<{ success: boolean; message: string; data: Booking }>(
+    `/owner/bookings/${bookingId}/suggest-dates`,
+    data
+  );
   return res.data;
 };
 

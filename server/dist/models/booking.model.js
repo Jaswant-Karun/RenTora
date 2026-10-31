@@ -138,6 +138,12 @@ const bookingSchema = new mongoose_1.Schema({
     managerOverrideReason: String,
     managerOverriddenBy: String,
     notes: String,
+    suggestedAlternative: {
+        date: String,
+        timeSlot: String,
+        note: String,
+        offeredAt: { type: Date, default: Date.now },
+    },
     checkedIn: {
         type: Boolean,
         default: false,

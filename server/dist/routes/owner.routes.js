@@ -20,6 +20,7 @@ router.post('/bookings/:id/approve', owner_controller_js_1.approveBooking);
 router.post('/bookings/:id/reject', owner_controller_js_1.rejectBooking);
 router.post('/bookings/:id/cancel', owner_controller_js_1.cancelBookingByOwner);
 router.post('/bookings/:id/waitlist', owner_controller_js_1.moveBookingToWaitlist);
+router.post('/bookings/:id/suggest-dates', owner_controller_js_1.suggestAlternativeDates);
 // Check-in / Check-out
 router.post('/checkin-checkout', owner_controller_js_1.handleCheckInCheckOut);
 // Condition Reports

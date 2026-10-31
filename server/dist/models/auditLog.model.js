@@ -10,10 +10,13 @@ const auditLogSchema = new mongoose_1.Schema({
         enum: [
             'RESOURCE_CREATION',
             'RESOURCE_UPDATE',
+            'RESOURCE_ARCHIVED',
+            'RESOURCE_DISABLED',
             'BOOKING_REQUEST',
             'BOOKING_APPROVAL',
             'BOOKING_REJECTION',
             'BOOKING_CANCELLATION',
+            'BOOKING_ALTERNATIVE_SUGGESTED',
             'CHECK_IN',
             'CHECK_OUT',
             'CONDITION_REPORT',
