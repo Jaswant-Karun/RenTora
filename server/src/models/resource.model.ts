@@ -12,7 +12,7 @@ export type ResourceCategory =
   | 'Workshop Tools'
   | 'Other Resources';
 
-export type ResourceStatus = 'available' | 'reserved' | 'maintenance' | 'in_use';
+export type ResourceStatus = 'available' | 'reserved' | 'maintenance' | 'in_use' | 'archived' | 'disabled';
 
 export interface IResource extends Document {
   name: string;
@@ -28,6 +28,7 @@ export interface IResource extends Document {
   ownerDepartment: string;
   ownerAvatar?: string;
   status: ResourceStatus;
+  isArchived?: boolean;
   availabilityText: string;
   availableDates?: string[];
   eligibility: string;
@@ -132,8 +133,13 @@ const resourceSchema = new Schema<IResource>(
     },
     status: {
       type: String,
-      enum: ['available', 'reserved', 'maintenance', 'in_use'],
+      enum: ['available', 'reserved', 'maintenance', 'in_use', 'archived', 'disabled'],
       default: 'available',
+      index: true,
+    },
+    isArchived: {
+      type: Boolean,
+      default: false,
       index: true,
     },
     availabilityText: {
