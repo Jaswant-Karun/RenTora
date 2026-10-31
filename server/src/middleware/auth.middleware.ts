@@ -76,6 +76,8 @@ export const requireRole = (allowedRoles: string[]) => {
 
     next();
   };
+};
+
 export const optionalAuth = async (
   req: AuthenticatedRequest,
   _res: Response,
