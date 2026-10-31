@@ -12,7 +12,7 @@ import {
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { EmptyState } from '../components/common/EmptyState';
 import { Button } from '../components/common/Button';
-import { cancelBookingApi } from '../api/booking.api';
+import { cancelBookingApi, getWaitlistBookingsApi } from '../api/booking.api';
 
 interface WaitlistItem {
   _id: string;
@@ -43,15 +43,9 @@ export const WaitlistPage: React.FC = () => {
   const fetchWaitlist = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('rentora_token');
-      const res = await fetch('http://localhost:5000/api/bookings/waitlist', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const data = await res.json();
-      if (data.success) {
-        setWaitlist(data.data);
+      const res = await getWaitlistBookingsApi();
+      if (res.success) {
+        setWaitlist(res.data);
       }
     } catch (err) {
       console.error('Error loading waitlist:', err);

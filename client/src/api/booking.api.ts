@@ -85,6 +85,12 @@ export const getBookingsApi = async (status?: string) => {
   return res.data;
 };
 
+// List user waitlist entries
+export const getWaitlistBookingsApi = async () => {
+  const res = await apiClient.get<{ success: boolean; data: any[] }>('/bookings/waitlist');
+  return res.data;
+};
+
 // Get single booking with visual timeline & audit trail
 export const getBookingByIdApi = async (id: string) => {
   const res = await apiClient.get<{
