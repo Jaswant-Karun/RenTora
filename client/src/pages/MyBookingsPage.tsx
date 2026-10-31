@@ -324,6 +324,15 @@ export const MyBookingsPage: React.FC = () => {
                         Cancel Reservation
                       </button>
                     )}
+
+                    <button
+                      onClick={() => setSelectedIncidentBooking(booking)}
+                      className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-all"
+                      title="Report damage, missing parts, scheduling collision or safety issue"
+                    >
+                      <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
+                      <span>Report Issue</span>
+                    </button>
                   </div>
                 </div>
 
@@ -425,6 +434,19 @@ export const MyBookingsPage: React.FC = () => {
             </form>
           </motion.div>
         </div>
+      )}
+
+      {/* Incident Report Modal */}
+      {selectedIncidentBooking && (
+        <IncidentReportModal
+          isOpen={!!selectedIncidentBooking}
+          onClose={() => setSelectedIncidentBooking(null)}
+          defaultBookingId={selectedIncidentBooking._id}
+          defaultBookingRef={`BK-${selectedIncidentBooking._id.slice(-6).toUpperCase()}`}
+          defaultResourceId={selectedIncidentBooking.resourceId}
+          defaultResourceName={selectedIncidentBooking.resourceName}
+          onSuccess={() => fetchBookings()}
+        />
       )}
     </div>
   );
