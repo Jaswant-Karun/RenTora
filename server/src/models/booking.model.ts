@@ -103,7 +103,26 @@ export interface IBooking extends Document {
   };
   conflictDetected?: boolean;
   isOverdue?: boolean;
+  overdueMinutes?: number;
   fairShareExplanation?: any;
+
+  trustPassToken?: {
+    token: string;
+    qrPayload: string;
+    generatedAt: Date;
+    expiresAt: Date;
+    isValid: boolean;
+  };
+  handoverOfficer?: {
+    id: Types.ObjectId;
+    name: string;
+    role: string;
+  };
+  returnOfficer?: {
+    id: Types.ObjectId;
+    name: string;
+    role: string;
+  };
 
   createdAt: Date;
   updatedAt: Date;
@@ -286,8 +305,29 @@ const bookingSchema = new Schema<IBooking>(
       type: Boolean,
       default: false,
     },
+    overdueMinutes: {
+      type: Number,
+      default: 0,
+    },
     fairShareExplanation: {
       type: Schema.Types.Mixed,
+    },
+    trustPassToken: {
+      token: { type: String, index: true },
+      qrPayload: String,
+      generatedAt: Date,
+      expiresAt: Date,
+      isValid: { type: Boolean, default: true },
+    },
+    handoverOfficer: {
+      id: Schema.Types.ObjectId,
+      name: String,
+      role: String,
+    },
+    returnOfficer: {
+      id: Schema.Types.ObjectId,
+      name: String,
+      role: String,
     },
     auditTrail: {
       type: [auditEntrySchema],
@@ -302,5 +342,6 @@ const bookingSchema = new Schema<IBooking>(
 // Compound index for high performance overlap checks and preventing concurrent double booking
 bookingSchema.index({ resourceId: 1, startTime: 1, endTime: 1, status: 1 });
 bookingSchema.index({ userId: 1, status: 1 });
+bookingSchema.index({ 'trustPassToken.token': 1 });
 
 export const Booking = model<IBooking>('Booking', bookingSchema);
