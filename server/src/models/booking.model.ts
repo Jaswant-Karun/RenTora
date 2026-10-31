@@ -253,6 +253,12 @@ const bookingSchema = new Schema<IBooking>(
     managerOverrideReason: String,
     managerOverriddenBy: String,
     notes: String,
+    suggestedAlternative: {
+      date: String,
+      timeSlot: String,
+      note: String,
+      offeredAt: { type: Date, default: Date.now },
+    },
     checkedIn: {
       type: Boolean,
       default: false,

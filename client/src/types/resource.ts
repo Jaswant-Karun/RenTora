@@ -148,6 +148,12 @@ export interface Booking {
   conflictDetected?: boolean;
   isOverdue?: boolean;
   auditTrail?: AuditEntry[];
+  suggestedAlternative?: {
+    date: string;
+    timeSlot: string;
+    note?: string;
+    offeredAt?: string;
+  };
   notes?: string;
   createdAt: string;
   updatedAt?: string;
