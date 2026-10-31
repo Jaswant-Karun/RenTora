@@ -1,0 +1,76 @@
+import { Schema, model, Document } from 'mongoose';
+
+export interface ISystemSetting extends Document {
+  platformName: string;
+  supportEmail: string;
+  allowPublicRegistration: boolean;
+  defaultSessionDurationDays: number;
+  maintenanceMode: boolean;
+  maintenanceMessage: string;
+  maxActiveBookingsPerUser: number;
+  maxWeeklyReservationHours: number;
+  monopolisationWindowDays: number;
+  enforceAuditLedgerIntegrity: boolean;
+  aiEngineProvider: string;
+  updatedBy?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const systemSettingSchema = new Schema<ISystemSetting>(
+  {
+    platformName: {
+      type: String,
+      default: 'RENTORA Institutional Resource Sharing Platform',
+    },
+    supportEmail: {
+      type: String,
+      default: 'support@rentora.edu',
+    },
+    allowPublicRegistration: {
+      type: Boolean,
+      default: true,
+    },
+    defaultSessionDurationDays: {
+      type: Number,
+      default: 7,
+    },
+    maintenanceMode: {
+      type: Boolean,
+      default: false,
+    },
+    maintenanceMessage: {
+      type: String,
+      default: 'RENTORA platform undergoing scheduled campus-wide database sync. Back shortly.',
+    },
+    maxActiveBookingsPerUser: {
+      type: Number,
+      default: 3,
+    },
+    maxWeeklyReservationHours: {
+      type: Number,
+      default: 16,
+    },
+    monopolisationWindowDays: {
+      type: Number,
+      default: 14,
+    },
+    enforceAuditLedgerIntegrity: {
+      type: Boolean,
+      default: true,
+    },
+    aiEngineProvider: {
+      type: String,
+      default: 'RENTORA Embedded Intelligence Engine',
+    },
+    updatedBy: {
+      type: String,
+      default: 'Platform Administrator',
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+export const SystemSetting = model<ISystemSetting>('SystemSetting', systemSettingSchema);
