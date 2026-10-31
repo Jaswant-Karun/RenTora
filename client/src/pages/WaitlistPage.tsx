@@ -77,15 +77,6 @@ export const WaitlistPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-[#16834A] flex items-center justify-between">
-          <span>{toastMessage}</span>
-          <button onClick={() => setToastMessage('')}>
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
 
       {/* 1. Header Section */}
       <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
