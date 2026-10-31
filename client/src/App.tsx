@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 import { AppLayout } from './components/layout/AppLayout';
 import { IntroScreen } from './pages/IntroScreen';
 import { LandingPage } from './pages/LandingPage';
@@ -38,7 +39,10 @@ import { ManagerDashboardPage } from './pages/manager/ManagerDashboardPage';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const ProtectedRoute: React.FC<{
+  children: React.ReactNode;
+  allowedRoles?: ('student' | 'owner' | 'manager' | 'admin')[];
+}> = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -51,6 +55,18 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    const fallback =
+      user.role === 'admin'
+        ? '/admin'
+        : user.role === 'manager'
+        ? '/manager'
+        : user.role === 'owner'
+        ? '/owner'
+        : '/dashboard';
+    return <Navigate to={fallback} replace />;
   }
 
   return <>{children}</>;
@@ -78,8 +94,9 @@ export const App: React.FC = () => {
   return (
     <Router>
       <AuthProvider>
-        <ErrorBoundary>
-          <AppLayout>
+        <ToastProvider>
+          <ErrorBoundary>
+            <AppLayout>
             <Routes>
             {/* First Screen: Animated Introduction Screen */}
             <Route path="/" element={<IntroScreen />} />
