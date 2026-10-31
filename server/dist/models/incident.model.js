@@ -3,12 +3,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Incident = void 0;
 const mongoose_1 = require("mongoose");
 const incidentSchema = new mongoose_1.Schema({
+    incidentNumber: {
+        type: String,
+        unique: true,
+        index: true,
+        trim: true,
+    },
     category: {
         type: String,
         enum: [
             'equipment_damage',
+            'delayed_return',
             'late_return',
             'missing_components',
+            'equipment_malfunction',
+            'safety_concerns',
+            'disputes',
             'misuse',
             'scheduling_conflicts',
             'other',
@@ -51,6 +61,14 @@ const incidentSchema = new mongoose_1.Schema({
         required: true,
         default: 'General Resource',
     },
+    conditionReportBeforeId: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: 'ConditionReport',
+    },
+    conditionReportAfterId: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: 'ConditionReport',
+    },
     reportedBy: {
         type: String,
         required: true,
@@ -76,9 +94,38 @@ const incidentSchema = new mongoose_1.Schema({
     },
     status: {
         type: String,
-        enum: ['reported', 'investigating', 'resolved', 'dismissed'],
+        enum: ['reported', 'investigating', 'decision_pending', 'resolved', 'dismissed'],
         default: 'reported',
         index: true,
+    },
+    requiresHumanReview: {
+        type: Boolean,
+        default: true,
+    },
+    investigationNotes: [
+        {
+            authorId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User' },
+            authorName: { type: String, required: true },
+            authorRole: { type: String, default: 'Investigator' },
+            note: { type: String, required: true },
+            createdAt: { type: Date, default: Date.now },
+        },
+    ],
+    decision: {
+        outcome: {
+            type: String,
+            enum: ['no_fault', 'user_responsible', 'fair_wear_and_tear', 'equipment_defect', 'under_review'],
+        },
+        decidedBy: { type: String },
+        decidedAt: { type: Date },
+        rationale: { type: String },
+        sanctions: { type: String },
+    },
+    resolution: {
+        summary: { type: String },
+        resolvedBy: { type: String },
+        resolvedAt: { type: Date },
+        actionTaken: { type: String },
     },
     managerResponse: {
         type: String,
@@ -100,6 +147,15 @@ const incidentSchema = new mongoose_1.Schema({
     resolvedBy: String,
 }, {
     timestamps: true,
+});
+incidentSchema.pre('validate', function (next) {
+    if (!this.incidentNumber) {
+        const year = new Date().getFullYear();
+        const rand = Math.floor(1000 + Math.random() * 9000);
+        const timeSlice = Date.now().toString().slice(-4);
+        this.incidentNumber = `INC-${year}-${timeSlice}${rand}`;
+    }
+    next();
 });
 incidentSchema.index({ status: 1, severity: 1, createdAt: -1 });
 incidentSchema.index({ resourceId: 1, status: 1 });

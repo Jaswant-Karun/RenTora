@@ -12,6 +12,8 @@ import aiRoutes from './ai.routes.js';
 import adminRoutes from './admin.routes.js';
 import fairShareRoutes from './fairShare.routes.js';
 import trustPassRoutes from './trustPass.routes.js';
+import conditionGuardRoutes from './conditionGuard.routes.js';
+import uploadRoutes from './upload.routes.js';
 import { getDBStatus } from '../config/db.js';
 
 const router = Router();
@@ -51,5 +53,7 @@ router.use('/ai', aiRoutes);
 router.use('/admin', adminRoutes);
 router.use('/fairshare', fairShareRoutes);
 router.use('/trustpass', trustPassRoutes);
+router.use('/condition-guard', conditionGuardRoutes);
+router.use('/upload', uploadRoutes);
 
 export default router;

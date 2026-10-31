@@ -26,6 +26,19 @@ const conditionReportSchema = new mongoose_1.Schema({
         type: String,
         default: 'Lab Custodian',
     },
+    responsibleUserId: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: 'User',
+        index: true,
+    },
+    responsibleUserName: {
+        type: String,
+        default: '',
+    },
+    responsibleUserEmail: {
+        type: String,
+        default: '',
+    },
     type: {
         type: String,
         enum: ['check_in', 'check_out', 'routine'],
@@ -46,6 +59,10 @@ const conditionReportSchema = new mongoose_1.Schema({
         type: String,
         default: '0',
     },
+    existingDamage: {
+        type: [String],
+        default: [],
+    },
     conditionNotes: {
         type: String,
         default: '',
@@ -57,6 +74,22 @@ const conditionReportSchema = new mongoose_1.Schema({
     photos: {
         type: [String],
         default: [],
+    },
+    differences: {
+        hasDifferences: { type: Boolean, default: false },
+        summary: { type: String, default: '' },
+        items: [
+            {
+                category: { type: String },
+                before: { type: String },
+                after: { type: String },
+                requiresReview: { type: Boolean, default: true },
+            },
+        ],
+    },
+    requiresHumanReview: {
+        type: Boolean,
+        default: false,
     },
     timestamp: {
         type: Date,
