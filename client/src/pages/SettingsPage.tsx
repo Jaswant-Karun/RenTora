@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, Shield, Bell, Lock, Check } from 'lucide-react';
+import { Settings, Shield, Bell, Check } from 'lucide-react';
 import { Button } from '../components/common/Button';
 
 export const SettingsPage: React.FC = () => {
@@ -13,70 +13,75 @@ export const SettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-4xl mx-auto">
-      <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 shadow-xl space-y-1">
-        <h1 className="text-2xl font-extrabold text-white">Account Settings & Security</h1>
-        <p className="text-xs text-slate-400">
-          Manage your notification preferences, institutional security policies, and session credentials.
+    <div className="space-y-6 max-w-4xl">
+      {/* Header */}
+      <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm">
+        <h1 className="text-xl font-bold text-[#172033] tracking-tight">Account Settings & Preferences</h1>
+        <p className="text-xs text-[#64748B] mt-0.5">
+          Manage your notification alerts, security preferences, and active credentials.
         </p>
       </div>
 
-      <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 shadow-xl space-y-6">
-        <div className="space-y-4">
-          <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-            <Bell className="w-4 h-4 text-brand-400" />
+      {/* Main Settings Card */}
+      <div className="bg-white border border-[#E2E8F0] rounded-xl p-6 shadow-sm space-y-6">
+        {/* Notification Section */}
+        <div className="space-y-3">
+          <h2 className="text-sm font-semibold text-[#172033] flex items-center gap-2">
+            <Bell className="w-4 h-4 text-[#1769D2]" />
             Notification Preferences
-          </h3>
+          </h2>
 
-          <div className="space-y-3 text-xs">
-            <label className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-950 border border-slate-800 cursor-pointer">
+          <div className="space-y-2 text-xs">
+            <label className="flex items-center justify-between p-3 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] cursor-pointer hover:bg-slate-100 transition-colors">
               <div>
-                <span className="font-semibold text-white block">Email Reservation Alerts</span>
-                <span className="text-slate-400 text-[11px]">Receive pass confirmations and clearance notifications via email</span>
+                <span className="font-medium text-[#172033] block">Email Reservation Confirmations</span>
+                <span className="text-[#64748B] text-[11px]">Receive pass confirmations and custodian decisions via institutional email</span>
               </div>
               <input
                 type="checkbox"
                 checked={emailAlerts}
                 onChange={(e) => setEmailAlerts(e.target.checked)}
-                className="w-4 h-4 rounded text-brand-600 bg-slate-900 border-slate-700"
+                className="w-4 h-4 rounded border-[#E2E8F0] text-[#1769D2] focus:ring-[#1769D2]"
               />
             </label>
 
-            <label className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-950 border border-slate-800 cursor-pointer">
+            <label className="flex items-center justify-between p-3 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] cursor-pointer hover:bg-slate-100 transition-colors">
               <div>
-                <span className="font-semibold text-white block">SMS Emergency Maintenance Alerts</span>
-                <span className="text-slate-400 text-[11px]">Receive SMS messages if equipment experiences unexpected downtime</span>
+                <span className="font-medium text-[#172033] block">SMS Urgent Maintenance Alerts</span>
+                <span className="text-[#64748B] text-[11px]">Receive SMS notices if equipment experiences emergency downtime</span>
               </div>
               <input
                 type="checkbox"
                 checked={smsAlerts}
                 onChange={(e) => setSmsAlerts(e.target.checked)}
-                className="w-4 h-4 rounded text-brand-600 bg-slate-900 border-slate-700"
+                className="w-4 h-4 rounded border-[#E2E8F0] text-[#1769D2] focus:ring-[#1769D2]"
               />
             </label>
           </div>
         </div>
 
-        <div className="pt-4 border-t border-slate-800 space-y-3">
-          <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-            <Shield className="w-4 h-4 text-emerald-400" />
-            Active Session Security
-          </h3>
-          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs space-y-1">
-            <p className="font-semibold text-slate-200">JWT Token with httpOnly Cookie Storage</p>
-            <p className="text-[11px] text-slate-400">
-              Your session is secured using modern cryptographic signatures with sameSite policy protection against CSRF attacks.
+        {/* Security Section */}
+        <div className="pt-4 border-t border-[#E2E8F0] space-y-3">
+          <h2 className="text-sm font-semibold text-[#172033] flex items-center gap-2">
+            <Shield className="w-4 h-4 text-[#16834A]" />
+            Institutional Security & Session
+          </h2>
+          <div className="p-3.5 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-xs space-y-1">
+            <p className="font-medium text-[#172033]">JWT Encrypted Session with httpOnly Cookie Storage</p>
+            <p className="text-[11px] text-[#64748B]">
+              Your session is cryptographically signed and protected with sameSite cookie policies against CSRF vectors.
             </p>
           </div>
         </div>
 
-        <div className="pt-2 flex items-center justify-end gap-3">
+        {/* Save Controls */}
+        <div className="pt-2 flex items-center justify-end gap-3 border-t border-[#E2E8F0]">
           {saved && (
-            <span className="text-xs text-emerald-400 flex items-center gap-1 font-semibold">
+            <span className="text-xs text-[#16834A] flex items-center gap-1 font-medium">
               <Check className="w-3.5 h-3.5" /> Preferences saved!
             </span>
           )}
-          <Button size="sm" onClick={handleSave}>
+          <Button variant="primary" size="sm" onClick={handleSave}>
             Save Changes
           </Button>
         </div>

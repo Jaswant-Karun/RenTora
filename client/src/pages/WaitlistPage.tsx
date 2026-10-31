@@ -2,18 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Clock,
-  AlertCircle,
   Compass,
   CheckCircle2,
-  ShieldAlert,
-  Sparkles,
-  ArrowRight,
   TrendingUp,
-  Info,
-  Calendar,
-  XCircle,
+  X,
+  AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
+import { EmptyState } from '../components/common/EmptyState';
+import { Button } from '../components/common/Button';
 import { cancelBookingApi } from '../api/booking.api';
 
 interface WaitlistItem {
@@ -83,196 +81,137 @@ export const WaitlistPage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
-      {/* Page Header */}
-      <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 shadow-xl space-y-2 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[10px] font-bold uppercase tracking-wider">
-          <Clock className="w-3.5 h-3.5" />
-          Transparent Fairness & Standby Queue
-        </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-white">Resource Waiting Lists</h1>
-        <p className="text-xs sm:text-sm text-slate-400 max-w-3xl leading-relaxed">
-          When high-demand institutional instruments are fully reserved, RENTORA's fairness engine places you in a
-          transparent queue. You can see your exact position, estimated release time, and why you were waitlisted.
-        </p>
-      </div>
-
+    <div className="space-y-6">
+      {/* Toast Notification */}
       {toastMessage && (
-        <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 shrink-0" />
+        <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-[#16834A] flex items-center justify-between">
           <span>{toastMessage}</span>
+          <button onClick={() => setToastMessage('')}>
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
 
-      {/* Fairness Principles Card */}
+      {/* 1. Header Section */}
+      <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-[#172033] tracking-tight">
+            Transparent Standby Waiting Lists
+          </h1>
+          <p className="text-xs text-[#64748B] mt-0.5">
+            Transparent priority standby queues with automatic promotion when equipment becomes available.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={fetchWaitlist}
+            className="p-2 text-[#64748B] hover:text-[#172033] rounded-lg border border-[#E2E8F0] bg-white hover:bg-slate-50 transition-colors"
+            title="Refresh queue standing"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+          <Link
+            to="/dashboard/explore"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#1769D2] hover:bg-[#1256B0] text-white text-xs font-medium shadow-xs transition-colors shrink-0"
+          >
+            <Compass className="w-3.5 h-3.5" />
+            <span>Explore Catalog</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* 2. Transparency Policy Pillars */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 text-xs space-y-1">
-          <div className="flex items-center gap-2 text-amber-400 font-bold">
+        <div className="bg-white border border-[#E2E8F0] rounded-xl p-4 shadow-sm space-y-1">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-[#1769D2]">
             <TrendingUp className="w-4 h-4" />
-            Configurable Priority Rules
+            <span>Configurable Priority Rules</span>
           </div>
-          <p className="text-slate-400 text-[11px]">
-            Queue position factors in academic thesis tier (PhD/Final Year), departmental alignment, and historical fair-share usage bonus.
+          <p className="text-[11px] text-[#64748B] leading-relaxed">
+            Queue standing prioritizes academic research level, thesis urgency, and historical fair usage.
           </p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 text-xs space-y-1">
-          <div className="flex items-center gap-2 text-indigo-400 font-bold">
-            <ShieldAlert className="w-4 h-4" />
-            Anti-Monopolisation Cooldown
+        <div className="bg-white border border-[#E2E8F0] rounded-xl p-4 shadow-sm space-y-1">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-[#D97706]">
+            <Clock className="w-4 h-4" />
+            <span>Anti-Monopolisation Rules</span>
           </div>
-          <p className="text-slate-400 text-[11px]">
-            Users who reserve the same high-demand asset $\ge 3$ times in 14 days are temporarily throttled to guarantee equal peer access.
+          <p className="text-[11px] text-[#64748B] leading-relaxed">
+            Repeated bookings of the same asset trigger cooldown windows to guarantee fair peer access.
           </p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 text-xs space-y-1">
-          <div className="flex items-center gap-2 text-emerald-400 font-bold">
+        <div className="bg-white border border-[#E2E8F0] rounded-xl p-4 shadow-sm space-y-1">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-[#16834A]">
             <CheckCircle2 className="w-4 h-4" />
-            Instant Automated Promotion
+            <span>Automated Promotion</span>
           </div>
-          <p className="text-slate-400 text-[11px]">
-            The instant a prior borrower completes their session or cancels, the highest-priority standby reservation is confirmed automatically.
+          <p className="text-[11px] text-[#64748B] leading-relaxed">
+            When a prior borrower cancels or finishes early, the highest-priority request is confirmed immediately.
           </p>
         </div>
       </div>
 
-      {/* Main List */}
+      {/* 3. Waitlist Cards List */}
       {loading ? (
         <div className="py-20 flex justify-center items-center">
           <LoadingSpinner message="Scanning institutional standby queues..." size="md" />
         </div>
       ) : waitlist.length === 0 ? (
-        <div className="p-12 text-center rounded-3xl bg-slate-900/40 border border-dashed border-slate-800 space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-slate-800 text-slate-400 flex items-center justify-center mx-auto">
-            <Clock className="w-6 h-6" />
-          </div>
-          <h3 className="text-base font-bold text-white">No active waiting list reservations</h3>
-          <p className="text-xs text-slate-400 max-w-md mx-auto">
-            You do not currently have any waitlisted reservations. All your booked sessions are confirmed and ready for use.
-          </p>
-          <div className="pt-2">
-            <Link
-              to="/dashboard/explore"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold shadow-lg shadow-brand-500/20"
-            >
-              <Compass className="w-4 h-4" /> Explore Campus Marketplace
-            </Link>
-          </div>
-        </div>
+        <EmptyState
+          title="No active waitlist reservations"
+          description="You do not currently have any waitlisted reservations. All your confirmed bookings are active."
+          actionLabel="Explore Campus Marketplace"
+          onAction={() => window.location.href = '/dashboard/explore'}
+        />
       ) : (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <span>Your Active Standby Queue</span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                {waitlist.length} Queued
-              </span>
-            </h2>
-            <button
-              onClick={fetchWaitlist}
-              className="text-xs text-brand-400 hover:text-brand-300 font-semibold"
-            >
-              Refresh Status
-            </button>
-          </div>
+        <div className="space-y-3">
+          <h2 className="text-sm font-semibold text-[#172033] flex items-center gap-2">
+            <span>Your Standby Positions</span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#EFF6FF] text-[#1769D2] border border-blue-200">
+              {waitlist.length} Queued
+            </span>
+          </h2>
 
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 gap-3">
             {waitlist.map((item) => (
               <div
                 key={item._id}
-                className="p-5 rounded-3xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all shadow-xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6"
+                className="bg-white border border-[#E2E8F0] rounded-xl p-4 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-[#CBD5E1] transition-colors"
               >
-                {/* Left: Resource Info */}
-                <div className="flex items-start gap-4">
-                  {item.resourceImage ? (
-                    <img
-                      src={item.resourceImage}
-                      alt={item.resourceName}
-                      className="w-16 h-16 rounded-2xl object-cover border border-slate-800 shrink-0"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-500 shrink-0">
-                      <Clock className="w-6 h-6" />
-                    </div>
-                  )}
+                <div className="flex items-start sm:items-center space-x-3.5">
+                  <div className="w-10 h-10 rounded-lg bg-[#EFF6FF] text-[#1769D2] border border-blue-200 flex flex-col items-center justify-center shrink-0">
+                    <span className="text-[9px] uppercase font-bold text-[#64748B]">POS</span>
+                    <span className="text-sm font-bold text-[#1769D2] leading-none">#{item.queuePosition}</span>
+                  </div>
 
-                  <div className="space-y-1.5">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-950 text-brand-300 border border-slate-800">
-                        {item.resourceCategory}
-                      </span>
-                      {item.monopolisationDetected && (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                          Fair-Share Cooldown
-                        </span>
-                      )}
-                    </div>
-
-                    <h3 className="text-base font-bold text-white">{item.resourceName}</h3>
-
-                    <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                        {item.date} ({item.timeSlot})
-                      </span>
-                      {item.resourceLocation && <span>📍 {item.resourceLocation}</span>}
-                    </div>
-
-                    {/* Transparency Box */}
-                    <div className="mt-2 p-3 rounded-2xl bg-slate-950/80 border border-amber-500/20 text-xs space-y-1">
-                      <div className="flex items-center gap-1.5 text-amber-400 font-bold text-[11px]">
-                        <Info className="w-3.5 h-3.5" />
-                        Why Was I Waitlisted?
-                      </div>
-                      <p className="text-slate-300 text-[11px] leading-relaxed">
-                        {item.transparencyRationale || item.waitlistReason || 'High campus demand. Queued according to fair allocation priority.'}
+                  <div>
+                    <h3 className="text-sm font-semibold text-[#172033]">{item.resourceName}</h3>
+                    <p className="text-xs text-[#64748B] mt-0.5">
+                      {item.date} • {item.timeSlot} • {item.resourceCategory}
+                    </p>
+                    {item.waitlistReason && (
+                      <p className="text-[11px] text-[#64748B] mt-1 bg-[#F8FAFC] p-1.5 rounded border border-[#E2E8F0]">
+                        <strong>Why you were waitlisted:</strong> {item.waitlistReason}
                       </p>
-                    </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Right: Queue Stats & Actions */}
-                <div className="flex flex-row lg:flex-col items-center lg:items-end justify-between w-full lg:w-auto gap-4 pt-4 lg:pt-0 border-t lg:border-t-0 border-slate-800">
-                  <div className="text-left lg:text-right space-y-1">
-                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">
-                      Live Queue Standing
-                    </span>
-                    <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl bg-amber-500/15 text-amber-300 border border-amber-500/30 text-sm font-extrabold">
-                      <Clock className="w-4 h-4" />
-                      #{item.queuePosition} in Line
-                    </div>
-                    {item.waitlistPriority && (
-                      <span className="block text-[11px] text-indigo-400 font-semibold">
-                        Priority Score: {item.waitlistPriority} pts
-                      </span>
-                    )}
-                    {item.estimatedReleaseTime && (
-                      <span className="block text-[10px] text-slate-400">
-                        Est. Release: {new Date(item.estimatedReleaseTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => {
-                        setCancellingId(item._id);
-                        setShowCancelModal(true);
-                      }}
-                      className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-rose-500/20 hover:text-rose-300 hover:border-rose-500/30 border border-slate-700 text-xs font-semibold text-slate-300 transition-all"
-                    >
-                      Leave Waitlist
-                    </button>
-                    <Link
-                      to="/dashboard/explore"
-                      className="px-3.5 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-xs font-semibold text-white shadow-md shadow-brand-500/20 flex items-center gap-1.5"
-                    >
-                      <span>Find Similar</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
+                <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCancellingId(item._id);
+                      setShowCancelModal(true);
+                    }}
+                    className="px-3 py-1.5 text-xs font-medium text-[#DC2626] hover:bg-red-50 rounded-lg border border-red-200 transition-colors"
+                  >
+                    Leave Queue
+                  </button>
                 </div>
               </div>
             ))}
@@ -280,40 +219,50 @@ export const WaitlistPage: React.FC = () => {
         </div>
       )}
 
-      {/* Cancel Waitlist Modal */}
+      {/* Cancel Modal */}
       {showCancelModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="w-full max-w-md p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-2xl">
-            <div className="flex items-center gap-2 text-rose-400 font-bold text-sm">
-              <XCircle className="w-5 h-5" />
-              Cancel Waiting List Position
-            </div>
-            <p className="text-xs text-slate-300">
-              Are you sure you want to release your standing in this queue? Other students behind you will be promoted immediately.
-            </p>
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1">Mandatory Stated Reason</label>
-              <input
-                type="text"
-                value={cancelReason}
-                onChange={(e) => setCancelReason(e.target.value)}
-                placeholder="Why are you releasing this slot?"
-                className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-brand-500"
-              />
-            </div>
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-white border border-[#E2E8F0] shadow-xl rounded-xl p-6 space-y-4">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-base font-semibold text-[#172033]">Leave Standby Waitlist</h3>
+                <p className="text-xs text-[#64748B] mt-0.5">Your position in the queue will be surrendered.</p>
+              </div>
               <button
                 onClick={() => setShowCancelModal(false)}
-                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300"
+                className="p-1 text-[#64748B] hover:text-[#172033] rounded-md hover:bg-slate-100"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <label className="block text-xs font-medium text-[#172033]">
+                Reason for Leaving Queue
+              </label>
+              <textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                rows={2}
+                className="w-full bg-[#F8FAFC] text-[#172033] text-xs rounded-lg p-2.5 border border-[#E2E8F0] focus:bg-white focus:outline-none focus:border-[#1769D2]"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setShowCancelModal(false)}
               >
                 Keep Position
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
                 onClick={handleCancelWaitlist}
-                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-xs font-semibold text-white"
               >
-                Confirm Cancellation
-              </button>
+                Surrender Position
+              </Button>
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import React from 'react';
-import { Activity, Clock, TrendingUp, CheckCircle2, ShieldCheck, Cpu } from 'lucide-react';
+import { Activity, TrendingUp, CheckCircle2 } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
+import { StatCard } from '../components/common/StatCard';
 
 export const ActivityPage: React.FC = () => {
   const chartData = [
@@ -12,56 +13,71 @@ export const ActivityPage: React.FC = () => {
   ];
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
-      <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 shadow-xl space-y-1">
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 text-[10px] font-bold uppercase tracking-wider">
-          <Activity className="w-3.5 h-3.5" />
-          Usage Telemetry
-        </div>
-        <h1 className="text-2xl font-extrabold text-white">My Resource Activity & Audit</h1>
-        <p className="text-xs text-slate-400">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm">
+        <h1 className="text-xl font-bold text-[#172033] tracking-tight">Resource Activity & Telemetry</h1>
+        <p className="text-xs text-[#64748B] mt-0.5">
           Transparent metrics on laboratory hours utilized, research output generated, and procurement cost avoided.
         </p>
       </div>
 
+      {/* 3 Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800">
-          <span className="text-[10px] font-bold text-slate-400 uppercase">Total Equipment Hours</span>
-          <p className="text-3xl font-extrabold text-white mt-1">321 hrs</p>
-          <p className="text-xs text-emerald-400 mt-1 flex items-center gap-1">
-            <TrendingUp className="w-3.5 h-3.5" /> +18 hrs this month
-          </p>
-        </div>
-        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800">
-          <span className="text-[10px] font-bold text-slate-400 uppercase">Cost Avoided</span>
-          <p className="text-3xl font-extrabold text-cyan-400 mt-1">₹1,85,000</p>
-          <p className="text-xs text-slate-400 mt-1">Via shared institutional federation</p>
-        </div>
-        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800">
-          <span className="text-[10px] font-bold text-slate-400 uppercase">Safety Rating</span>
-          <p className="text-3xl font-extrabold text-emerald-400 mt-1">100%</p>
-          <p className="text-xs text-slate-400 mt-1">Zero safety violations</p>
-        </div>
+        <StatCard
+          label="Total Equipment Hours"
+          value="321 hrs"
+          description="+18 hrs this month"
+          icon={<Activity className="w-4 h-4" />}
+          trend={{ value: '+18h', isPositive: true }}
+        />
+
+        <StatCard
+          label="Cost Avoided"
+          value="₹1,85,000"
+          description="Via shared institutional federation"
+          icon={<TrendingUp className="w-4 h-4" />}
+          trend={{ value: 'Savings', isPositive: true }}
+        />
+
+        <StatCard
+          label="Safety Compliance"
+          value="100%"
+          description="Zero safety violations recorded"
+          icon={<CheckCircle2 className="w-4 h-4" />}
+          trend={{ value: 'Optimal', isPositive: true }}
+        />
       </div>
 
-      <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 shadow-xl space-y-4">
-        <h3 className="text-base font-extrabold text-white">Monthly Hours Logged</h3>
-        <div className="h-64 w-full">
+      {/* Chart Card */}
+      <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0]">
+          <div>
+            <h2 className="text-sm font-semibold text-[#172033]">Monthly Hours Logged</h2>
+            <p className="text-xs text-[#64748B]">Apparatus runtime across semester terms</p>
+          </div>
+          <span className="text-[11px] font-medium text-[#1769D2] bg-[#EFF6FF] px-2 py-0.5 rounded-md border border-blue-200">
+            Real-time Telemetry
+          </span>
+        </div>
+
+        <div className="h-64 w-full pt-2">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-              <XAxis dataKey="month" stroke="#64748b" fontSize={12} tickLine={false} />
-              <YAxis stroke="#64748b" fontSize={12} tickLine={false} />
+            <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+              <XAxis dataKey="month" stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} />
+              <YAxis stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} />
               <Tooltip
+                cursor={{ fill: '#F8FAFC' }}
                 contentStyle={{
-                  backgroundColor: '#0f172a',
-                  borderColor: '#334155',
-                  borderRadius: '0.75rem',
-                  color: '#f8fafc',
-                  fontSize: '12px',
+                  backgroundColor: '#FFFFFF',
+                  borderColor: '#E2E8F0',
+                  borderRadius: '0.5rem',
+                  fontSize: '11px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
                 }}
               />
-              <Bar dataKey="hours" fill="#06b6d4" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="hours" name="Hours Logged" fill="#1769D2" radius={[4, 4, 0, 0]} maxBarSize={36} />
             </BarChart>
           </ResponsiveContainer>
         </div>
