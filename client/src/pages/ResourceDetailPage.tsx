@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { getResourceByIdApi } from '../../api/resource.api';
-import { Resource } from '../../types/resource';
-import { BookingModal } from '../../components/resources/BookingModal';
-import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { getResourceByIdApi } from '../api/resource.api';
+import { Resource } from '../types/resource';
+import { BookingModal } from '../components/resources/BookingModal';
+import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import {
   ArrowLeft,
   Building,

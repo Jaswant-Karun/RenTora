@@ -5,6 +5,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const auth_routes_js_1 = __importDefault(require("./auth.routes.js"));
+const resource_routes_js_1 = __importDefault(require("./resource.routes.js"));
+const booking_routes_js_1 = __importDefault(require("./booking.routes.js"));
+const dashboard_routes_js_1 = __importDefault(require("./dashboard.routes.js"));
+const notification_routes_js_1 = __importDefault(require("./notification.routes.js"));
 const db_js_1 = require("../config/db.js");
 const router = (0, express_1.Router)();
 // Health Check
@@ -26,6 +30,10 @@ router.get('/db-status', (_req, res) => {
         database: (0, db_js_1.getDBStatus)(),
     });
 });
-// Auth Routes
+// API Endpoints
 router.use('/auth', auth_routes_js_1.default);
+router.use('/resources', resource_routes_js_1.default);
+router.use('/bookings', booking_routes_js_1.default);
+router.use('/dashboard', dashboard_routes_js_1.default);
+router.use('/notifications', notification_routes_js_1.default);
 exports.default = router;
