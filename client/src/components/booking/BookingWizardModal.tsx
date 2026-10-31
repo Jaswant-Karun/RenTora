@@ -351,6 +351,21 @@ export const BookingWizardModal: React.FC<BookingWizardModalProps> = ({
                   <span>End time must be later than start time.</span>
                 </div>
               )}
+
+              {/* AI Scheduling Conflict Detection Alert */}
+              <SchedulingConflictAlert
+                conflictData={aiConflictData}
+                loading={checkingConflict}
+                onSelectAlternativeSlot={(slot) => {
+                  setSelectedDate(slot.date);
+                  const parts = slot.timeSlot.split('-').map((s) => s.trim());
+                  if (parts[0]) setStartTimeStr(parts[0]);
+                  if (parts[1]) setEndTimeStr(parts[1]);
+                }}
+                onProceedToWaitlist={() => {
+                  setCurrentStep(4);
+                }}
+              />
             </div>
           )}
 
