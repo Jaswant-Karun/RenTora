@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShieldAlert,
@@ -50,7 +51,30 @@ import { ALL_CATEGORIES } from '../ExploreResourcesPage';
 type AdminTab = 'overview' | 'users' | 'resources' | 'institutions' | 'audit' | 'settings';
 
 export const AdminDashboardPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<AdminTab>('overview');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+
+  const getInitialTab = (): AdminTab => {
+    const tabParam = searchParams.get('tab') as AdminTab;
+    const validTabs: AdminTab[] = ['overview', 'users', 'resources', 'institutions', 'audit', 'settings'];
+    if (tabParam && validTabs.includes(tabParam)) return tabParam;
+    const sub = location.pathname.replace('/admin/', '').replace('/admin', '').trim() as AdminTab;
+    if (sub && validTabs.includes(sub)) return sub;
+    return 'overview';
+  };
+
+  const [activeTab, setActiveTab] = useState<AdminTab>(getInitialTab);
+
+  useEffect(() => {
+    const tab = getInitialTab();
+    setActiveTab(tab);
+  }, [searchParams, location.pathname]);
+
+  const handleTabChange = (newTab: AdminTab) => {
+    setActiveTab(newTab);
+    setSearchParams({ tab: newTab });
+  };
+
   const [loading, setLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState('');
 
@@ -343,7 +367,7 @@ export const AdminDashboardPage: React.FC = () => {
           return (
             <button
               key={t.id}
-              onClick={() => setActiveTab(t.id)}
+              onClick={() => handleTabChange(t.id)}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border ${
                 isActive
                   ? 'bg-[#1769D2] text-white border-[#1769D2] shadow-sm'
