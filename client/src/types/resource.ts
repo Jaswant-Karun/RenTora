@@ -134,6 +134,7 @@ export interface Booking {
   cancellationReason?: string;
   waitlistReason?: string;
   waitlistPriority?: number;
+  queuePosition?: number;
   checkedIn?: boolean;
   checkedInAt?: string;
   initialCondition?: ConditionSnapshot;
