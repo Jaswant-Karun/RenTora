@@ -10,6 +10,7 @@ import {
 import { Booking } from '../../types/resource';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { Button } from '../../components/common/Button';
+import { BookingTimeline } from '../../components/booking/BookingTimeline';
 import {
   Inbox,
   CheckCircle2,
@@ -337,6 +338,9 @@ export const OwnerBookingsPage: React.FC<{ initialTab?: string }> = ({ initialTa
                   </p>
                 )}
               </div>
+
+              {/* Visual Lifecycle Stepper & Audit Log */}
+              <BookingTimeline booking={b} />
 
               {/* Action Buttons Bar */}
               <div className="flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-slate-800/80">

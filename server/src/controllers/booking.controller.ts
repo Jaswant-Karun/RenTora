@@ -252,22 +252,6 @@ export const createBooking = async (
       return;
     }
 
-    // Active booking limits check for students
-    if (req.user.role === 'student') {
-      const activeCount = await Booking.countDocuments({
-        userId: req.user._id,
-        status: { $in: ['pending', 'under_review', 'approved', 'checked_in', 'return_pending', 'active'] },
-      });
-      const fairPolicy = (await FairAllocation.findOne()) || { maxActiveBookingsPerStudent: 3 };
-      if (activeCount >= fairPolicy.maxActiveBookingsPerStudent) {
-        res.status(429).json({
-          success: false,
-          message: `Active reservation limit reached (${activeCount}/${fairPolicy.maxActiveBookingsPerStudent}). Complete or cancel an existing session first.`,
-        });
-        return;
-      }
-    }
-
     // ATOMIC DOUBLE-BOOKING CHECK
     // Query for any approved or in-session booking overlapping the requested interval
     const conflict = await Booking.findOne({
@@ -287,6 +271,22 @@ export const createBooking = async (
         ).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} on this date.`,
       });
       return;
+    }
+
+    // Active booking limits check for students
+    if (req.user.role === 'student') {
+      const activeCount = await Booking.countDocuments({
+        userId: req.user._id,
+        status: { $in: ['pending', 'under_review', 'approved', 'checked_in', 'return_pending', 'active'] },
+      });
+      const fairPolicy = (await FairAllocation.findOne()) || { maxActiveBookingsPerStudent: 3 };
+      if (activeCount >= fairPolicy.maxActiveBookingsPerStudent) {
+        res.status(429).json({
+          success: false,
+          message: `Active reservation limit reached (${activeCount}/${fairPolicy.maxActiveBookingsPerStudent}). Complete or cancel an existing session first.`,
+        });
+        return;
+      }
     }
 
     // Determine initial status:
