@@ -9,7 +9,7 @@ import { BookingModal } from '../components/resources/BookingModal';
 import { SmartResourceMatcherModal } from '../components/ai/SmartResourceMatcherModal';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { StatCard } from '../components/common/StatCard';
-import { StatusBadge } from '../common/StatusBadge';
+import { StatusBadge } from '../components/common/StatusBadge';
 import {
   Boxes,
   Calendar,
