@@ -4,9 +4,9 @@ exports.createResource = exports.getResourceById = exports.getResources = void 0
 const resource_model_js_1 = require("../models/resource.model.js");
 const getResources = async (req, res, next) => {
     try {
-        const { search, category, institution, location, availability, resourceType, eligibility, date, sort, page = '1', limit = '12', } = req.query;
+        const { search, category, institution, location, availability, resourceType, eligibility, training, date, sort, page = '1', limit = '12', } = req.query;
         const query = {};
-        // Search query
+        // Search query across name, description, tags, location, institution, owner
         if (search && typeof search === 'string' && search.trim() !== '') {
             const searchRegex = new RegExp(search.trim(), 'i');
             query.$or = [
@@ -16,6 +16,7 @@ const getResources = async (req, res, next) => {
                 { location: searchRegex },
                 { institution: searchRegex },
                 { ownerName: searchRegex },
+                { resourceType: searchRegex },
             ];
         }
         // Category filter
@@ -50,21 +51,39 @@ const getResources = async (req, res, next) => {
         if (eligibility && typeof eligibility === 'string' && eligibility !== 'All' && eligibility !== 'all') {
             query.eligibility = new RegExp(eligibility, 'i');
         }
+        // Training / Certification requirement filter
+        if (training && typeof training === 'string' && training !== 'All' && training !== 'all') {
+            if (training === 'required' || training === 'Certification Required') {
+                query.trainingRequired = { $not: /none|not required|no certification|open to all/i };
+            }
+            else if (training === 'none' || training === 'No Training Needed') {
+                query.trainingRequired = { $regex: /none|not required|no certification|open to all/i };
+            }
+        }
         // Date filter
         if (date && typeof date === 'string' && date.trim() !== '') {
-            // If date specified, check if available on that date
+            // If date specified, ensure status is not in maintenance
             query.status = { $ne: 'maintenance' };
         }
-        // Sorting
-        let sortOptions = { createdAt: -1 };
-        if (sort === 'popular') {
-            sortOptions = { totalBookings: -1 };
+        // Sorting by relevance, popularity, rating, availability, name
+        let sortOptions = { featured: -1, rating: -1, createdAt: -1 };
+        if (sort === 'popular' || sort === 'popularity') {
+            sortOptions = { totalBookings: -1, rating: -1 };
         }
         else if (sort === 'rating') {
-            sortOptions = { rating: -1 };
+            sortOptions = { rating: -1, totalBookings: -1 };
         }
-        else if (sort === 'name') {
+        else if (sort === 'availability') {
+            sortOptions = { status: 1, totalBookings: -1 };
+        }
+        else if (sort === 'name' || sort === 'name_asc') {
             sortOptions = { name: 1 };
+        }
+        else if (sort === 'name_desc') {
+            sortOptions = { name: -1 };
+        }
+        else if (sort === 'newest') {
+            sortOptions = { createdAt: -1 };
         }
         const pageNum = Math.max(1, parseInt(page, 10) || 1);
         const limitNum = Math.max(1, parseInt(limit, 10) || 12);
@@ -74,10 +93,12 @@ const getResources = async (req, res, next) => {
             resource_model_js_1.Resource.countDocuments(query),
         ]);
         // Distinct filter metadata for frontend dropdowns
-        const [institutions, locations, categories] = await Promise.all([
+        const [institutions, locations, categories, resourceTypes, rawEligibilities] = await Promise.all([
             resource_model_js_1.Resource.distinct('institution'),
             resource_model_js_1.Resource.distinct('location'),
             resource_model_js_1.Resource.distinct('category'),
+            resource_model_js_1.Resource.distinct('resourceType'),
+            resource_model_js_1.Resource.distinct('eligibility'),
         ]);
         res.status(200).json({
             success: true,
@@ -88,9 +109,11 @@ const getResources = async (req, res, next) => {
                 limit: limitNum,
                 totalPages: Math.ceil(total / limitNum),
                 filterOptions: {
-                    institutions,
-                    locations,
-                    categories,
+                    institutions: institutions.filter(Boolean),
+                    locations: locations.filter(Boolean),
+                    categories: categories.filter(Boolean),
+                    resourceTypes: resourceTypes.filter(Boolean),
+                    eligibilities: rawEligibilities.filter(Boolean),
                 },
             },
         });

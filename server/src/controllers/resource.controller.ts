@@ -12,6 +12,7 @@ export const getResources = async (req: Request, res: Response, next: NextFuncti
       availability,
       resourceType,
       eligibility,
+      training,
       date,
       sort,
       page = '1',
@@ -20,7 +21,7 @@ export const getResources = async (req: Request, res: Response, next: NextFuncti
 
     const query: any = {};
 
-    // Search query
+    // Search query across name, description, tags, location, institution, owner
     if (search && typeof search === 'string' && search.trim() !== '') {
       const searchRegex = new RegExp(search.trim(), 'i');
       query.$or = [
@@ -30,6 +31,7 @@ export const getResources = async (req: Request, res: Response, next: NextFuncti
         { location: searchRegex },
         { institution: searchRegex },
         { ownerName: searchRegex },
+        { resourceType: searchRegex },
       ];
     }
 
@@ -69,20 +71,35 @@ export const getResources = async (req: Request, res: Response, next: NextFuncti
       query.eligibility = new RegExp(eligibility, 'i');
     }
 
+    // Training / Certification requirement filter
+    if (training && typeof training === 'string' && training !== 'All' && training !== 'all') {
+      if (training === 'required' || training === 'Certification Required') {
+        query.trainingRequired = { $not: /none|not required|no certification|open to all/i };
+      } else if (training === 'none' || training === 'No Training Needed') {
+        query.trainingRequired = { $regex: /none|not required|no certification|open to all/i };
+      }
+    }
+
     // Date filter
     if (date && typeof date === 'string' && date.trim() !== '') {
-      // If date specified, check if available on that date
+      // If date specified, ensure status is not in maintenance
       query.status = { $ne: 'maintenance' };
     }
 
-    // Sorting
-    let sortOptions: any = { createdAt: -1 };
-    if (sort === 'popular') {
-      sortOptions = { totalBookings: -1 };
+    // Sorting by relevance, popularity, rating, availability, name
+    let sortOptions: any = { featured: -1, rating: -1, createdAt: -1 };
+    if (sort === 'popular' || sort === 'popularity') {
+      sortOptions = { totalBookings: -1, rating: -1 };
     } else if (sort === 'rating') {
-      sortOptions = { rating: -1 };
-    } else if (sort === 'name') {
+      sortOptions = { rating: -1, totalBookings: -1 };
+    } else if (sort === 'availability') {
+      sortOptions = { status: 1, totalBookings: -1 };
+    } else if (sort === 'name' || sort === 'name_asc') {
       sortOptions = { name: 1 };
+    } else if (sort === 'name_desc') {
+      sortOptions = { name: -1 };
+    } else if (sort === 'newest') {
+      sortOptions = { createdAt: -1 };
     }
 
     const pageNum = Math.max(1, parseInt(page as string, 10) || 1);
@@ -95,10 +112,12 @@ export const getResources = async (req: Request, res: Response, next: NextFuncti
     ]);
 
     // Distinct filter metadata for frontend dropdowns
-    const [institutions, locations, categories] = await Promise.all([
+    const [institutions, locations, categories, resourceTypes, rawEligibilities] = await Promise.all([
       Resource.distinct('institution'),
       Resource.distinct('location'),
       Resource.distinct('category'),
+      Resource.distinct('resourceType'),
+      Resource.distinct('eligibility'),
     ]);
 
     res.status(200).json({
@@ -110,9 +129,11 @@ export const getResources = async (req: Request, res: Response, next: NextFuncti
         limit: limitNum,
         totalPages: Math.ceil(total / limitNum),
         filterOptions: {
-          institutions,
-          locations,
-          categories,
+          institutions: institutions.filter(Boolean),
+          locations: locations.filter(Boolean),
+          categories: categories.filter(Boolean),
+          resourceTypes: resourceTypes.filter(Boolean),
+          eligibilities: rawEligibilities.filter(Boolean),
         },
       },
     });

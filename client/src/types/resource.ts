@@ -182,6 +182,7 @@ export interface ResourceFilterParams {
   availability?: string;
   resourceType?: string;
   eligibility?: string;
+  training?: string;
   date?: string;
   sort?: string;
   page?: number;

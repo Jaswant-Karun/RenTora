@@ -15,6 +15,8 @@ export const getResourcesApi = async (params?: ResourceFilterParams) => {
         institutions: string[];
         locations: string[];
         categories: string[];
+        resourceTypes?: string[];
+        eligibilities?: string[];
       };
     };
   }>('/resources', { params });

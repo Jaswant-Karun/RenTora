@@ -6,6 +6,8 @@ export interface DashboardStats {
   pendingRequests: number;
   completedBookings: number;
   totalCampusResources: number;
+  totalBookings?: number;
+  waitlistedCount?: number;
 }
 
 export interface CategoryDistribution {
@@ -21,6 +23,19 @@ export interface BookingActivityItem {
   activeUsers: number;
 }
 
+export interface UserActivityTimelineItem {
+  _id: string;
+  resourceName: string;
+  resourceCategory?: string;
+  status: string;
+  date: string;
+  timeSlot: string;
+  checkedIn?: boolean;
+  checkedOut?: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
 export interface DashboardSummaryResponse {
   success: boolean;
   data: {
@@ -28,6 +43,8 @@ export interface DashboardSummaryResponse {
     recentlyAdded: Resource[];
     recommended: Resource[];
     upcomingBookings: Booking[];
+    waitlistEntries?: Booking[];
+    userActivityTimeline?: UserActivityTimelineItem[];
     bookingActivity: BookingActivityItem[];
     categoryDistribution: CategoryDistribution[];
     notifications: NotificationItem[];
