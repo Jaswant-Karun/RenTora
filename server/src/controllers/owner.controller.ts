@@ -46,20 +46,63 @@ export const getOwnerOverview = async (req: AuthenticatedRequest, res: Response,
       };
     });
 
+    const totalResources = resources.length;
+    const availableResources = resources.filter((r) => r.status === 'available').length;
+    const currentlyBookedResources = resources.filter((r) => r.status === 'in_use' || r.status === 'reserved').length;
+    const pendingBookingRequests = pendingRequests;
+    const activeReservations = activeBookings;
+    const completedBookings = totalBookings.filter((b) => b.status === 'completed').length;
+    const utilizationPercentage = totalResources > 0
+      ? Math.min(100, Math.round(((currentlyBookedResources + activeReservations) / totalResources) * 100))
+      : 0;
+
+    const upcomingReservations = bookingsWithConflictCheck
+      .filter((b) => b.status === 'approved' || b.status === 'active' || b.status === 'pending')
+      .slice(0, 8);
+
+    // Extract recent activity from booking audit trails
+    const recentActivity: any[] = [];
+    totalBookings.forEach((b) => {
+      if (Array.isArray(b.auditTrail)) {
+        b.auditTrail.forEach((entry: any) => {
+          recentActivity.push({
+            id: `${b._id}-${entry.timestamp}`,
+            bookingId: b._id,
+            resourceName: b.resourceName,
+            transition: entry.transition,
+            performedBy: entry.performedBy,
+            performedByRole: entry.performedByRole,
+            timestamp: entry.timestamp,
+            note: entry.note,
+          });
+        });
+      }
+    });
+    recentActivity.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
     res.status(200).json({
       success: true,
       data: {
         stats: {
-          totalListedResources: resources.length,
-          pendingRequestsCount: pendingRequests,
-          activeBookingsCount: activeBookings,
-          completedBookingsCount: totalBookings.filter((b) => b.status === 'completed').length,
-          totalHoursLogged: totalBookings.filter((b) => b.status === 'completed').length * 4 + 18,
-          utilizationRate: '94.2%',
+          totalListedResources: totalResources,
+          totalResources,
+          availableResources,
+          currentlyBookedResources,
+          pendingRequestsCount: pendingBookingRequests,
+          pendingBookingRequests,
+          activeBookingsCount: activeReservations,
+          activeReservations,
+          completedBookingsCount: completedBookings,
+          completedBookings,
+          totalHoursLogged: completedBookings * 4 + 18,
+          utilizationPercentage: `${utilizationPercentage}%`,
+          utilizationRate: `${utilizationPercentage}%`,
           activeIncidents: incidents.filter((i) => i.status !== 'resolved').length,
         },
         myResources: resources,
         recentBookings: bookingsWithConflictCheck.slice(0, 8),
+        upcomingReservations,
+        recentActivity: recentActivity.slice(0, 10),
         conditionReports,
         incidents,
       },

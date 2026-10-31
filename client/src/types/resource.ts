@@ -10,7 +10,7 @@ export type ResourceCategory =
   | 'Workshop Tools'
   | 'Other Resources';
 
-export type ResourceStatus = 'available' | 'reserved' | 'maintenance' | 'in_use';
+export type ResourceStatus = 'available' | 'reserved' | 'maintenance' | 'in_use' | 'archived' | 'disabled';
 
 export interface Resource {
   _id: string;
@@ -27,6 +27,7 @@ export interface Resource {
   ownerDepartment: string;
   ownerAvatar?: string;
   status: ResourceStatus;
+  isArchived?: boolean;
   availabilityText: string;
   availableDates?: string[];
   eligibility: string;
