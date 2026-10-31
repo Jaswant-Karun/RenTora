@@ -18,6 +18,17 @@ interface ResourceCardProps {
 }
 
 export const ResourceCard: React.FC<ResourceCardProps> = ({ resource, onQuickBook, className = '' }) => {
+  const handleCardClick = () => {
+    try {
+      const raw = localStorage.getItem('rentora_recently_viewed');
+      let list: Resource[] = raw ? JSON.parse(raw) : [];
+      list = [resource, ...list.filter((r) => r._id !== resource._id)].slice(0, 8);
+      localStorage.setItem('rentora_recently_viewed', JSON.stringify(list));
+    } catch {
+      // Ignore storage errors
+    }
+  };
+
   return (
     <div
       className={`group flex flex-col justify-between rounded-xl bg-white border border-[#E2E8F0] shadow-sm hover:border-[#CBD5E1] hover:shadow-md transition-all duration-200 overflow-hidden ${className}`}
@@ -25,15 +36,17 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({ resource, onQuickBoo
       <div>
         {/* High-quality consistent image header */}
         <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100">
-          <img
-            src={resource.images?.[0] || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80'}
-            alt={resource.name}
-            className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
-            loading="lazy"
-          />
+          <Link to={`/dashboard/resources/${resource._id}`} onClick={handleCardClick} className="block w-full h-full">
+            <img
+              src={resource.images?.[0] || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80'}
+              alt={resource.name}
+              className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
+              loading="lazy"
+            />
+          </Link>
 
           {/* Top Badges */}
-          <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1.5">
+          <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1.5 pointer-events-none">
             <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-white/95 text-[#1769D2] border border-[#E2E8F0] shadow-xs">
               {resource.category}
             </span>
@@ -41,7 +54,7 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({ resource, onQuickBoo
           </div>
 
           {/* Availability schedule badge */}
-          <div className="absolute bottom-2.5 right-2.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/95 text-[#16834A] border border-emerald-200 text-[10px] font-medium shadow-xs">
+          <div className="absolute bottom-2.5 right-2.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/95 text-[#16834A] border border-emerald-200 text-[10px] font-medium shadow-xs pointer-events-none">
             <Clock className="w-3 h-3" />
             <span>{resource.availabilityText || 'Available'}</span>
           </div>
@@ -53,6 +66,7 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({ resource, onQuickBoo
           <div>
             <Link
               to={`/dashboard/resources/${resource._id}`}
+              onClick={handleCardClick}
               className="text-sm font-semibold text-[#172033] hover:text-[#1769D2] transition-colors line-clamp-1"
             >
               {resource.name}
