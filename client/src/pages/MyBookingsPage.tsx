@@ -36,7 +36,9 @@ import {
   Printer,
   Download,
   ClipboardCheck,
+  ShieldCheck,
 } from 'lucide-react';
+import { FairShareExplanationModal } from '../components/fairshare/FairShareExplanationModal';
 
 export const MyBookingsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -55,6 +57,7 @@ export const MyBookingsPage: React.FC = () => {
   const [selectedBookingForHandover, setSelectedBookingForHandover] = useState<Booking | null>(null);
   const [selectedIncidentBooking, setSelectedIncidentBooking] = useState<Booking | null>(null);
   const [receiptBooking, setReceiptBooking] = useState<Booking | null>(null);
+  const [fairShareModalBooking, setFairShareModalBooking] = useState<Booking | null>(null);
   const [handoverMode, setHandoverMode] = useState<'check_in' | 'return'>('check_in');
 
   // Cancel Modal State
