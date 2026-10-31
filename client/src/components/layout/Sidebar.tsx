@@ -1,5 +1,5 @@
-import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Badge } from '../common/Badge';
 import {
@@ -22,14 +22,25 @@ import {
   BarChart3,
   History,
   Building2,
-  ShieldCheck,
   Scale,
   Users,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  Shield,
+  Layers,
 } from 'lucide-react';
 
-export const Sidebar: React.FC = () => {
-  const { user } = useAuth();
+interface SidebarProps {
+  isMobileOpen?: boolean;
+  onMobileClose?: () => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobileClose }) => {
+  const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   if (!user) return null;
 
@@ -38,7 +49,12 @@ export const Sidebar: React.FC = () => {
   const isManagerPath = location.pathname.startsWith('/manager');
   const isAdminPath = location.pathname.startsWith('/admin');
 
-  // Exact 12 Owner items requested
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
+
+  // 12 Owner modules
   const ownerNavItems = [
     { label: 'Overview', to: '/owner', icon: LayoutDashboard },
     { label: 'My Resources', to: '/owner/resources', icon: Cpu },
@@ -54,7 +70,7 @@ export const Sidebar: React.FC = () => {
     { label: 'Settings', to: '/owner/settings', icon: Settings },
   ];
 
-  // Admin items
+  // Admin modules
   const adminNavItems = [
     { label: 'Platform Overview', to: '/admin', icon: LayoutDashboard },
     { label: 'User Management', to: '/admin', icon: Users },
@@ -64,7 +80,7 @@ export const Sidebar: React.FC = () => {
     { label: 'System Settings', to: '/admin', icon: Settings },
   ];
 
-  // Manager items
+  // Manager modules
   const managerNavItems = [
     { label: 'Manager Overview', to: '/manager', icon: Building2 },
     { label: 'Resource Approvals', to: '/manager/approvals', icon: ClipboardCheck },
@@ -74,7 +90,7 @@ export const Sidebar: React.FC = () => {
     { label: 'Fair Allocation Settings', to: '/manager/fair-allocation', icon: Settings },
   ];
 
-  // Primary user / borrower items
+  // Borrower / Student modules
   const userNavItems = [
     { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
     { label: 'Explore Resources', to: '/dashboard/explore', icon: Compass },
@@ -86,109 +102,187 @@ export const Sidebar: React.FC = () => {
     { label: 'Settings', to: '/dashboard/settings', icon: Settings },
   ];
 
-  // Decide which navigation set to display
   let navItems = userNavItems;
-  let sectionTitle = 'Main Workspace';
+  let sectionTitle = 'MAIN NAVIGATION';
 
   if (role === 'admin' || isAdminPath) {
     navItems = adminNavItems;
-    sectionTitle = 'System Admin Console';
+    sectionTitle = 'ADMINISTRATION';
   } else if (role === 'owner' || isOwnerPath) {
     navItems = ownerNavItems;
-    sectionTitle = 'Owner Custodian Console';
+    sectionTitle = 'CUSTODIAN MODULES';
   } else if (role === 'manager' && isManagerPath) {
     navItems = managerNavItems;
-    sectionTitle = 'Institutional Governance';
+    sectionTitle = 'CAMPUS GOVERNANCE';
   }
 
-  return (
-    <aside className="w-64 shrink-0 hidden lg:flex flex-col justify-between border-r border-slate-800/80 bg-slate-950/70 backdrop-blur-md min-h-[calc(100vh-4rem)] p-4">
+  const sidebarContent = (
+    <div className="flex flex-col h-full bg-white text-[#172033] justify-between">
+      {/* Top Brand Header */}
       <div>
-        {/* User Card */}
-        <div className="p-3 mb-4 rounded-2xl bg-slate-900/90 border border-slate-800/90 flex items-center space-x-3 shadow-lg">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-500 to-indigo-600 flex items-center justify-center font-bold text-white text-sm shrink-0 shadow-md shadow-brand-500/20">
-            {user.avatar ? (
-              <img src={user.avatar} alt={user.name} className="w-full h-full rounded-xl object-cover" />
-            ) : (
-              user.name.charAt(0)
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-slate-100 truncate">{user.name}</p>
-            <div className="mt-1 flex items-center gap-1.5">
-              <Badge role={user.role} size="sm" />
+        <div className="h-16 flex items-center justify-between px-4 border-b border-[#E2E8F0]">
+          <NavLink
+            to="/dashboard"
+            onClick={onMobileClose}
+            className="flex items-center space-x-2.5 overflow-hidden"
+          >
+            <div className="w-8 h-8 rounded-lg bg-[#1769D2] flex items-center justify-center text-white shrink-0 shadow-sm">
+              <Layers className="w-4 h-4" />
             </div>
-          </div>
+            {!isCollapsed && (
+              <div className="leading-none">
+                <span className="font-bold text-base tracking-tight text-[#172033]">RENTORA</span>
+                <span className="block text-[10px] text-[#64748B] font-medium tracking-wide">ENTERPRISE</span>
+              </div>
+            )}
+          </NavLink>
+
+          {/* Desktop collapse toggle */}
+          <button
+            type="button"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="hidden lg:flex p-1 rounded-md text-[#64748B] hover:text-[#172033] hover:bg-slate-100 transition-colors"
+            title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          </button>
         </div>
 
-        {/* Quick Role Switcher Buttons if Owner or Manager */}
-        {(role === 'owner' || role === 'manager' || role === 'admin') && (
-          <div className="mb-4 grid grid-cols-2 gap-1 p-1 rounded-xl bg-slate-900 border border-slate-800 text-[10px] font-bold">
-            <NavLink
-              to="/dashboard"
-              className={({ isActive }) =>
-                `p-1.5 rounded-lg text-center transition-colors ${
-                  !isOwnerPath && !isManagerPath && !isAdminPath
-                    ? 'bg-slate-800 text-white shadow'
-                    : 'text-slate-400 hover:text-white'
-                }`
-              }
-            >
-              Borrower View
-            </NavLink>
-            <NavLink
-              to={role === 'admin' ? '/admin' : role === 'owner' ? '/owner' : '/manager'}
-              className={({ isActive }) =>
-                `p-1.5 rounded-lg text-center transition-colors ${
-                  isOwnerPath || isManagerPath || isAdminPath
-                    ? 'bg-brand-600 text-white shadow'
-                    : 'text-slate-400 hover:text-white'
-                }`
-              }
-            >
-              {role === 'admin' ? 'Admin Hub' : role === 'owner' ? 'Owner Console' : 'Manager Hub'}
-            </NavLink>
+        {/* View Switcher if Multi-Role User */}
+        {(role === 'owner' || role === 'manager' || role === 'admin') && !isCollapsed && (
+          <div className="p-3 border-b border-[#E2E8F0]">
+            <div className="grid grid-cols-2 gap-1 p-0.5 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[11px] font-medium">
+              <NavLink
+                to="/dashboard"
+                onClick={onMobileClose}
+                className={({ isActive }) =>
+                  `py-1 px-2 rounded-md text-center transition-colors ${
+                    !isOwnerPath && !isManagerPath && !isAdminPath
+                      ? 'bg-white text-[#1769D2] shadow-sm font-semibold'
+                      : 'text-[#64748B] hover:text-[#172033]'
+                  }`
+                }
+              >
+                Borrower
+              </NavLink>
+              <NavLink
+                to={role === 'admin' ? '/admin' : role === 'owner' ? '/owner' : '/manager'}
+                onClick={onMobileClose}
+                className={({ isActive }) =>
+                  `py-1 px-2 rounded-md text-center transition-colors ${
+                    isOwnerPath || isManagerPath || isAdminPath
+                      ? 'bg-[#1769D2] text-white shadow-sm font-semibold'
+                      : 'text-[#64748B] hover:text-[#172033]'
+                  }`
+                }
+              >
+                {role === 'admin' ? 'Admin Hub' : role === 'owner' ? 'Custodian' : 'Manager'}
+              </NavLink>
+            </div>
           </div>
         )}
 
-        {/* Menu Items */}
-        <div className="space-y-1">
-          <p className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center justify-between">
-            <span>{sectionTitle}</span>
-            {role === 'owner' && <span className="text-brand-400 font-mono">12 modules</span>}
-          </p>
-          <div className="max-h-[calc(100vh-18rem)] overflow-y-auto space-y-1 pr-1 scrollbar-thin">
+        {/* Navigation Section */}
+        <div className="p-3">
+          {!isCollapsed && (
+            <p className="px-3 pb-2 text-[10px] font-semibold tracking-wider text-[#64748B] uppercase">
+              {sectionTitle}
+            </p>
+          )}
+
+          <nav className="space-y-0.5">
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
                 <NavLink
                   key={item.to}
                   to={item.to}
-                  end={item.to === '/owner' || item.to === '/dashboard' || item.to === '/manager'}
+                  end={item.to === '/owner' || item.to === '/dashboard' || item.to === '/manager' || item.to === '/admin'}
+                  onClick={onMobileClose}
                   className={({ isActive }) =>
-                    `flex items-center space-x-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
+                    `flex items-center space-x-3 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
                       isActive
-                        ? 'bg-brand-600/15 text-brand-300 border border-brand-500/30 shadow-sm shadow-brand-500/10'
-                        : 'text-slate-400 hover:text-slate-100 hover:bg-slate-900/60'
+                        ? 'bg-[#EFF6FF] text-[#1769D2] font-semibold border-r-2 border-[#1769D2]'
+                        : 'text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#172033]'
                     }`
                   }
+                  title={isCollapsed ? item.label : undefined}
                 >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span className="truncate">{item.label}</span>
+                  <Icon className={`w-4 h-4 shrink-0 transition-colors`} />
+                  {!isCollapsed && <span className="truncate">{item.label}</span>}
                 </NavLink>
               );
             })}
-          </div>
+          </nav>
         </div>
       </div>
 
-      {/* Footer Institution Info */}
-      <div className="mt-4 pt-3 border-t border-slate-800/60 px-3">
-        <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Institution Node</p>
-        <p className="text-xs font-semibold text-slate-200 truncate mt-0.5">{user.institution}</p>
-        <p className="text-[11px] text-slate-400 truncate mt-0.5">{user.department || 'General Faculty'}</p>
+      {/* User Section at Bottom */}
+      <div className="p-3 border-t border-[#E2E8F0] space-y-2">
+        {!isCollapsed ? (
+          <>
+            <div className="flex items-center space-x-2.5 p-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0]">
+              <div className="w-8 h-8 rounded-full bg-[#EFF6FF] text-[#1769D2] flex items-center justify-center font-semibold text-xs shrink-0 border border-blue-200">
+                {user.name.charAt(0)}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold text-[#172033] truncate">{user.name}</p>
+                <p className="text-[10px] text-[#64748B] truncate">{user.institution}</p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="w-full flex items-center space-x-2 px-3 py-1.5 text-xs font-medium text-[#64748B] hover:text-[#DC2626] hover:bg-red-50 rounded-lg transition-colors"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Log out</span>
+            </button>
+          </>
+        ) : (
+          <div className="flex flex-col items-center space-y-2">
+            <div className="w-8 h-8 rounded-full bg-[#EFF6FF] text-[#1769D2] flex items-center justify-center font-semibold text-xs border border-blue-200" title={user.name}>
+              {user.name.charAt(0)}
+            </div>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="p-2 text-[#64748B] hover:text-[#DC2626] hover:bg-red-50 rounded-lg transition-colors"
+              title="Log out"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
-    </aside>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Desktop Sidebar (Fixed Left) */}
+      <aside
+        className={`hidden lg:block shrink-0 border-r border-[#E2E8F0] bg-white transition-all duration-200 z-30 sticky top-0 h-screen ${
+          isCollapsed ? 'w-16' : 'w-64'
+        }`}
+      >
+        {sidebarContent}
+      </aside>
+
+      {/* Mobile Drawer */}
+      {isMobileOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 flex">
+          <div
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
+            onClick={onMobileClose}
+          />
+          <div className="relative w-72 max-w-xs bg-white h-full shadow-2xl z-10">
+            {sidebarContent}
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
