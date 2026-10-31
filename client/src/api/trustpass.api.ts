@@ -7,6 +7,7 @@ export interface TrustPassTokenData {
   expiresAt: string;
   status: string;
   bookingId: string;
+  isValid?: boolean;
 }
 
 export interface TrustPassVerificationData {

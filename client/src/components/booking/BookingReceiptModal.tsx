@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Booking } from '../../types/resource';
 import { StatusBadge } from '../common/StatusBadge';
-import { getTrustPassTokenApi } from '../../api/trustpass.api';
+import { getTrustPassTokenApi, TrustPassTokenData } from '../../api/trustpass.api';
 import {
   Printer,
   Download,
@@ -33,12 +33,7 @@ export const BookingReceiptModal: React.FC<BookingReceiptModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const [tokenData, setTokenData] = useState<{
-    token: string;
-    qrPayload: string;
-    expiresAt: string;
-    isValid: boolean;
-  } | null>(null);
+  const [tokenData, setTokenData] = useState<TrustPassTokenData | null>(null);
   const [tokenLoading, setTokenLoading] = useState(false);
   const [copiedToken, setCopiedToken] = useState(false);
 
@@ -242,29 +237,90 @@ export const BookingReceiptModal: React.FC<BookingReceiptModalProps> = ({
             </div>
           </div>
 
-          {/* Verification QR / Security Seal */}
-          <div className="flex items-center justify-between pt-2 border-t border-[#E2E8F0] text-xs">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-slate-100 border border-slate-200 rounded-lg flex items-center justify-center text-slate-800">
-                <QrCode className="w-8 h-8" />
+          {/* TrustPass QR & Cryptographic Security Seal */}
+          <div className="pt-4 border-t border-[#E2E8F0] space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-[#1769D2]" />
+                <span className="text-xs font-bold text-[#172033] uppercase tracking-wider">
+                  TrustPass™ Verification Pass
+                </span>
               </div>
-              <div>
-                <span className="text-[10px] font-bold text-[#172033] block">
-                  DIGITAL LAB ACCESS TOKEN
-                </span>
-                <span className="text-[10px] text-[#64748B] block font-mono">
-                  {booking._id}
-                </span>
-                <span className="text-[9px] text-[#16834A] font-semibold block">
-                  Valid for facility entry & custodian scan
-                </span>
+              <div className="inline-flex items-center gap-1 text-[11px] font-bold text-[#16834A] bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                OFFICIALLY SIGNED
               </div>
             </div>
 
-            <div className="text-right">
-              <div className="inline-flex items-center gap-1 text-[11px] font-bold text-[#16834A] bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                VERIFIED PASS
+            <div className="p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl flex flex-col sm:flex-row items-center gap-4">
+              {/* QR Code Graphic */}
+              <div className="relative p-2 bg-white rounded-lg border border-[#E2E8F0] shadow-2xs shrink-0 flex items-center justify-center">
+                {tokenLoading ? (
+                  <div className="w-[120px] h-[120px] flex flex-col items-center justify-center text-slate-400">
+                    <Loader2 className="w-6 h-6 animate-spin text-[#1769D2]" />
+                    <span className="text-[10px] mt-1">Generating token...</span>
+                  </div>
+                ) : (
+                  <img
+                    src={qrCodeUrl}
+                    alt="TrustPass QR Code"
+                    className="w-[120px] h-[120px] object-contain rounded"
+                  />
+                )}
+              </div>
+
+              {/* Token Details & Handover Info */}
+              <div className="flex-1 min-w-0 space-y-2 text-xs">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase font-bold text-[#64748B]">
+                      Secure Handover Token (Manual Fallback)
+                    </span>
+                    {tokenData?.token && (
+                      <button
+                        type="button"
+                        onClick={handleCopyToken}
+                        className="text-[10px] text-[#1769D2] hover:underline flex items-center gap-0.5 cursor-pointer font-medium"
+                      >
+                        {copiedToken ? (
+                          <>
+                            <Check className="w-3 h-3 text-[#16834A]" /> Copied!
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3 h-3" /> Copy Code
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                  <div className="mt-1 flex items-center gap-2">
+                    <code className="text-xs font-mono font-bold bg-white px-2.5 py-1 rounded border border-[#E2E8F0] text-[#172033] break-all select-all shadow-2xs">
+                      {tokenData?.token || `REN-RES-${booking._id}`}
+                    </code>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-[11px] text-[#64748B]">
+                  <div>
+                    <span className="block text-[10px]">Pass Status:</span>
+                    <span className="font-semibold text-[#16834A]">
+                      {tokenData?.isValid !== false ? 'Active & Verifiable' : 'Consumed / Closed'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="block text-[10px]">Security Expiry:</span>
+                    <span className="font-semibold text-[#172033]">
+                      {tokenData?.expiresAt
+                        ? new Date(tokenData.expiresAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                        : 'Session End + 24h'}
+                    </span>
+                  </div>
+                </div>
+
+                <p className="text-[10px] text-[#64748B] bg-white p-2 rounded border border-[#E2E8F0]">
+                  Present this QR code or provide the manual handover token to the resource custodian or lab manager at check-in and check-out. Zero sensitive personal data is encoded in the QR.
+                </p>
               </div>
             </div>
           </div>
