@@ -168,7 +168,7 @@ export const AddResourcePage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6 max-w-4xl">
       {/* Header */}
       <div className="p-6 rounded-xl bg-white border border-[#E2E8F0] shadow-sm space-y-1">
         <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#EFF6FF] text-[#1769D2] border border-[#1769D2]/20 text-[10px] font-semibold uppercase tracking-wider">
