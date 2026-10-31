@@ -118,123 +118,112 @@ export const OwnerOverviewPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 4 Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 rounded-xl bg-white border border-[#E2E8F0] shadow-sm">
+      {/* 7 Core Numerical Metrics Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
+        {/* 1. Total Resources */}
+        <div className="p-4 rounded-xl bg-white border border-[#E2E8F0] shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-[#64748B] uppercase">My Listed Resources</span>
-            <Cpu className="w-4 h-4 text-[#1769D2]" />
+            <span className="text-[11px] font-semibold text-[#64748B] uppercase">Total Assets</span>
+            <Cpu className="w-3.5 h-3.5 text-[#1769D2]" />
           </div>
-          <p className="text-2xl font-bold text-[#172033] mt-2">{stats.totalListedResources}</p>
-          <p className="text-xs text-[#64748B] mt-1">Federated across campus</p>
+          <p className="text-xl font-bold text-[#172033] mt-1.5">{stats.totalResources ?? stats.totalListedResources ?? 0}</p>
+          <p className="text-[10px] text-[#64748B] mt-0.5">Catalogued</p>
         </div>
 
-        <div className="p-5 rounded-xl bg-white border border-[#E2E8F0] shadow-sm">
+        {/* 2. Available Resources */}
+        <div className="p-4 rounded-xl bg-white border border-[#E2E8F0] shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-[#64748B] uppercase">Pending Requests</span>
-            <Inbox className="w-4 h-4 text-[#D97706]" />
+            <span className="text-[11px] font-semibold text-[#16834A] uppercase">Available</span>
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#16834A]" />
           </div>
-          <p className="text-2xl font-bold text-[#D97706] mt-2">{stats.pendingRequestsCount}</p>
-          <p className="text-xs text-[#D97706] mt-1">Action required</p>
+          <p className="text-xl font-bold text-[#16834A] mt-1.5">{stats.availableResources ?? (myResources.filter(r => r.status === 'available').length)}</p>
+          <p className="text-[10px] text-[#64748B] mt-0.5">Ready for booking</p>
         </div>
 
-        <div className="p-5 rounded-xl bg-white border border-[#E2E8F0] shadow-sm">
+        {/* 3. Currently Booked */}
+        <div className="p-4 rounded-xl bg-white border border-[#E2E8F0] shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-[#64748B] uppercase">Active Bookings</span>
-            <CheckCircle2 className="w-4 h-4 text-[#16834A]" />
+            <span className="text-[11px] font-semibold text-[#1769D2] uppercase">In Use</span>
+            <Clock className="w-3.5 h-3.5 text-[#1769D2]" />
           </div>
-          <p className="text-2xl font-bold text-[#172033] mt-2">{stats.activeBookingsCount}</p>
-          <p className="text-xs text-[#16834A] mt-1">Passes active</p>
+          <p className="text-xl font-bold text-[#1769D2] mt-1.5">{stats.currentlyBookedResources ?? (myResources.filter(r => r.status === 'in_use' || r.status === 'reserved').length)}</p>
+          <p className="text-[10px] text-[#64748B] mt-0.5">Occupied now</p>
         </div>
 
-        <div className="p-5 rounded-xl bg-white border border-[#E2E8F0] shadow-sm">
+        {/* 4. Pending Booking Requests */}
+        <div className="p-4 rounded-xl bg-white border border-[#E2E8F0] shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-[#64748B] uppercase">Completed Sessions</span>
-            <History className="w-4 h-4 text-[#1769D2]" />
+            <span className="text-[11px] font-semibold text-[#D97706] uppercase">Pending</span>
+            <Inbox className="w-3.5 h-3.5 text-[#D97706]" />
           </div>
-          <p className="text-2xl font-bold text-[#172033] mt-2">{stats.completedBookingsCount}</p>
-          <p className="text-xs text-[#64748B] mt-1">Fully checked out & logged</p>
+          <p className="text-xl font-bold text-[#D97706] mt-1.5">{stats.pendingBookingRequests ?? stats.pendingRequestsCount ?? 0}</p>
+          <p className="text-[10px] text-[#D97706] mt-0.5">Review needed</p>
+        </div>
+
+        {/* 5. Active Reservations */}
+        <div className="p-4 rounded-xl bg-white border border-[#E2E8F0] shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-semibold text-[#172033] uppercase">Active</span>
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#1769D2]" />
+          </div>
+          <p className="text-xl font-bold text-[#172033] mt-1.5">{stats.activeReservations ?? stats.activeBookingsCount ?? 0}</p>
+          <p className="text-[10px] text-[#64748B] mt-0.5">Valid passes</p>
+        </div>
+
+        {/* 6. Completed Bookings */}
+        <div className="p-4 rounded-xl bg-white border border-[#E2E8F0] shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-semibold text-[#64748B] uppercase">Completed</span>
+            <History className="w-3.5 h-3.5 text-[#64748B]" />
+          </div>
+          <p className="text-xl font-bold text-[#172033] mt-1.5">{stats.completedBookings ?? stats.completedBookingsCount ?? 0}</p>
+          <p className="text-[10px] text-[#64748B] mt-0.5">Sessions logged</p>
+        </div>
+
+        {/* 7. Utilization Percentage */}
+        <div className="p-4 rounded-xl bg-white border border-[#E2E8F0] shadow-sm col-span-2 sm:col-span-1">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-semibold text-[#1769D2] uppercase">Utilization</span>
+            <span className="text-[10px] font-bold text-[#1769D2]">KPI</span>
+          </div>
+          <p className="text-xl font-bold text-[#1769D2] mt-1.5">{stats.utilizationPercentage ?? stats.utilizationRate ?? '0%'}</p>
+          <p className="text-[10px] text-[#16834A] mt-0.5">Operating rate</p>
         </div>
       </div>
 
-      {/* Main Grid: My Listed Resources & Pending Requests */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left: Listed Resources (7 cols) */}
+      {/* Main Content Grid: Upcoming Reservations & Managed Resources */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left: Upcoming Reservations (7 cols) */}
         <div className="lg:col-span-7 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base font-bold text-[#172033]">My Managed Facilities & Equipment</h3>
-              <p className="text-xs text-[#64748B]">Live catalogue entries under your departmental custody</p>
-            </div>
-            <Link to="/owner/add-resource" className="text-xs text-[#1769D2] font-semibold hover:underline">
-              + Add Resource
-            </Link>
-          </div>
-
-          <div className="space-y-3">
-            {myResources.map((res) => (
-              <div
-                key={res._id}
-                className="p-4 rounded-xl bg-white border border-[#E2E8F0] shadow-sm flex items-center justify-between gap-4"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <img
-                    src={res.images?.[0]}
-                    alt={res.name}
-                    className="w-14 h-14 rounded-lg object-cover shrink-0 border border-[#E2E8F0]"
-                  />
-                  <div className="min-w-0 space-y-0.5 text-xs">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#EFF6FF] text-[#1769D2] border border-[#1769D2]/20">
-                      {res.category}
-                    </span>
-                    <h4 className="font-semibold text-[#172033] truncate text-sm">{res.name}</h4>
-                    <p className="text-[#64748B] truncate">{res.location}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  <Link
-                    to={`/dashboard/resources/${res._id}`}
-                    className="px-3 py-1.5 rounded-lg bg-white border border-[#E2E8F0] hover:bg-slate-50 text-xs text-[#172033] font-medium transition-colors"
-                  >
-                    View
-                  </Link>
-                  <button
-                    onClick={() => handleDeleteResource(res._id, res.name)}
-                    className="p-1.5 rounded-lg text-[#64748B] hover:text-[#DC2626] hover:bg-red-50 transition-colors"
-                    title="Decommission"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Right: Incoming Requests Preview (5 cols) */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-base font-bold text-[#172033]">Recent Requests & Bookings</h3>
-              <p className="text-xs text-[#64748B]">Incoming borrower reservation passes</p>
+              <h3 className="text-base font-bold text-[#172033] flex items-center gap-2">
+                <Clock className="w-4 h-4 text-[#1769D2]" />
+                Upcoming Reservations
+              </h3>
+              <p className="text-xs text-[#64748B]">Scheduled borrower sessions and confirmed access passes</p>
             </div>
             <Link to="/owner/requests" className="text-xs text-[#1769D2] font-semibold hover:underline">
-              View all ({stats.pendingRequestsCount})
+              Manage All Requests
             </Link>
           </div>
 
           <div className="space-y-3">
-            {recentBookings.slice(0, 4).map((b) => (
+            {((data.upcomingReservations && data.upcomingReservations.length > 0) ? data.upcomingReservations : recentBookings).slice(0, 5).map((b) => (
               <div
                 key={b._id}
-                className="p-3.5 rounded-xl bg-white border border-[#E2E8F0] shadow-sm text-xs space-y-2"
+                className="p-4 rounded-xl bg-white border border-[#E2E8F0] shadow-sm hover:border-[#1769D2]/30 transition-all text-xs space-y-2.5"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-[#172033] truncate max-w-[200px]">{b.resourceName}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-sm text-[#172033]">{b.resourceName}</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-[#64748B]">
+                      {b.resourceCategory || 'Lab Equipment'}
+                    </span>
+                  </div>
                   <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase ${
-                      b.status === 'active'
+                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase ${
+                      b.status === 'approved' || b.status === 'active'
                         ? 'bg-emerald-50 text-[#16834A] border border-emerald-200'
                         : b.status === 'pending'
                         ? 'bg-amber-50 text-[#D97706] border border-amber-200'
@@ -245,19 +234,141 @@ export const OwnerOverviewPage: React.FC = () => {
                   </span>
                 </div>
 
-                <div className="text-[11px] text-[#64748B] flex items-center justify-between">
-                  <span>Borrower: {b.userName}</span>
-                  <span>{b.date}</span>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px] text-[#64748B] pt-1 border-t border-[#E2E8F0]">
+                  <div>
+                    <span className="font-medium text-[#172033]">Borrower:</span> {b.userName}
+                  </div>
+                  <div>
+                    <span className="font-medium text-[#172033]">Date:</span> {b.date}
+                  </div>
+                  <div>
+                    <span className="font-medium text-[#172033]">Slot:</span> {b.timeSlot}
+                  </div>
                 </div>
 
+                {b.suggestedAlternative && (
+                  <div className="p-2 rounded-lg bg-blue-50 border border-blue-200 text-[11px] text-[#1769D2]">
+                    <span className="font-semibold">Alternative Suggested:</span> {b.suggestedAlternative.date} ({b.suggestedAlternative.timeSlot})
+                  </div>
+                )}
+
                 {b.conflictDetected && (
-                  <div className="p-1.5 rounded-lg bg-amber-50 border border-amber-200 text-[10px] text-[#D97706] font-semibold flex items-center gap-1">
-                    <AlertTriangle className="w-3 h-3 text-[#D97706]" />
-                    Conflict: Overlapping slot detected
+                  <div className="p-2 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-[#D97706] font-semibold flex items-center gap-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5 text-[#D97706] shrink-0" />
+                    <span>Booking Conflict: Overlapping reservation detected on this timeslot.</span>
                   </div>
                 )}
               </div>
             ))}
+
+            {recentBookings.length === 0 && (
+              <div className="py-8 text-center bg-white rounded-xl border border-dashed border-[#E2E8F0]">
+                <Clock className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                <p className="text-xs text-[#64748B]">No active upcoming reservations found.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Managed Resources Summary */}
+          <div className="pt-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-base font-bold text-[#172033] flex items-center gap-2">
+                <Cpu className="w-4 h-4 text-[#1769D2]" />
+                Managed Facilities ({myResources.length})
+              </h3>
+              <Link to="/owner/resources" className="text-xs text-[#1769D2] font-semibold hover:underline">
+                View All & Edit
+              </Link>
+            </div>
+
+            <div className="space-y-2.5">
+              {myResources.slice(0, 3).map((res) => (
+                <div
+                  key={res._id}
+                  className="p-3 rounded-xl bg-white border border-[#E2E8F0] shadow-sm flex items-center justify-between gap-3 text-xs"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <img
+                      src={res.images?.[0] || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=400&q=80'}
+                      alt={res.name}
+                      className="w-12 h-12 rounded-lg object-cover shrink-0 border border-[#E2E8F0]"
+                    />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold text-[#172033] truncate">{res.name}</h4>
+                        <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
+                          res.status === 'available' ? 'bg-emerald-50 text-[#16834A]' :
+                          res.status === 'maintenance' ? 'bg-amber-50 text-[#D97706]' :
+                          res.status === 'disabled' ? 'bg-red-50 text-[#DC2626]' :
+                          'bg-slate-100 text-[#64748B]'
+                        }`}>
+                          {res.status}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#64748B] truncate">{res.location} • {res.category}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Link
+                      to={`/dashboard/resources/${res._id}`}
+                      className="px-2.5 py-1 rounded bg-[#F8FAFC] border border-[#E2E8F0] hover:bg-slate-100 font-medium text-[11px] text-[#172033]"
+                    >
+                      View
+                    </Link>
+                    <button
+                      onClick={() => handleDeleteResource(res._id, res.name)}
+                      className="p-1 text-[#64748B] hover:text-[#DC2626] transition-colors"
+                      title="Archive Resource"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Right: Recent Activity Log (5 cols) */}
+        <div className="lg:col-span-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-bold text-[#172033] flex items-center gap-2">
+                <History className="w-4 h-4 text-[#1769D2]" />
+                Recent Activity & Audit Trail
+              </h3>
+              <p className="text-xs text-[#64748B]">Real-time operational events across your resources</p>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-xl bg-white border border-[#E2E8F0] shadow-sm space-y-3">
+            {data.recentActivity && data.recentActivity.length > 0 ? (
+              <div className="space-y-3">
+                {data.recentActivity.slice(0, 8).map((act, idx) => (
+                  <div key={act.id || idx} className="flex items-start gap-3 text-xs pb-2.5 border-b border-[#E2E8F0] last:border-0 last:pb-0">
+                    <div className="w-2 h-2 rounded-full bg-[#1769D2] mt-1.5 shrink-0" />
+                    <div className="min-w-0 flex-1 space-y-0.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-semibold text-[#172033] truncate">{act.transition.replace(/_/g, ' ')}</span>
+                        <span className="text-[10px] text-[#64748B] shrink-0">
+                          {new Date(act.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#64748B] truncate">
+                        Resource: <span className="text-[#172033] font-medium">{act.resourceName}</span>
+                      </p>
+                      {act.note && <p className="text-[10px] text-slate-500 italic truncate">"{act.note}"</p>}
+                      <p className="text-[10px] text-slate-400">By {act.performedBy} ({act.performedByRole})</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-8 text-center text-[#64748B] text-xs">
+                No recent activity recorded today.
+              </div>
+            )}
           </div>
         </div>
       </div>
