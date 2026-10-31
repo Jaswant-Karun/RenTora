@@ -10,8 +10,15 @@ export const IntroScreen: React.FC = () => {
   const [isCompleted, setIsCompleted] = useState(false);
 
   useEffect(() => {
-    const duration = 2200; // 2.2s clean, fast enterprise intro
-    const interval = 25;
+    // If user is already authenticated with token, bypass intro immediately
+    const existingToken = localStorage.getItem('rentora_auth_token');
+    if (existingToken) {
+      navigate('/dashboard', { replace: true });
+      return;
+    }
+
+    const duration = 1100; // 1.1s snappy, professional SaaS intro
+    const interval = 20;
     const increment = 100 / (duration / interval);
 
     const timer = setInterval(() => {
@@ -23,12 +30,10 @@ export const IntroScreen: React.FC = () => {
           return 100;
         }
 
-        if (next < 30) {
+        if (next < 35) {
           setStatusMessage('Initializing institutional resource registry...');
-        } else if (next < 65) {
+        } else if (next < 70) {
           setStatusMessage('Federating laboratory equipment nodes...');
-        } else if (next < 90) {
-          setStatusMessage('Synchronizing safety clearance protocols...');
         } else {
           setStatusMessage('Securing institutional session...');
         }
@@ -38,13 +43,13 @@ export const IntroScreen: React.FC = () => {
     }, interval);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     if (isCompleted) {
       const redirectTimer = setTimeout(() => {
         navigate('/login', { replace: true });
-      }, 400);
+      }, 200);
       return () => clearTimeout(redirectTimer);
     }
   }, [isCompleted, navigate]);
