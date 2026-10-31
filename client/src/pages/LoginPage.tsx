@@ -69,7 +69,9 @@ export const LoginPage: React.FC = () => {
     } catch (err: any) {
       const message =
         err.response?.data?.message ||
-        'Unable to authenticate with provided credentials. Please check your email and password.';
+        (err.message === 'Network Error'
+          ? 'Cannot connect to backend server. If using Render free tier, the server may be waking up (wait ~30 seconds), or VITE_API_URL is not set in Vercel.'
+          : err.message || 'Unable to authenticate with provided credentials. Please check your email and password.');
       setServerError(message);
     }
   };

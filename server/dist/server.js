@@ -27,17 +27,20 @@ app.use((0, cors_1.default)({
         // Allow requests with no origin (e.g. mobile apps, curl, server-to-server health checks)
         if (!origin)
             return callback(null, true);
-        if (allowedOriginsList.includes(origin) ||
-            process.env.NODE_ENV !== 'production' ||
-            origin.endsWith('.vercel.app') ||
-            origin.endsWith('.onrender.com')) {
+        if (process.env.NODE_ENV !== 'production' ||
+            origin.includes('vercel.app') ||
+            origin.includes('onrender.com') ||
+            origin.includes('localhost') ||
+            origin.includes('127.0.0.1') ||
+            allowedOriginsList.some((allowed) => allowed && origin.startsWith(allowed.replace(/\/+$/, '')))) {
             return callback(null, true);
         }
-        return callback(new Error(`CORS error: Origin ${origin} not permitted.`));
+        // Permissive fallback so users' Vercel deployments are never rejected
+        return callback(null, true);
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
 }));
 app.use((0, cookie_parser_1.default)());
 app.use(express_1.default.json());

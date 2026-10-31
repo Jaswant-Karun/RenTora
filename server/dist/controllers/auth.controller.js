@@ -8,10 +8,11 @@ const getCookieOptions = (rememberMe) => {
     const maxAge = rememberMe
         ? 30 * 24 * 60 * 60 * 1000 // 30 days
         : 7 * 24 * 60 * 60 * 1000; // 7 days
+    const isProduction = process.env.NODE_ENV === 'production';
     return {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: (process.env.NODE_ENV === 'production' ? 'strict' : 'lax'),
+        secure: isProduction,
+        sameSite: (isProduction ? 'none' : 'lax'),
         maxAge,
     };
 };
@@ -110,10 +111,11 @@ const login = async (req, res, next) => {
 };
 exports.login = login;
 const logout = async (_req, res) => {
+    const isProduction = process.env.NODE_ENV === 'production';
     res.clearCookie('rentora_token', {
         httpOnly: true,
-        sameSite: (process.env.NODE_ENV === 'production' ? 'strict' : 'lax'),
-        secure: process.env.NODE_ENV === 'production',
+        sameSite: (isProduction ? 'none' : 'lax'),
+        secure: isProduction,
     });
     res.status(200).json({
         success: true,

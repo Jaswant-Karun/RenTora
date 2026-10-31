@@ -88,7 +88,9 @@ export const RegisterPage: React.FC = () => {
     } catch (err: any) {
       const message =
         err.response?.data?.message ||
-        'Registration failed. Please verify your details or use a different email.';
+        (err.message === 'Network Error'
+          ? 'Cannot connect to backend server. If using Render free tier, the server may be waking up (wait ~30 seconds), or VITE_API_URL is not set in Vercel.'
+          : err.message || 'Registration failed. Please verify your details or use a different email.');
       setServerError(message);
     }
   };
