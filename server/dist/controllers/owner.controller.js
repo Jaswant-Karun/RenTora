@@ -7,6 +7,7 @@ const conditionReport_model_js_1 = require("../models/conditionReport.model.js")
 const incident_model_js_1 = require("../models/incident.model.js");
 const notification_model_js_1 = require("../models/notification.model.js");
 const auditLogger_js_1 = require("../utils/auditLogger.js");
+const fairShare_service_js_1 = require("../services/fairShare.service.js");
 // 1. Get Owner Overview Stats & Summary
 const getOwnerOverview = async (req, res, next) => {
     try {
@@ -503,6 +504,8 @@ const rejectBooking = async (req, res, next) => {
             },
             reason: reason.trim(),
         });
+        // Advance waitlist and notify next eligible user
+        await fairShare_service_js_1.FairShareService.advanceWaitlist(booking.resourceId, booking.date, booking.timeSlot, booking._id?.toString());
         res.status(200).json({
             success: true,
             message: 'Booking rejected and rejection rationale dispatched to the student.',
@@ -564,6 +567,8 @@ const cancelBookingByOwner = async (req, res, next) => {
             type: 'maintenance',
             link: '/dashboard/bookings',
         });
+        // Advance waitlist and notify next eligible user
+        await fairShare_service_js_1.FairShareService.advanceWaitlist(booking.resourceId, booking.date, booking.timeSlot, booking._id?.toString());
         res.status(200).json({
             success: true,
             message: 'Booking cancelled and alert dispatched to user.',

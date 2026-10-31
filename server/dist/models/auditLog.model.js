@@ -26,6 +26,8 @@ const auditLogSchema = new mongoose_1.Schema({
             'MANAGER_OVERRIDE',
             'WAITLIST_ENQUEUE',
             'WAITLIST_PROMOTION',
+            'FAIRSHARE_DECISION',
+            'SLOT_RELEASE_NOTIFICATION',
         ],
     },
     entityType: {

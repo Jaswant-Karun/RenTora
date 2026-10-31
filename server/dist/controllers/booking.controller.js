@@ -8,6 +8,7 @@ const notification_model_js_1 = require("../models/notification.model.js");
 const conditionReport_model_js_1 = require("../models/conditionReport.model.js");
 const fairAllocation_model_js_1 = require("../models/fairAllocation.model.js");
 const auditLogger_js_1 = require("../utils/auditLogger.js");
+const fairShare_service_js_1 = require("../services/fairShare.service.js");
 // Helper: Check if two time intervals overlap
 const hasOverlap = (s1, e1, s2, e2) => {
     return s1 < e2 && e1 > s2;
@@ -435,6 +436,43 @@ const createBooking = async (req, res, next) => {
             });
             assignedQueuePos = existingWaitlistCount + 1;
         }
+        // FairShare Transparent Resource Allocation Engine Evaluation
+        const fairShareEval = await fairShare_service_js_1.FairShareService.evaluateAllocation({
+            userId: req.user._id,
+            resourceId: resource._id,
+            date: formattedDate,
+            timeSlot: formattedTimeSlot,
+            startTime: parsedStart,
+            endTime: parsedEnd,
+            allowWaitlist,
+        });
+        // Database-level race safeguard for simultaneous concurrent booking attempts
+        if (finalStatus !== 'waitlisted') {
+            const raceConflict = await booking_model_js_1.Booking.findOne({
+                resourceId: resource._id,
+                status: { $in: ['approved', 'checked_in', 'return_pending', 'active'] },
+                startTime: { $lt: parsedEnd },
+                endTime: { $gt: parsedStart },
+            });
+            if (raceConflict) {
+                if (!allowWaitlist) {
+                    res.status(409).json({
+                        success: false,
+                        message: `Simultaneous booking collision: Slot was just reserved by another user.`,
+                        canWaitlist: true,
+                        estimatedReleaseTime: raceConflict.endTime,
+                    });
+                    return;
+                }
+                finalStatus = 'waitlisted';
+                waitlistReasonText = 'Simultaneous booking collision detected. Queued in priority standby.';
+                const existingCount = await booking_model_js_1.Booking.countDocuments({
+                    resourceId: resource._id,
+                    status: 'waitlisted',
+                });
+                assignedQueuePos = existingCount + 1;
+            }
+        }
         const booking = await booking_model_js_1.Booking.create({
             userId: req.user._id,
             userName: req.user.name,
@@ -464,8 +502,11 @@ const createBooking = async (req, res, next) => {
             queuePosition: finalStatus === 'waitlisted' ? assignedQueuePos : undefined,
             estimatedReleaseTime: conflict ? conflict.endTime : undefined,
             monopolisationDetected: monopolisation.monopolised,
+            fairShareExplanation: fairShareEval.explanation,
             auditTrail: [initialAudit],
         });
+        // Record in permanent FairShare Decision Ledger
+        await fairShare_service_js_1.FairShareService.recordDecision(booking, fairShareEval.explanation, req.user);
         // Immutable Audit Log in Central Ledger
         await (0, auditLogger_js_1.recordAuditLog)({
             action: finalStatus === 'waitlisted' ? 'WAITLIST_ENQUEUE' : 'BOOKING_REQUEST',
@@ -1213,6 +1254,8 @@ const cancelBooking = async (req, res, next) => {
         await booking.save();
         // If resource was in_use, free it up
         await resource_model_js_1.Resource.findByIdAndUpdate(booking.resourceId, { status: 'available' });
+        // Advance waitlist and notify next eligible user
+        await fairShare_service_js_1.FairShareService.advanceWaitlist(booking.resourceId, booking.date, booking.timeSlot, booking._id?.toString());
         // Immutable Audit Log
         await (0, auditLogger_js_1.recordAuditLog)({
             action: 'BOOKING_CANCELLATION',

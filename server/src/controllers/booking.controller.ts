@@ -532,6 +532,11 @@ export const createBooking = async (
     if (finalStatus === 'waitlisted') {
       const existingWaitlistCount = await Booking.countDocuments({
         resourceId: resource._id,
+        status: 'waitlisted',
+      });
+      assignedQueuePos = existingWaitlistCount + 1;
+    }
+
     // FairShare Transparent Resource Allocation Engine Evaluation
     const fairShareEval = await FairShareService.evaluateAllocation({
       userId: req.user._id,

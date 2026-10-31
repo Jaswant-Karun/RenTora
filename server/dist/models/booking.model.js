@@ -170,6 +170,9 @@ const bookingSchema = new mongoose_1.Schema({
         type: Boolean,
         default: false,
     },
+    fairShareExplanation: {
+        type: mongoose_1.Schema.Types.Mixed,
+    },
     auditTrail: {
         type: [auditEntrySchema],
         default: [],

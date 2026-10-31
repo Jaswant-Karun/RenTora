@@ -23,7 +23,7 @@ export const evaluateFairShare = async (
     }
 
     const evaluation = await FairShareService.evaluateAllocation({
-      userId: req.user._id,
+      userId: req.user!._id,
       resourceId,
       date,
       timeSlot,
@@ -175,8 +175,9 @@ export const managerOverrideAllocation = async (
       return;
     }
 
+    const bookingId = Array.isArray(id) ? id[0] : id;
     const overriddenBooking = await FairShareService.managerOverride(
-      id,
+      bookingId,
       req.user as any,
       reason.trim(),
       action
@@ -200,8 +201,9 @@ export const getResourceWaitlist = async (
 ): Promise<void> => {
   try {
     const { resourceId } = req.params;
+    const resId = Array.isArray(resourceId) ? resourceId[0] : resourceId;
     const waitlist = await Booking.find({
-      resourceId,
+      resourceId: resId,
       status: 'waitlisted',
     }).sort({ waitlistPriority: -1, createdAt: 1 });
 
