@@ -31,6 +31,12 @@ export interface Resource {
   availableDates?: string[];
   eligibility: string;
   approvalRequired: boolean;
+  approvalStatus?: 'approved' | 'pending' | 'rejected';
+  minBookingDuration?: number;
+  maxBookingDuration?: number;
+  supervisionRequirement?: boolean;
+  depositConditions?: string;
+  availabilitySchedule?: string;
   specifications: Record<string, string>;
   usageInstructions: string[];
   trainingRequired: string;
@@ -47,21 +53,49 @@ export interface Resource {
 
 export interface Booking {
   _id: string;
-  userId: string;
-  userName: string;
-  userEmail: string;
+  userId?: string;
+  userName?: string;
+  userEmail?: string;
   userDepartment?: string;
   userInstitution?: string;
-  resourceId: string;
-  resourceName: string;
-  resourceCategory: string;
-  resourceLocation: string;
-  resourceImage: string;
-  date: string;
-  timeSlot: string;
+  resourceId?: string;
+  resourceName?: string;
+  resourceCategory?: string;
+  resourceLocation?: string;
+  resourceImage?: string;
+  resource?: {
+    _id: string;
+    name: string;
+    category: string;
+    location: string;
+    images?: string[];
+    institution?: string;
+  };
+  user?: {
+    _id: string;
+    name: string;
+    email: string;
+    institution?: string;
+    department?: string;
+    role?: string;
+    isVerified?: boolean;
+  };
+  date?: string;
+  timeSlot?: string;
+  startTime: string;
+  endTime: string;
   purpose: string;
   supervisorName?: string;
-  status: 'active' | 'pending' | 'completed' | 'cancelled';
+  status: 'active' | 'pending' | 'completed' | 'cancelled' | 'rejected' | 'waitlisted';
+  rejectionReason?: string;
+  cancellationReason?: string;
+  checkedIn?: boolean;
+  checkedInAt?: string;
+  checkedOut?: boolean;
+  checkedOutAt?: string;
+  conditionNotes?: string;
+  meterReading?: string;
+  conflictDetected?: boolean;
   notes?: string;
   createdAt: string;
 }

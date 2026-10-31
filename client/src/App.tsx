@@ -18,6 +18,22 @@ import { SettingsPage } from './pages/SettingsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { LoadingSpinner } from './components/common/LoadingSpinner';
 
+// Owner Pages
+import { OwnerOverviewPage } from './pages/owner/OwnerOverviewPage';
+import { MyResourcesPage } from './pages/owner/MyResourcesPage';
+import { AddResourcePage } from './pages/owner/AddResourcePage';
+import { OwnerBookingsPage } from './pages/owner/OwnerBookingsPage';
+import { CheckInOutPage } from './pages/owner/CheckInOutPage';
+import { ConditionReportsPage } from './pages/owner/ConditionReportsPage';
+import { OwnerIncidentsPage } from './pages/owner/OwnerIncidentsPage';
+import { OwnerCalendarPage } from './pages/owner/OwnerCalendarPage';
+import { OwnerAnalyticsPage } from './pages/owner/OwnerAnalyticsPage';
+import { OwnerAuditPage } from './pages/owner/OwnerAuditPage';
+import { OwnerSettingsPage } from './pages/owner/OwnerSettingsPage';
+
+// Manager Pages
+import { ManagerDashboardPage } from './pages/manager/ManagerDashboardPage';
+
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
 
@@ -171,6 +187,122 @@ export const App: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <SettingsPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Owner Dashboard & 12 Specialized Submodules */}
+            <Route
+              path="/owner"
+              element={
+                <ProtectedRoute>
+                  <OwnerOverviewPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/owner/resources"
+              element={
+                <ProtectedRoute>
+                  <MyResourcesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/owner/add-resource"
+              element={
+                <ProtectedRoute>
+                  <AddResourcePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/owner/requests"
+              element={
+                <ProtectedRoute>
+                  <OwnerBookingsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/owner/approved"
+              element={
+                <ProtectedRoute>
+                  <OwnerBookingsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/owner/checkin"
+              element={
+                <ProtectedRoute>
+                  <CheckInOutPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/owner/condition-reports"
+              element={
+                <ProtectedRoute>
+                  <ConditionReportsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/owner/incidents"
+              element={
+                <ProtectedRoute>
+                  <OwnerIncidentsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/owner/calendar"
+              element={
+                <ProtectedRoute>
+                  <OwnerCalendarPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/owner/analytics"
+              element={
+                <ProtectedRoute>
+                  <OwnerAnalyticsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/owner/audit"
+              element={
+                <ProtectedRoute>
+                  <OwnerAuditPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/owner/settings"
+              element={
+                <ProtectedRoute>
+                  <OwnerSettingsPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Institutional Manager & Governance Console */}
+            <Route
+              path="/manager"
+              element={
+                <ProtectedRoute>
+                  <ManagerDashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/manager/*"
+              element={
+                <ProtectedRoute>
+                  <ManagerDashboardPage />
                 </ProtectedRoute>
               }
             />

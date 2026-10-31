@@ -462,9 +462,23 @@ export const getConditionReports = async (_req: AuthenticatedRequest, res: Respo
 
 export const createConditionReport = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
+    const { resourceId, resourceName, notes, observations, reportType, type, conditionRating, operationalStatus } = req.body;
+    let finalResourceName = resourceName;
+
+    if (!finalResourceName && resourceId) {
+      const resDoc = await Resource.findById(resourceId);
+      finalResourceName = resDoc ? resDoc.name : 'Academic Resource';
+    }
+
     const report = await ConditionReport.create({
       ...req.body,
+      resourceId: resourceId || undefined,
+      resourceName: finalResourceName || 'Laboratory Equipment',
       inspectorName: req.user?.name || 'Lab Custodian',
+      inspectorRole: req.user?.role || 'owner',
+      observations: observations || notes || 'Periodic inspection completed.',
+      type: type || (reportType === 'routine-maintenance' ? 'routine' : reportType) || 'routine',
+      operationalStatus: operationalStatus || (conditionRating === 'damaged' ? 'damaged' : conditionRating === 'fair' ? 'minor_wear' : 'optimal'),
     });
     res.status(201).json({ success: true, message: 'Condition report logged', data: report });
   } catch (error) {
@@ -484,10 +498,24 @@ export const getOwnerIncidents = async (_req: AuthenticatedRequest, res: Respons
 
 export const createIncident = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
+    const { resourceId, resourceName, title, description, severity, actionTaken } = req.body;
+    let finalResourceName = resourceName;
+
+    if (!finalResourceName && resourceId) {
+      const resDoc = await Resource.findById(resourceId);
+      finalResourceName = resDoc ? resDoc.name : 'Academic Resource';
+    }
+
     const incident = await Incident.create({
-      ...req.body,
+      resourceId: resourceId || undefined,
+      resourceName: finalResourceName || 'Laboratory Equipment',
       reportedBy: req.user?.name || 'Lab Custodian',
       userEmail: req.user?.email || 'owner@rentora.edu',
+      severity: severity || 'medium',
+      title: title || 'Safety Incident Logged',
+      description: description || 'Hazard observed during operational session.',
+      actionTaken: actionTaken || 'Equipment assessed and logged.',
+      status: 'reported',
     });
     res.status(201).json({ success: true, message: 'Incident report logged into institutional safety registry', data: incident });
   } catch (error) {
