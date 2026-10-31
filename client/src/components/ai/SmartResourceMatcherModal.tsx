@@ -274,7 +274,7 @@ export const SmartResourceMatcherModal: React.FC<SmartResourceMatcherModalProps>
 
                     <p className="text-xs text-[#172033] bg-white p-2.5 rounded-lg border border-[#E2E8F0] leading-relaxed">
                       <strong className="text-[#1769D2]">Match Rationale:</strong>{' '}
-                      {(item as any).matchRationale || (item.whyRecommended && item.whyRecommended.length > 0 ? item.whyRecommended.join(' • ') : 'High compatibility with project specifications.'}
+                      {(item as any).matchRationale || (item.whyRecommended && item.whyRecommended.length > 0 ? item.whyRecommended.join(' • ') : 'High compatibility with project specifications.')}
                     </p>
                   </div>
                 ))}

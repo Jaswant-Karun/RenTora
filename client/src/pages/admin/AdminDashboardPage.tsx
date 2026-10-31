@@ -106,7 +106,7 @@ export const AdminDashboardPage: React.FC = () => {
       const res = await getAdminOverviewApi();
       if (res.success) {
         setStats(res.data.stats);
-        setInstitutionSummary(res.data.institutionSummary);
+        setInstitutionSummary(res.data.institutionsSummary || []);
       }
     } catch (err) {
       console.error('Error fetching admin overview:', err);
@@ -181,7 +181,7 @@ export const AdminDashboardPage: React.FC = () => {
   // Handle User Role Update
   const handleRoleChange = async (userId: string, newRole: string) => {
     try {
-      const res = await updateAdminUserRoleApi(userId, newRole);
+      const res = await updateAdminUserRoleApi(userId, { role: newRole });
       if (res.success) {
         showToast(`User role updated to ${newRole}`);
         fetchUsers();
@@ -599,8 +599,8 @@ export const AdminDashboardPage: React.FC = () => {
               >
                 <option value="All">All Categories</option>
                 {ALL_CATEGORIES.map((cat) => (
-                  <option key={cat.name} value={cat.name}>
-                    {cat.name}
+                  <option key={cat} value={cat}>
+                    {cat}
                   </option>
                 ))}
               </select>
