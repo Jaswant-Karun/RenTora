@@ -61,6 +61,7 @@ type ManagerTab =
   | 'ai-analytics'
   | 'approvals'
   | 'users'
+  | 'bookings'
   | 'eligibility'
   | 'waitlist'
   | 'conflicts'
@@ -80,6 +81,7 @@ export const ManagerDashboardPage: React.FC = () => {
       'ai-analytics',
       'approvals',
       'users',
+      'bookings',
       'eligibility',
       'waitlist',
       'conflicts',
@@ -118,6 +120,15 @@ export const ManagerDashboardPage: React.FC = () => {
   const [conflicts, setConflicts] = useState<any[]>([]);
   const [incidents, setIncidents] = useState<any[]>([]);
   const [disputes, setDisputes] = useState<any[]>([]);
+  const [institutionalBookings, setInstitutionalBookings] = useState<any[]>([]);
+  const [bookingFilterStatus, setBookingFilterStatus] = useState<string>('all');
+  const [bookingSearch, setBookingSearch] = useState<string>('');
+
+  // User & Owner Verification Filter States
+  const [userRoleFilter, setUserRoleFilter] = useState<'all' | 'student' | 'owner'>('all');
+  const [userVerifyFilter, setUserVerifyFilter] = useState<'all' | 'verified' | 'unverified'>('all');
+  const [userSearchTerm, setUserSearchTerm] = useState('');
+
   const [fairAllocation, setFairAllocation] = useState<any>({
     maxHoursPerWeekPerUser: 12,
     maxActiveBookingsPerUser: 3,
@@ -144,6 +155,8 @@ export const ManagerDashboardPage: React.FC = () => {
         incidentsRes,
         disputesRes,
         fairAllocationRes,
+        bookingsRes,
+        waitlistRes,
       ] = await Promise.all([
         getManagerStatsApi(),
         getResourceApprovalsApi(),
@@ -152,6 +165,8 @@ export const ManagerDashboardPage: React.FC = () => {
         getManagerIncidentsApi(),
         getManagerDisputesApi(),
         getFairAllocationSettingsApi(),
+        getManagerBookingsApi(),
+        getManagerWaitlistsApi(),
       ]);
 
       if (statsRes.success) setStatsData(statsRes.data);
@@ -163,19 +178,10 @@ export const ManagerDashboardPage: React.FC = () => {
       if (fairAllocationRes.success && fairAllocationRes.data) {
         setFairAllocation(fairAllocationRes.data);
       }
-
-      // Fetch waitlist queue
-      try {
-        const token = localStorage.getItem('token');
-        const resWaitlist = await fetch('/api/fairness/waitlist', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const waitlistJson = await resWaitlist.json();
-        if (waitlistJson.success) {
-          setWaitlistBookings(waitlistJson.data);
-        }
-      } catch (e) {
-        console.error('Error fetching waitlist queue:', e);
+      if (bookingsRes.success) setInstitutionalBookings(bookingsRes.data);
+      if (waitlistRes.success) setWaitlistBookings(waitlistRes.data);
+    } catch (e) {
+      console.error('Error fetching manager data:', e);
       }
     } catch (err) {
       console.error('Error loading manager dashboard data:', err);
