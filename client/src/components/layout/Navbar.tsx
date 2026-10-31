@@ -144,7 +144,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleMobileSidebar }) => {
               key={acc.role}
               onClick={async () => {
                 await switchDemoRole(acc.role);
-                navigate('/dashboard');
+                navigate(acc.role === 'admin' ? '/admin' : acc.role === 'manager' ? '/manager' : acc.role === 'owner' ? '/owner' : '/dashboard');
               }}
               className={`text-[11px] font-medium px-2 py-1 rounded-md transition-colors ${
                 user?.role === acc.role
@@ -187,6 +187,36 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleMobileSidebar }) => {
                 </div>
 
                 <div className="space-y-0.5">
+                  {user.role === 'owner' && (
+                    <Link
+                      to="/owner"
+                      onClick={() => setProfileDropdownOpen(false)}
+                      className="flex items-center space-x-2 px-3 py-1.5 text-xs text-[#1769D2] hover:bg-[#EFF6FF] rounded-lg transition-colors font-medium"
+                    >
+                      <UserIcon className="w-3.5 h-3.5" />
+                      <span>Custodian Console</span>
+                    </Link>
+                  )}
+                  {user.role === 'manager' && (
+                    <Link
+                      to="/manager"
+                      onClick={() => setProfileDropdownOpen(false)}
+                      className="flex items-center space-x-2 px-3 py-1.5 text-xs text-[#1769D2] hover:bg-[#EFF6FF] rounded-lg transition-colors font-medium"
+                    >
+                      <UserIcon className="w-3.5 h-3.5" />
+                      <span>Manager Governance</span>
+                    </Link>
+                  )}
+                  {user.role === 'admin' && (
+                    <Link
+                      to="/admin"
+                      onClick={() => setProfileDropdownOpen(false)}
+                      className="flex items-center space-x-2 px-3 py-1.5 text-xs text-[#1769D2] hover:bg-[#EFF6FF] rounded-lg transition-colors font-medium"
+                    >
+                      <ShieldAlert className="w-3.5 h-3.5" />
+                      <span>Admin Control Center</span>
+                    </Link>
+                  )}
                   <Link
                     to="/dashboard/profile"
                     onClick={() => setProfileDropdownOpen(false)}

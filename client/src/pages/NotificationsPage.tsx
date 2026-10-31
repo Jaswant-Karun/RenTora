@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getNotificationsApi, markNotificationReadApi } from '../api/resource.api';
+import { getNotificationsApi, markNotificationReadApi, markAllNotificationsReadApi } from '../api/resource.api';
 import { NotificationItem } from '../types/resource';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { EmptyState } from '../components/common/EmptyState';
@@ -56,11 +56,7 @@ export const NotificationsPage: React.FC = () => {
   const handleMarkAllRead = async () => {
     setActionLoading(true);
     try {
-      const token = localStorage.getItem('rentora_token');
-      await fetch('http://localhost:5000/api/notifications/mark-all-read', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await markAllNotificationsReadApi();
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
       setToastMessage('All notifications marked as read.');
       setTimeout(() => setToastMessage(''), 3000);

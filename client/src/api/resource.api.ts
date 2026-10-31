@@ -82,3 +82,11 @@ export const markNotificationReadApi = async (id: string) => {
   }>(`/notifications/${id}/read`);
   return response.data;
 };
+
+export const markAllNotificationsReadApi = async () => {
+  const response = await apiClient.post<{
+    success: boolean;
+    message: string;
+  }>('/notifications/mark-all-read');
+  return response.data;
+};
