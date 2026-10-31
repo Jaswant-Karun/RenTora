@@ -60,16 +60,36 @@ export const LoginPage: React.FC = () => {
     },
   });
 
-  const redirectAfterAuth = () => {
-    const from = (location.state as any)?.from?.pathname || '/dashboard';
-    navigate(from, { replace: true });
+  const redirectAfterAuth = (userRole?: string) => {
+    const from = (location.state as any)?.from?.pathname;
+    if (from && from !== '/login' && from !== '/register') {
+      navigate(from, { replace: true });
+      return;
+    }
+
+    // Role-based redirect routing
+    switch (userRole) {
+      case 'admin':
+        navigate('/dashboard?role=admin', { replace: true });
+        break;
+      case 'manager':
+        navigate('/dashboard?role=manager', { replace: true });
+        break;
+      case 'owner':
+        navigate('/dashboard?role=owner', { replace: true });
+        break;
+      case 'student':
+      default:
+        navigate('/dashboard?role=student', { replace: true });
+        break;
+    }
   };
 
   const onSubmit = async (data: LoginFormValues) => {
     setServerError(null);
     try {
-      await login(data.email, data.password, data.rememberMe);
-      redirectAfterAuth();
+      const loggedInUser = await login(data.email, data.password, data.rememberMe);
+      redirectAfterAuth(loggedInUser?.role);
     } catch (err: any) {
       const msg =
         err.response?.data?.message ||
@@ -83,8 +103,8 @@ export const LoginPage: React.FC = () => {
     setValue('password', pass);
     setServerError(null);
     try {
-      await switchDemoRole(role);
-      redirectAfterAuth();
+      const loggedInUser = await switchDemoRole(role);
+      redirectAfterAuth(loggedInUser?.role);
     } catch (err: any) {
       setServerError(err.response?.data?.message || err.message);
     }

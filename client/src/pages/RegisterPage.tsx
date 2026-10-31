@@ -93,8 +93,8 @@ export const RegisterPage: React.FC = () => {
   const onSubmit = async (data: RegisterFormValues) => {
     setServerError(null);
     try {
-      await registerAuth(data);
-      navigate('/dashboard', { replace: true });
+      const registeredUser = await registerAuth(data);
+      navigate(`/dashboard?role=${registeredUser.role}&new=true`, { replace: true });
     } catch (err: any) {
       const msg =
         err.response?.data?.message ||
