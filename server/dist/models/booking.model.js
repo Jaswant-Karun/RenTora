@@ -170,8 +170,29 @@ const bookingSchema = new mongoose_1.Schema({
         type: Boolean,
         default: false,
     },
+    overdueMinutes: {
+        type: Number,
+        default: 0,
+    },
     fairShareExplanation: {
         type: mongoose_1.Schema.Types.Mixed,
+    },
+    trustPassToken: {
+        token: { type: String, index: true },
+        qrPayload: String,
+        generatedAt: Date,
+        expiresAt: Date,
+        isValid: { type: Boolean, default: true },
+    },
+    handoverOfficer: {
+        id: mongoose_1.Schema.Types.ObjectId,
+        name: String,
+        role: String,
+    },
+    returnOfficer: {
+        id: mongoose_1.Schema.Types.ObjectId,
+        name: String,
+        role: String,
     },
     auditTrail: {
         type: [auditEntrySchema],
@@ -183,4 +204,5 @@ const bookingSchema = new mongoose_1.Schema({
 // Compound index for high performance overlap checks and preventing concurrent double booking
 bookingSchema.index({ resourceId: 1, startTime: 1, endTime: 1, status: 1 });
 bookingSchema.index({ userId: 1, status: 1 });
+bookingSchema.index({ 'trustPassToken.token': 1 });
 exports.Booking = (0, mongoose_1.model)('Booking', bookingSchema);

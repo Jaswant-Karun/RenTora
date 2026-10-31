@@ -16,6 +16,7 @@ const auditLog_routes_js_1 = __importDefault(require("./auditLog.routes.js"));
 const ai_routes_js_1 = __importDefault(require("./ai.routes.js"));
 const admin_routes_js_1 = __importDefault(require("./admin.routes.js"));
 const fairShare_routes_js_1 = __importDefault(require("./fairShare.routes.js"));
+const trustPass_routes_js_1 = __importDefault(require("./trustPass.routes.js"));
 const db_js_1 = require("../config/db.js");
 const router = (0, express_1.Router)();
 // Health Check
@@ -50,4 +51,5 @@ router.use('/audit-logs', auditLog_routes_js_1.default);
 router.use('/ai', ai_routes_js_1.default);
 router.use('/admin', admin_routes_js_1.default);
 router.use('/fairshare', fairShare_routes_js_1.default);
+router.use('/trustpass', trustPass_routes_js_1.default);
 exports.default = router;
