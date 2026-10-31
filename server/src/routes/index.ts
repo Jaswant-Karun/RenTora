@@ -10,6 +10,7 @@ import incidentRoutes from './incident.routes.js';
 import auditLogRoutes from './auditLog.routes.js';
 import aiRoutes from './ai.routes.js';
 import adminRoutes from './admin.routes.js';
+import fairShareRoutes from './fairShare.routes.js';
 import { getDBStatus } from '../config/db.js';
 
 const router = Router();
@@ -47,5 +48,6 @@ router.use('/incidents', incidentRoutes);
 router.use('/audit-logs', auditLogRoutes);
 router.use('/ai', aiRoutes);
 router.use('/admin', adminRoutes);
+router.use('/fairshare', fairShareRoutes);
 
 export default router;
