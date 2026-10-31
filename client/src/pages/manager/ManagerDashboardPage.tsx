@@ -165,6 +165,7 @@ export const ManagerDashboardPage: React.FC = () => {
         fairAllocationRes,
         bookingsRes,
         waitlistRes,
+        fairShareRes,
       ] = await Promise.all([
         getManagerStatsApi(),
         getResourceApprovalsApi(),
@@ -175,6 +176,7 @@ export const ManagerDashboardPage: React.FC = () => {
         getFairAllocationSettingsApi(),
         getManagerBookingsApi(),
         getManagerWaitlistsApi(),
+        getFairShareHistoryApi(),
       ]);
 
       if (statsRes.success) setStatsData(statsRes.data);
@@ -188,6 +190,9 @@ export const ManagerDashboardPage: React.FC = () => {
       }
       if (bookingsRes.success) setInstitutionalBookings(bookingsRes.data);
       if (waitlistRes.success) setWaitlistBookings(waitlistRes.data);
+      if (fairShareRes.success && fairShareRes.data) {
+        setFairShareDecisions(fairShareRes.data.decisions || []);
+      }
     } catch (err) {
       console.error('Error loading manager dashboard data:', err);
     } finally {
@@ -1393,6 +1398,123 @@ export const ManagerDashboardPage: React.FC = () => {
               </button>
             </div>
           </div>
+
+          {/* FairShare Transparent Allocation Decision Ledger */}
+          <div className="space-y-4 pt-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <div>
+                <h3 className="text-base font-bold text-[#172033] flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-indigo-600" />
+                  <span>FairShare Allocation Decision History</span>
+                </h3>
+                <p className="text-xs text-[#64748B] mt-0.5">
+                  Complete explainable decision audit log. No unexplained scores or arbitrary penalties.
+                </p>
+              </div>
+
+              {/* Filter Tabs */}
+              <div className="flex items-center space-x-1 overflow-x-auto text-xs">
+                {['all', 'approved', 'pending_review', 'waitlisted', 'rejected'].map((dec) => (
+                  <button
+                    key={dec}
+                    type="button"
+                    onClick={() => setFairShareDecisionFilter(dec)}
+                    className={`px-3 py-1 rounded-lg capitalize font-medium transition-all ${
+                      fairShareDecisionFilter === dec
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                    }`}
+                  >
+                    {dec.replace('_', ' ')}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Decisions Table */}
+            <div className="bg-white border border-[#E2E8F0] rounded-2xl overflow-hidden shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-[#E2E8F0] text-slate-500 font-semibold uppercase tracking-wider text-[11px]">
+                      <th className="py-3 px-4">Timestamp</th>
+                      <th className="py-3 px-4">Researcher</th>
+                      <th className="py-3 px-4">Resource</th>
+                      <th className="py-3 px-4">Slot</th>
+                      <th className="py-3 px-4">Decision</th>
+                      <th className="py-3 px-4">Primary Rationale</th>
+                      <th className="py-3 px-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#E2E8F0]">
+                    {fairShareDecisions.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="py-8 text-center text-slate-400">
+                          No allocation decisions logged in this cycle yet.
+                        </td>
+                      </tr>
+                    ) : (
+                      fairShareDecisions
+                        .filter((d) => fairShareDecisionFilter === 'all' || d.finalDecision.toLowerCase() === fairShareDecisionFilter)
+                        .map((item) => (
+                          <tr key={item._id} className="hover:bg-slate-50/70 transition-colors">
+                            <td className="py-3 px-4 text-slate-500 whitespace-nowrap">
+                              {new Date(item.createdAt).toLocaleDateString()} {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="font-semibold text-slate-900 block">{item.userName}</span>
+                              <span className="text-[10px] text-slate-500">{item.userQualification || item.userRole}</span>
+                            </td>
+                            <td className="py-3 px-4 font-medium text-slate-800">
+                              {item.resourceName}
+                            </td>
+                            <td className="py-3 px-4 text-slate-600 whitespace-nowrap">
+                              {item.date} ({item.timeSlot})
+                            </td>
+                            <td className="py-3 px-4 whitespace-nowrap">
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                                item.finalDecision === 'APPROVED'
+                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                  : item.finalDecision === 'PENDING_REVIEW'
+                                  ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                                  : item.finalDecision === 'WAITLISTED'
+                                  ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                  : 'bg-rose-50 text-rose-700 border border-rose-200'
+                              }`}>
+                                {item.finalDecision.replace('_', ' ')}
+                              </span>
+                              {item.isOverridden && (
+                                <span className="ml-1 text-[9px] font-bold text-amber-800 bg-amber-100 border border-amber-300 px-1 py-0.5 rounded">
+                                  Overridden
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-3 px-4 text-slate-600 max-w-xs truncate" title={item.reason}>
+                              {item.reason}
+                            </td>
+                            <td className="py-3 px-4 text-right whitespace-nowrap">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedFairShareExplanation({
+                                  explanation: item.explanation,
+                                  resourceName: item.resourceName,
+                                  isOverridden: item.isOverridden,
+                                  overriddenBy: item.overriddenBy,
+                                  overrideReason: item.overrideReason,
+                                })}
+                                className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold border border-indigo-200 transition-colors"
+                              >
+                                View Breakdown
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </form>
       )}
 
@@ -1401,6 +1523,19 @@ export const ManagerDashboardPage: React.FC = () => {
         <div className="space-y-4">
           <AuditLedgerViewer />
         </div>
+      )}
+
+      {/* FairShare Transparency Breakdown Modal */}
+      {selectedFairShareExplanation && (
+        <FairShareExplanationModal
+          isOpen={!!selectedFairShareExplanation}
+          explanation={selectedFairShareExplanation.explanation}
+          resourceName={selectedFairShareExplanation.resourceName}
+          isOverridden={selectedFairShareExplanation.isOverridden}
+          overriddenBy={selectedFairShareExplanation.overriddenBy}
+          overrideReason={selectedFairShareExplanation.overrideReason}
+          onClose={() => setSelectedFairShareExplanation(null)}
+        />
       )}
 
       {/* Manager Override Modal */}

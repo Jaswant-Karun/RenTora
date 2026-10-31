@@ -144,9 +144,11 @@ export interface Booking {
   returnCondition?: ConditionSnapshot;
   checkedOut?: boolean;
   checkedOutAt?: string;
-  conditionOnCheckout?: string;
   conflictDetected?: boolean;
   isOverdue?: boolean;
+  fairShareExplanation?: any;
+  managerOverrideReason?: string;
+  managerOverriddenBy?: string;
   auditTrail?: AuditEntry[];
   suggestedAlternative?: {
     date: string;
