@@ -8,28 +8,39 @@ import { Dispute } from '../models/dispute.model.js';
 import { FairAllocation } from '../models/fairAllocation.model.js';
 import { Notification } from '../models/notification.model.js';
 import { recordAuditLog } from '../utils/auditLogger.js';
+import { AuditLog } from '../models/auditLog.model.js';
 
-// 1. Institution-wide Resource Statistics
+// 1. Institution-wide Resource Statistics & Analytics
 export const getManagerStats = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const institution = req.user?.institution || 'National Institute of Technology';
 
     const [
       totalResources,
+      availableResources,
       activeBookings,
       totalUsers,
+      studentUsers,
+      ownerUsers,
       unverifiedUsers,
       incidentsCount,
       disputesCount,
       pendingResourceApprovals,
+      completedBookings,
+      waitlistedBookings,
     ] = await Promise.all([
-      Resource.countDocuments(),
+      Resource.countDocuments({ isArchived: { $ne: true } }),
+      Resource.countDocuments({ status: 'available', isArchived: { $ne: true } }),
       Booking.countDocuments({ status: 'active' }),
       User.countDocuments(),
+      User.countDocuments({ role: 'student' }),
+      User.countDocuments({ role: 'owner' }),
       User.countDocuments({ isVerified: false }),
       Incident.countDocuments({ status: { $ne: 'resolved' } }),
       Dispute.countDocuments({ status: { $ne: 'resolved' } }),
-      Resource.countDocuments({ approvalStatus: 'pending_manager' }),
+      Resource.countDocuments({ approvalStatus: 'pending_manager', isArchived: { $ne: true } }),
+      Booking.countDocuments({ status: 'completed' }),
+      Booking.countDocuments({ status: 'waitlisted' }),
     ]);
 
     // Department utilization aggregation
