@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Resource } from '../../types/resource';
 import { preCheckBookingApi, createBookingApi, PreCheckResult } from '../../api/booking.api';
 import { detectSchedulingConflictsApi, ConflictDetectionResponse } from '../../api/ai.api';
@@ -8,19 +8,15 @@ import { LoadingSpinner } from '../common/LoadingSpinner';
 import {
   Calendar,
   Clock,
-  CheckCircle2,
-  AlertTriangle,
-  XCircle,
   ShieldCheck,
-  Cpu,
-  FileText,
-  User,
   ArrowRight,
   ArrowLeft,
   Check,
   AlertCircle,
-  HelpCircle,
-  Sparkles,
+  X,
+  Building,
+  MapPin,
+  CheckCircle2,
 } from 'lucide-react';
 
 interface BookingWizardModalProps {
@@ -90,7 +86,6 @@ export const BookingWizardModal: React.FC<BookingWizardModalProps> = ({
   // Step 4 State (User input fields)
   const [purpose, setPurpose] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
-  const [expectedDuration, setExpectedDuration] = useState('3 hours');
   const [additionalInformation, setAdditionalInformation] = useState('');
   const [supervisorName, setSupervisorName] = useState('Dr. Meera Raman (Faculty Advisor)');
   const [trainingAcknowledged, setTrainingAcknowledged] = useState(true);
@@ -170,7 +165,7 @@ export const BookingWizardModal: React.FC<BookingWizardModalProps> = ({
         setTimeout(() => {
           onSuccess();
           onClose();
-        }, 1800);
+        }, 1500);
       }
     } catch (err: any) {
       setSubmitError(err.response?.data?.message || 'Error submitting booking reservation.');
@@ -182,34 +177,34 @@ export const BookingWizardModal: React.FC<BookingWizardModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
+        initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-2xl rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl flex flex-col overflow-hidden max-h-[90vh]"
+        exit={{ opacity: 0, scale: 0.98 }}
+        className="w-full max-w-2xl rounded-2xl bg-white border border-[#E2E8F0] shadow-2xl flex flex-col overflow-hidden max-h-[90vh]"
       >
         {/* Modal Header */}
-        <div className="p-6 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between">
+        <div className="p-5 sm:p-6 bg-white border-b border-[#E2E8F0] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+            <div className="w-10 h-10 rounded-xl bg-[#EFF6FF] text-[#1769D2] flex items-center justify-center border border-[#1769D2]/20">
               <Calendar className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white">Reserve Academic Resource</h2>
-              <p className="text-xs text-slate-400">{resource.name} ({resource.category})</p>
+              <h2 className="text-base font-semibold text-[#172033]">Reserve Institutional Resource</h2>
+              <p className="text-xs text-[#64748B]">{resource.name} • {resource.category}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors"
+            className="p-1.5 text-[#64748B] hover:text-[#172033] rounded-lg hover:bg-slate-100 transition-colors"
           >
-            ✕
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* 5-Step Indicator */}
-        <div className="px-6 py-3 bg-slate-900/60 border-b border-slate-800/80 flex items-center justify-between text-xs">
+        <div className="px-5 sm:px-6 py-3 bg-[#F8FAFC] border-b border-[#E2E8F0] flex items-center justify-between text-xs">
           {[
             { num: 1, name: 'Overview' },
             { num: 2, name: 'Date & Time' },
@@ -221,19 +216,19 @@ export const BookingWizardModal: React.FC<BookingWizardModalProps> = ({
               key={st.num}
               className={`flex items-center gap-2 ${
                 currentStep === st.num
-                  ? 'text-brand-400 font-bold'
+                  ? 'text-[#1769D2] font-semibold'
                   : currentStep > st.num
-                  ? 'text-emerald-400 font-semibold'
-                  : 'text-slate-500'
+                  ? 'text-[#16834A] font-medium'
+                  : 'text-[#64748B]'
               }`}
             >
               <div
                 className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${
                   currentStep === st.num
-                    ? 'bg-brand-600 text-white'
+                    ? 'bg-[#1769D2] text-white shadow-sm'
                     : currentStep > st.num
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                    : 'bg-slate-800 text-slate-500'
+                    ? 'bg-emerald-50 text-[#16834A] border border-emerald-200'
+                    : 'bg-slate-200 text-[#64748B]'
                 }`}
               >
                 {currentStep > st.num ? '✓' : st.num}
@@ -244,11 +239,11 @@ export const BookingWizardModal: React.FC<BookingWizardModalProps> = ({
         </div>
 
         {/* Modal Body / Steps */}
-        <div className="p-6 flex-1 overflow-y-auto space-y-5">
+        <div className="p-5 sm:p-6 flex-1 overflow-y-auto space-y-5 bg-[#FFFFFF]">
           {/* STEP 1: Resource Overview */}
           {currentStep === 1 && (
             <div className="space-y-4">
-              <div className="h-44 rounded-2xl overflow-hidden relative border border-slate-800">
+              <div className="h-44 rounded-xl overflow-hidden relative border border-[#E2E8F0]">
                 <img
                   src={
                     resource.images?.[0] ||
@@ -257,43 +252,43 @@ export const BookingWizardModal: React.FC<BookingWizardModalProps> = ({
                   alt={resource.name}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent" />
-                <div className="absolute bottom-3 left-4">
-                  <span className="px-2.5 py-1 rounded text-[10px] font-bold uppercase bg-brand-500/20 text-brand-300 border border-brand-500/30">
+                <div className="absolute inset-0 bg-gradient-to-t from-[#172033]/80 via-transparent to-transparent" />
+                <div className="absolute bottom-3 left-4 right-4">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-[#EFF6FF] text-[#1769D2] border border-[#1769D2]/30">
                     {resource.category}
                   </span>
                   <h3 className="text-base font-bold text-white mt-1">{resource.name}</h3>
-                  <p className="text-xs text-slate-300">{resource.location} • {resource.institution}</p>
+                  <p className="text-xs text-slate-200">{resource.location} • {resource.institution}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
-                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
-                  <span className="text-slate-400">Duration Range</span>
-                  <p className="font-bold text-white mt-0.5">
+                <div className="p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                  <span className="text-[#64748B]">Duration Range</span>
+                  <p className="font-semibold text-[#172033] mt-0.5">
                     {resource.minBookingDuration || 1}h - {resource.maxBookingDuration || 8}h
                   </p>
                 </div>
-                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
-                  <span className="text-slate-400">Approval Required</span>
-                  <p className="font-bold text-amber-400 mt-0.5">
+                <div className="p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                  <span className="text-[#64748B]">Approval Required</span>
+                  <p className="font-semibold text-[#D97706] mt-0.5">
                     {resource.approvalRequired ? 'Yes (Custodian Review)' : 'Instant Booking'}
                   </p>
                 </div>
-                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
-                  <span className="text-slate-400">Supervision Required</span>
-                  <p className="font-bold text-purple-400 mt-0.5">
+                <div className="p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                  <span className="text-[#64748B]">Supervision</span>
+                  <p className="font-semibold text-[#1769D2] mt-0.5">
                     {resource.supervisionRequirement ? 'Supervised' : 'Self-Operated'}
                   </p>
                 </div>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs space-y-1.5">
-                <p className="font-semibold text-slate-200">Prerequisites & Safety:</p>
-                <p className="text-slate-400">
+              <div className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-xs space-y-1.5">
+                <p className="font-semibold text-[#172033]">Prerequisites & Safety Requirements:</p>
+                <p className="text-[#64748B]">
                   • <strong>Training:</strong> {resource.trainingRequired || 'Standard Safety Briefing'}
                 </p>
-                <p className="text-slate-400">
+                <p className="text-[#64748B]">
                   • <strong>Eligibility:</strong> {resource.eligibility || 'Verified institutional researchers'}
                 </p>
               </div>
@@ -304,49 +299,49 @@ export const BookingWizardModal: React.FC<BookingWizardModalProps> = ({
           {currentStep === 2 && (
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Select Reservation Date</label>
+                <label className="block text-xs font-semibold text-[#172033] mb-1">Select Reservation Date</label>
                 <input
                   type="date"
                   min={new Date().toISOString().split('T')[0]}
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-brand-500"
+                  className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#172033] focus:outline-none focus:border-[#1769D2] focus:ring-1 focus:ring-[#1769D2]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-brand-400" /> Start Time
+                  <label className="block text-xs font-semibold text-[#172033] mb-1 flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-[#1769D2]" /> Start Time
                   </label>
                   <input
                     type="time"
                     value={startTimeStr}
                     onChange={(e) => setStartTimeStr(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-brand-500"
+                    className="w-full px-3.5 py-2 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#172033] focus:outline-none focus:border-[#1769D2] focus:ring-1 focus:ring-[#1769D2]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-indigo-400" /> End Time
+                  <label className="block text-xs font-semibold text-[#172033] mb-1 flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-[#1769D2]" /> End Time
                   </label>
                   <input
                     type="time"
                     value={endTimeStr}
                     onChange={(e) => setEndTimeStr(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-brand-500"
+                    className="w-full px-3.5 py-2 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#172033] focus:outline-none focus:border-[#1769D2] focus:ring-1 focus:ring-[#1769D2]"
                   />
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs">
-                <span className="text-slate-400">Total Calculated Duration:</span>
-                <span className="text-base font-extrabold text-brand-400">{computedDuration} Hours</span>
+              <div className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-between text-xs">
+                <span className="text-[#64748B]">Total Calculated Duration:</span>
+                <span className="text-sm font-bold text-[#1769D2]">{computedDuration} Hours</span>
               </div>
 
               {computedDuration <= 0 && (
-                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+                <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-[#DC2626] text-xs flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>End time must be later than start time.</span>
                 </div>
@@ -372,9 +367,9 @@ export const BookingWizardModal: React.FC<BookingWizardModalProps> = ({
           {/* STEP 3: Automated Pre-Check Diagnostics */}
           {currentStep === 3 && (
             <div className="space-y-4">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-brand-400" />
-                Real-Time Institutional Reservation Verification
+              <h3 className="text-sm font-semibold text-[#172033] flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-[#1769D2]" />
+                Institutional Eligibility & Conflict Verification
               </h3>
 
               {preCheckLoading ? (
@@ -384,49 +379,49 @@ export const BookingWizardModal: React.FC<BookingWizardModalProps> = ({
               ) : preCheckData ? (
                 <div className="space-y-2.5 text-xs">
                   {/* Auth & User */}
-                  <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+                  <div className="p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-between">
                     <div>
-                      <p className="font-semibold text-white">User Authentication</p>
-                      <p className="text-slate-400">Session verified as {preCheckData.checks.user.name}</p>
+                      <p className="font-semibold text-[#172033]">User Authentication</p>
+                      <p className="text-[#64748B]">Session verified as {preCheckData.checks.user.name}</p>
                     </div>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-[#16834A] border border-emerald-200">
                       PASS
                     </span>
                   </div>
 
                   {/* Eligibility */}
-                  <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+                  <div className="p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-between">
                     <div>
-                      <p className="font-semibold text-white">Academic Eligibility Status</p>
-                      <p className="text-slate-400">{preCheckData.checks.eligibility.detail}</p>
+                      <p className="font-semibold text-[#172033]">Academic Eligibility Status</p>
+                      <p className="text-[#64748B]">{preCheckData.checks.eligibility.detail}</p>
                     </div>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-[#16834A] border border-emerald-200">
                       PASS
                     </span>
                   </div>
 
                   {/* Training */}
-                  <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+                  <div className="p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-between">
                     <div>
-                      <p className="font-semibold text-white">Required Safety Certification</p>
-                      <p className="text-slate-400">{preCheckData.checks.training.required}</p>
+                      <p className="font-semibold text-[#172033]">Required Safety Certification</p>
+                      <p className="text-[#64748B]">{preCheckData.checks.training.required}</p>
                     </div>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/20 text-indigo-400">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#EFF6FF] text-[#1769D2] border border-[#1769D2]/20">
                       CLEARED
                     </span>
                   </div>
 
                   {/* Resource Availability */}
-                  <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+                  <div className="p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-between">
                     <div>
-                      <p className="font-semibold text-white">Equipment Operational Status</p>
-                      <p className="text-slate-400">{preCheckData.checks.resourceAvailability.detail}</p>
+                      <p className="font-semibold text-[#172033]">Equipment Operational Status</p>
+                      <p className="text-[#64748B]">{preCheckData.checks.resourceAvailability.detail}</p>
                     </div>
                     <span
                       className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                         preCheckData.checks.resourceAvailability.passed
-                          ? 'bg-emerald-500/20 text-emerald-400'
-                          : 'bg-rose-500/20 text-rose-400'
+                          ? 'bg-emerald-50 text-[#16834A] border border-emerald-200'
+                          : 'bg-red-50 text-[#DC2626] border border-red-200'
                       }`}
                     >
                       {preCheckData.checks.resourceAvailability.passed ? 'AVAILABLE' : 'OFFLINE'}
@@ -434,16 +429,16 @@ export const BookingWizardModal: React.FC<BookingWizardModalProps> = ({
                   </div>
 
                   {/* Scheduling Conflict */}
-                  <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+                  <div className="p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-between">
                     <div>
-                      <p className="font-semibold text-white">Temporal Collision Check</p>
-                      <p className="text-slate-400">{preCheckData.checks.schedulingConflict.detail}</p>
+                      <p className="font-semibold text-[#172033]">Temporal Collision Check</p>
+                      <p className="text-[#64748B]">{preCheckData.checks.schedulingConflict.detail}</p>
                     </div>
                     <span
                       className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                         !preCheckData.checks.schedulingConflict.conflictDetected
-                          ? 'bg-emerald-500/20 text-emerald-400'
-                          : 'bg-rose-500/20 text-rose-400'
+                          ? 'bg-emerald-50 text-[#16834A] border border-emerald-200'
+                          : 'bg-red-50 text-[#DC2626] border border-red-200'
                       }`}
                     >
                       {!preCheckData.checks.schedulingConflict.conflictDetected ? 'ZERO CONFLICTS' : 'COLLISION DETECTED'}
@@ -451,16 +446,16 @@ export const BookingWizardModal: React.FC<BookingWizardModalProps> = ({
                   </div>
 
                   {/* Fair Allocation Limits */}
-                  <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+                  <div className="p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-between">
                     <div>
-                      <p className="font-semibold text-white">Fair Allocation Quota Check</p>
-                      <p className="text-slate-400">{preCheckData.checks.activeBookingLimits.detail}</p>
+                      <p className="font-semibold text-[#172033]">Fair Allocation Quota Check</p>
+                      <p className="text-[#64748B]">{preCheckData.checks.activeBookingLimits.detail}</p>
                     </div>
                     <span
                       className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                         preCheckData.checks.activeBookingLimits.passed
-                          ? 'bg-emerald-500/20 text-emerald-400'
-                          : 'bg-rose-500/20 text-rose-400'
+                          ? 'bg-emerald-50 text-[#16834A] border border-emerald-200'
+                          : 'bg-red-50 text-[#DC2626] border border-red-200'
                       }`}
                     >
                       {preCheckData.checks.activeBookingLimits.passed ? 'WITHIN LIMITS' : 'LIMIT EXCEEDED'}
@@ -475,7 +470,7 @@ export const BookingWizardModal: React.FC<BookingWizardModalProps> = ({
           {currentStep === 4 && (
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-[#172033] mb-1">
                   Purpose of Booking (Required)
                 </label>
                 <input
@@ -484,12 +479,12 @@ export const BookingWizardModal: React.FC<BookingWizardModalProps> = ({
                   value={purpose}
                   onChange={(e) => setPurpose(e.target.value)}
                   placeholder="e.g. Synthesis of GaN thin-films for semiconductor capstone project"
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500"
+                  className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#172033] placeholder-[#64748B] focus:outline-none focus:border-[#1769D2] focus:ring-1 focus:ring-[#1769D2]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-[#172033] mb-1">
                   Project Description & Methodology
                 </label>
                 <textarea
@@ -497,25 +492,25 @@ export const BookingWizardModal: React.FC<BookingWizardModalProps> = ({
                   value={projectDescription}
                   onChange={(e) => setProjectDescription(e.target.value)}
                   placeholder="Outline experiment protocol, materials brought, and safety precautions..."
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500"
+                  className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#172033] placeholder-[#64748B] focus:outline-none focus:border-[#1769D2] focus:ring-1 focus:ring-[#1769D2]"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-xs font-semibold text-[#172033] mb-1">
                     Faculty Sponsor / Supervisor
                   </label>
                   <input
                     type="text"
                     value={supervisorName}
                     onChange={(e) => setSupervisorName(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-brand-500"
+                    className="w-full px-3.5 py-2 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#172033] focus:outline-none focus:border-[#1769D2] focus:ring-1 focus:ring-[#1769D2]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-xs font-semibold text-[#172033] mb-1">
                     Additional Requirements
                   </label>
                   <input
@@ -523,20 +518,20 @@ export const BookingWizardModal: React.FC<BookingWizardModalProps> = ({
                     value={additionalInformation}
                     onChange={(e) => setAdditionalInformation(e.target.value)}
                     placeholder="e.g. Nitrogen purge line, cryogenic dewar"
-                    className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-brand-500"
+                    className="w-full px-3.5 py-2 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#172033] focus:outline-none focus:border-[#1769D2] focus:ring-1 focus:ring-[#1769D2]"
                   />
                 </div>
               </div>
 
-              <label className="flex items-center gap-2.5 p-3 rounded-xl bg-slate-950 border border-slate-800 cursor-pointer">
+              <label className="flex items-center gap-2.5 p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] cursor-pointer">
                 <input
                   type="checkbox"
                   checked={trainingAcknowledged}
                   onChange={(e) => setTrainingAcknowledged(e.target.checked)}
-                  className="rounded border-slate-700 text-brand-600 focus:ring-brand-500"
+                  className="rounded border-[#E2E8F0] text-[#1769D2] focus:ring-[#1769D2]"
                 />
-                <span className="text-xs text-slate-300">
-                  I certify that I have read and agree to comply with laboratory safety instructions and cleanroom SOPs.
+                <span className="text-xs text-[#64748B]">
+                  I certify that I have read and agree to comply with laboratory safety instructions and facility SOPs.
                 </span>
               </label>
             </div>
@@ -545,44 +540,44 @@ export const BookingWizardModal: React.FC<BookingWizardModalProps> = ({
           {/* STEP 5: Review & Submit */}
           {currentStep === 5 && (
             <div className="space-y-4">
-              <h3 className="text-sm font-bold text-white">Review Reservation Summary</h3>
+              <h3 className="text-sm font-semibold text-[#172033]">Review Reservation Summary</h3>
 
               {submitError && (
-                <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+                <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-[#DC2626] text-xs flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{submitError}</span>
                 </div>
               )}
 
               {submitSuccess && (
-                <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-sm flex items-center gap-2">
+                <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-[#16834A] text-sm flex items-center gap-2">
                   <Check className="w-5 h-5 shrink-0" />
                   <span>Reservation confirmed! Redirecting to My Bookings...</span>
                 </div>
               )}
 
-              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2.5 text-xs">
+              <div className="p-4 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-2.5 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Asset:</span>
-                  <span className="text-white font-bold">{resource.name}</span>
+                  <span className="text-[#64748B]">Asset:</span>
+                  <span className="text-[#172033] font-bold">{resource.name}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Date:</span>
-                  <span className="text-white font-semibold">{selectedDate}</span>
+                  <span className="text-[#64748B]">Date:</span>
+                  <span className="text-[#172033] font-medium">{selectedDate}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Timeslot:</span>
-                  <span className="text-brand-400 font-mono font-bold">
+                  <span className="text-[#64748B]">Timeslot:</span>
+                  <span className="text-[#1769D2] font-semibold">
                     {startTimeStr} - {endTimeStr} ({computedDuration} hrs)
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Purpose:</span>
-                  <span className="text-white max-w-xs text-right truncate">{purpose || 'Capstone research'}</span>
+                  <span className="text-[#64748B]">Purpose:</span>
+                  <span className="text-[#172033] max-w-xs text-right truncate">{purpose || 'Capstone research'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Governance:</span>
-                  <span className="text-amber-400 font-semibold">
+                  <span className="text-[#64748B]">Governance:</span>
+                  <span className="text-[#D97706] font-medium">
                     {resource.approvalRequired ? 'Requires Custodian Sign-Off' : 'Instant Confirmation'}
                   </span>
                 </div>
@@ -592,12 +587,12 @@ export const BookingWizardModal: React.FC<BookingWizardModalProps> = ({
         </div>
 
         {/* Modal Footer Controls */}
-        <div className="p-6 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between">
+        <div className="p-4 sm:p-5 bg-white border-t border-[#E2E8F0] flex items-center justify-between">
           <button
             type="button"
             onClick={handlePrevStep}
             disabled={currentStep === 1 || submitting}
-            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-30 text-slate-300 text-xs font-semibold transition-colors flex items-center gap-1.5"
+            className="px-4 py-2 rounded-lg bg-white border border-[#E2E8F0] hover:bg-slate-50 disabled:opacity-40 text-[#172033] text-xs font-medium transition-colors flex items-center gap-1.5"
           >
             <ArrowLeft className="w-3.5 h-3.5" /> Back
           </button>
@@ -611,7 +606,7 @@ export const BookingWizardModal: React.FC<BookingWizardModalProps> = ({
                 (currentStep === 3 && preCheckData && !preCheckData.canBook) ||
                 (currentStep === 4 && !purpose.trim())
               }
-              className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 disabled:opacity-40 text-white text-xs font-semibold shadow-lg shadow-brand-500/20 transition-all flex items-center gap-1.5"
+              className="px-5 py-2 rounded-lg bg-[#1769D2] hover:bg-[#1256B0] disabled:opacity-40 text-white text-xs font-semibold shadow-sm transition-all flex items-center gap-1.5"
             >
               Continue <ArrowRight className="w-3.5 h-3.5" />
             </button>
@@ -620,7 +615,7 @@ export const BookingWizardModal: React.FC<BookingWizardModalProps> = ({
               type="button"
               onClick={handleSubmitBooking}
               disabled={submitting || submitSuccess}
-              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 disabled:opacity-50 text-white text-xs font-semibold shadow-lg shadow-brand-500/25 transition-all flex items-center gap-2"
+              className="px-5 py-2 rounded-lg bg-[#1769D2] hover:bg-[#1256B0] disabled:opacity-50 text-white text-xs font-semibold shadow-sm transition-all flex items-center gap-2"
             >
               {submitting && <LoadingSpinner size="sm" />}
               Submit Reservation Request
