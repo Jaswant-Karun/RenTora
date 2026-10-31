@@ -1,47 +1,35 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import { getResourcesApi } from '../api/resource.api';
 import { Resource, ResourceCategory } from '../types/resource';
 import { ResourceCard } from '../components/resources/ResourceCard';
 import { BookingModal } from '../components/resources/BookingModal';
 import { SmartResourceMatcherModal } from '../components/ai/SmartResourceMatcherModal';
-import { LoadingSpinner } from '../components/common/LoadingSpinner';
+import { CardSkeleton } from '../components/common/SkeletonLoader';
+import { EmptyState } from '../components/common/EmptyState';
 import {
   Search,
-  SlidersHorizontal,
   RotateCcw,
   Building,
-  MapPin,
   Calendar,
   Layers,
-  ShieldCheck,
-  CheckCircle2,
-  Cpu,
-  GraduationCap,
-  Users,
-  Camera,
-  Printer,
-  Radio,
-  Gauge,
-  Wrench,
-  Boxes,
   Sparkles,
-  LayoutGrid,
-  List,
+  SlidersHorizontal,
+  CheckCircle2,
+  Clock,
 } from 'lucide-react';
 
-export const ALL_CATEGORIES: { name: ResourceCategory; icon: any }[] = [
-  { name: 'Laboratories', icon: Layers },
-  { name: 'Classrooms', icon: GraduationCap },
-  { name: 'Meeting Rooms', icon: Users },
-  { name: 'Computers', icon: Cpu },
-  { name: 'Cameras', icon: Camera },
-  { name: '3D Printers', icon: Printer },
-  { name: 'Electronics Equipment', icon: Radio },
-  { name: 'Testing Instruments', icon: Gauge },
-  { name: 'Workshop Tools', icon: Wrench },
-  { name: 'Other Resources', icon: Boxes },
+export const ALL_CATEGORIES: ResourceCategory[] = [
+  'Laboratories',
+  'Classrooms',
+  'Meeting Rooms',
+  'Computers',
+  'Cameras',
+  '3D Printers',
+  'Electronics Equipment',
+  'Testing Instruments',
+  'Workshop Tools',
+  'Other Resources',
 ];
 
 export const ExploreResourcesPage: React.FC = () => {
@@ -55,11 +43,9 @@ export const ExploreResourcesPage: React.FC = () => {
   // Filters state
   const selectedCategory = searchParams.get('category') || 'All';
   const selectedInstitution = searchParams.get('institution') || 'All';
-  const selectedLocation = searchParams.get('location') || 'All';
   const selectedAvailability = searchParams.get('availability') || 'All';
-  const selectedResourceType = searchParams.get('resourceType') || 'All';
-  const selectedEligibility = searchParams.get('eligibility') || 'All';
   const selectedDate = searchParams.get('date') || '';
+  const selectedSort = searchParams.get('sort') || 'name_asc';
 
   // Data states
   const [resources, setResources] = useState<Resource[]>([]);
@@ -70,9 +56,6 @@ export const ExploreResourcesPage: React.FC = () => {
     locations: string[];
     categories: string[];
   }>({ institutions: [], locations: [], categories: [] });
-
-  // View mode
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // Booking modal & AI Smart Matcher modal
   const [selectedForBooking, setSelectedForBooking] = useState<Resource | null>(null);
@@ -88,7 +71,7 @@ export const ExploreResourcesPage: React.FC = () => {
         searchParams.delete('search');
       }
       setSearchParams(searchParams, { replace: true });
-    }, 350);
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [searchInput]);
@@ -102,16 +85,20 @@ export const ExploreResourcesPage: React.FC = () => {
           search: debouncedSearch || undefined,
           category: selectedCategory !== 'All' ? selectedCategory : undefined,
           institution: selectedInstitution !== 'All' ? selectedInstitution : undefined,
-          location: selectedLocation !== 'All' ? selectedLocation : undefined,
           availability: selectedAvailability !== 'All' ? selectedAvailability : undefined,
-          resourceType: selectedResourceType !== 'All' ? selectedResourceType : undefined,
-          eligibility: selectedEligibility !== 'All' ? selectedEligibility : undefined,
           date: selectedDate || undefined,
-          limit: 30,
+          limit: 32,
         });
 
         if (res.success) {
-          setResources(res.data);
+          let items = res.data;
+          // Apply client sorting if needed
+          if (selectedSort === 'name_asc') {
+            items = [...items].sort((a, b) => a.name.localeCompare(b.name));
+          } else if (selectedSort === 'name_desc') {
+            items = [...items].sort((a, b) => b.name.localeCompare(a.name));
+          }
+          setResources(items);
           setTotalCount(res.meta.total);
           if (res.meta.filterOptions) {
             setFilterOptions(res.meta.filterOptions);
@@ -129,11 +116,9 @@ export const ExploreResourcesPage: React.FC = () => {
     debouncedSearch,
     selectedCategory,
     selectedInstitution,
-    selectedLocation,
     selectedAvailability,
-    selectedResourceType,
-    selectedEligibility,
     selectedDate,
+    selectedSort,
   ]);
 
   const updateFilter = (key: string, value: string) => {
@@ -151,179 +136,58 @@ export const ExploreResourcesPage: React.FC = () => {
     setSearchParams({}, { replace: true });
   };
 
-  const activeFiltersCount = useMemo(() => {
-    let count = 0;
-    if (selectedCategory !== 'All') count++;
-    if (selectedInstitution !== 'All') count++;
-    if (selectedLocation !== 'All') count++;
-    if (selectedAvailability !== 'All') count++;
-    if (selectedResourceType !== 'All') count++;
-    if (selectedEligibility !== 'All') count++;
-    if (selectedDate) count++;
-    if (debouncedSearch) count++;
-    return count;
-  }, [
-    selectedCategory,
-    selectedInstitution,
-    selectedLocation,
-    selectedAvailability,
-    selectedResourceType,
-    selectedEligibility,
-    selectedDate,
-    debouncedSearch,
-  ]);
+  const hasActiveFilters =
+    selectedCategory !== 'All' ||
+    selectedInstitution !== 'All' ||
+    selectedAvailability !== 'All' ||
+    Boolean(selectedDate) ||
+    Boolean(debouncedSearch);
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
-      {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800 shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="space-y-1.5 relative z-10">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-brand-500/15 border border-brand-500/30 text-brand-300 text-[11px] font-bold uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5 text-brand-400" />
-            Institutional Resource Marketplace
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            Explore Campus Resources & High-Value Equipment
+    <div className="space-y-6">
+      {/* 1. Page Header */}
+      <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-[#172033] tracking-tight">
+            Resource Marketplace
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 max-w-2xl">
-            Search and reserve cleanrooms, electron microscopes, HPC clusters, and specialized labs across partner universities.
+          <p className="text-xs text-[#64748B] mt-0.5">
+            Discover, check availability, and schedule specialized institutional equipment across partner universities.
           </p>
         </div>
 
-        {/* Actions & Live count badge */}
-        <div className="flex items-center gap-3 shrink-0">
-          <button
-            onClick={() => setIsSmartMatcherOpen(true)}
-            className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white text-xs font-bold shadow-lg shadow-brand-500/30 border border-brand-400/30 transition-all flex items-center gap-2 group"
-          >
-            <Sparkles className="w-4 h-4 text-brand-200 group-hover:rotate-12 transition-transform animate-pulse" />
-            <span>AI Smart Matcher</span>
-          </button>
-
-          <div className="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 text-right">
-            <p className="text-[10px] text-slate-400 uppercase font-semibold">Federated Catalog</p>
-            <p className="text-xl font-extrabold text-white mt-0.5">{totalCount} Assets</p>
-            <span className="text-[10px] text-emerald-400 flex items-center justify-end gap-1 font-medium">
-              <CheckCircle2 className="w-3 h-3" /> MongoDB Active
-            </span>
-          </div>
-        </div>
+        <button
+          type="button"
+          onClick={() => setIsSmartMatcherOpen(true)}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#EFF6FF] hover:bg-blue-100 text-[#1769D2] text-xs font-semibold border border-blue-200 shadow-xs transition-colors shrink-0"
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>AI Smart Matcher</span>
+        </button>
       </div>
 
-      {/* Category Pills (All 10 Categories) */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-            Filter by Category
-          </span>
-          {selectedCategory !== 'All' && (
-            <button
-              onClick={() => updateFilter('category', 'All')}
-              className="text-xs text-brand-400 hover:text-brand-300 transition-colors font-medium"
-            >
-              Show all categories
-            </button>
-          )}
-        </div>
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-          <button
-            onClick={() => updateFilter('category', 'All')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${
-              selectedCategory === 'All'
-                ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/25 border border-brand-500'
-                : 'bg-slate-900/80 hover:bg-slate-800 text-slate-300 border border-slate-800'
-            }`}
-          >
-            <Boxes className="w-4 h-4" />
-            <span>All Categories</span>
-          </button>
-
-          {ALL_CATEGORIES.map((cat) => {
-            const Icon = cat.icon;
-            const isSelected = selectedCategory === cat.name;
-            return (
-              <button
-                key={cat.name}
-                onClick={() => updateFilter('category', cat.name)}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${
-                  isSelected
-                    ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/25 border border-brand-500'
-                    : 'bg-slate-900/80 hover:bg-slate-800 text-slate-300 border border-slate-800'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                <span>{cat.name}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Search & Filter Bar */}
-      <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-4">
-        {/* Top search input row */}
-        <div className="flex flex-col sm:flex-row items-center gap-3">
-          <div className="relative flex-1 w-full">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-              <Search className="w-4 h-4" />
-            </div>
+      {/* 2. Search & Filter Bar */}
+      <div className="bg-white border border-[#E2E8F0] rounded-xl p-4 shadow-sm space-y-3">
+        {/* Search Input & Select Dropdowns */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+          {/* Text Search */}
+          <div className="lg:col-span-2 relative">
+            <Search className="w-4 h-4 text-[#64748B] absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search by equipment name, keywords, model, institution, or specs (debounced)..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="w-full bg-slate-950 text-slate-100 placeholder-slate-500 rounded-xl border border-slate-700/80 pl-10 pr-4 py-2.5 text-xs focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all"
+              placeholder="Search by equipment name, specification, tag..."
+              className="w-full bg-[#F8FAFC] text-[#172033] placeholder-[#94A3B8] text-xs rounded-lg pl-9 pr-3 py-2 border border-[#E2E8F0] focus:bg-white focus:outline-none focus:border-[#1769D2] focus:ring-1 focus:ring-[#1769D2] transition-colors"
             />
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-            {activeFiltersCount > 0 && (
-              <button
-                onClick={handleResetFilters}
-                className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-medium border border-slate-700 flex items-center gap-1.5 transition-all"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset ({activeFiltersCount})</span>
-              </button>
-            )}
-
-            {/* View Mode Toggle */}
-            <div className="flex items-center p-1 rounded-xl bg-slate-950 border border-slate-800">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded-lg text-xs transition-colors ${
-                  viewMode === 'grid' ? 'bg-slate-800 text-white shadow' : 'text-slate-400 hover:text-slate-200'
-                }`}
-                title="Grid View"
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-1.5 rounded-lg text-xs transition-colors ${
-                  viewMode === 'list' ? 'bg-slate-800 text-white shadow' : 'text-slate-400 hover:text-slate-200'
-                }`}
-                title="List View"
-              >
-                <List className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Filters Matrix */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 pt-2 border-t border-slate-800/80 text-xs">
           {/* Institution Filter */}
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-              <Building className="w-3 h-3 text-slate-500" />
-              Institution
-            </label>
+          <div>
             <select
               value={selectedInstitution}
               onChange={(e) => updateFilter('institution', e.target.value)}
-              className="w-full bg-slate-950 text-slate-200 rounded-xl border border-slate-700/80 p-2 text-xs focus:outline-none focus:border-brand-500"
+              className="w-full bg-[#F8FAFC] text-[#172033] text-xs rounded-lg px-2.5 py-2 border border-[#E2E8F0] focus:bg-white focus:outline-none focus:border-[#1769D2]"
             >
               <option value="All">All Institutions</option>
               {filterOptions.institutions.map((inst) => (
@@ -334,209 +198,126 @@ export const ExploreResourcesPage: React.FC = () => {
             </select>
           </div>
 
-          {/* Location Filter */}
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-              <MapPin className="w-3 h-3 text-slate-500" />
-              Location
-            </label>
-            <select
-              value={selectedLocation}
-              onChange={(e) => updateFilter('location', e.target.value)}
-              className="w-full bg-slate-950 text-slate-200 rounded-xl border border-slate-700/80 p-2 text-xs focus:outline-none focus:border-brand-500"
-            >
-              <option value="All">All Campus Locations</option>
-              {filterOptions.locations.map((loc) => (
-                <option key={loc} value={loc}>
-                  {loc}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Availability Status Filter */}
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-              <CheckCircle2 className="w-3 h-3 text-slate-500" />
-              Availability
-            </label>
+          {/* Availability Filter */}
+          <div>
             <select
               value={selectedAvailability}
               onChange={(e) => updateFilter('availability', e.target.value)}
-              className="w-full bg-slate-950 text-slate-200 rounded-xl border border-slate-700/80 p-2 text-xs focus:outline-none focus:border-brand-500"
+              className="w-full bg-[#F8FAFC] text-[#172033] text-xs rounded-lg px-2.5 py-2 border border-[#E2E8F0] focus:bg-white focus:outline-none focus:border-[#1769D2]"
             >
               <option value="All">All Statuses</option>
-              <option value="Available Now">Available Now</option>
-              <option value="reserved">Reserved Slots</option>
+              <option value="available">Available Now</option>
+              <option value="reserved">Reserved</option>
               <option value="maintenance">Under Maintenance</option>
             </select>
           </div>
 
-          {/* Resource Type Filter */}
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-              <Layers className="w-3 h-3 text-slate-500" />
-              Resource Type
-            </label>
-            <select
-              value={selectedResourceType}
-              onChange={(e) => updateFilter('resourceType', e.target.value)}
-              className="w-full bg-slate-950 text-slate-200 rounded-xl border border-slate-700/80 p-2 text-xs focus:outline-none focus:border-brand-500"
-            >
-              <option value="All">All Types</option>
-              <option value="Physical Space / Research Lab">Physical Space / Lab</option>
-              <option value="High Performance Computing (HPC)">HPC / Supercomputer</option>
-              <option value="High-Speed Scientific Camera">Scientific Camera</option>
-              <option value="Additive Manufacturing System">3D Printer / Additive</option>
-              <option value="RF & Signal Measurement">RF & Electronics</option>
-              <option value="Mechanical Test System">Mechanical Tester</option>
-              <option value="Subtractive Fabrication Machine">CNC / Machine Tool</option>
-              <option value="Surveying & Geospatial Apparatus">Drone / Surveying</option>
-            </select>
-          </div>
-
-          {/* Eligibility Filter */}
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-              <ShieldCheck className="w-3 h-3 text-slate-500" />
-              Eligibility
-            </label>
-            <select
-              value={selectedEligibility}
-              onChange={(e) => updateFilter('eligibility', e.target.value)}
-              className="w-full bg-slate-950 text-slate-200 rounded-xl border border-slate-700/80 p-2 text-xs focus:outline-none focus:border-brand-500"
-            >
-              <option value="All">All Members</option>
-              <option value="All Enrolled Students & Faculty">Enrolled Students & Faculty</option>
-              <option value="Faculty">Faculty Only</option>
-              <option value="Research Scholars">Research Scholars</option>
-              <option value="Certified">Certified Operators Only</option>
-            </select>
-          </div>
-
           {/* Date Filter */}
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-              <Calendar className="w-3 h-3 text-slate-500" />
-              Desired Date
-            </label>
+          <div>
             <input
               type="date"
               value={selectedDate}
               onChange={(e) => updateFilter('date', e.target.value)}
-              className="w-full bg-slate-950 text-slate-200 rounded-xl border border-slate-700/80 p-2 text-xs focus:outline-none focus:border-brand-500"
+              className="w-full bg-[#F8FAFC] text-[#172033] text-xs rounded-lg px-2.5 py-1.5 border border-[#E2E8F0] focus:bg-white focus:outline-none focus:border-[#1769D2]"
+              title="Filter by required date"
             />
           </div>
         </div>
-      </div>
 
-      {/* Main Results Section */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-xs text-slate-400 font-medium">
-            Showing <strong className="text-white">{resources.length}</strong> of{' '}
-            <strong className="text-white">{totalCount}</strong> matching resources
-          </p>
+        {/* Horizontal Category Pills */}
+        <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 pt-1 scrollbar-none text-xs">
+          <button
+            type="button"
+            onClick={() => updateFilter('category', 'All')}
+            className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+              selectedCategory === 'All'
+                ? 'bg-[#1769D2] text-white shadow-xs'
+                : 'bg-[#F8FAFC] text-[#64748B] hover:text-[#172033] border border-[#E2E8F0]'
+            }`}
+          >
+            All Categories
+          </button>
+          {ALL_CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => updateFilter('category', cat)}
+              className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                selectedCategory === cat
+                  ? 'bg-[#1769D2] text-white shadow-xs'
+                  : 'bg-[#F8FAFC] text-[#64748B] hover:text-[#172033] border border-[#E2E8F0]'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
         </div>
 
-        {loading ? (
-          <div className="py-20 flex justify-center items-center">
-            <LoadingSpinner message="Querying federated MongoDB resource nodes..." size="lg" />
-          </div>
-        ) : resources.length === 0 ? (
-          <div className="p-12 text-center rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3">
-            <SlidersHorizontal className="w-10 h-10 text-slate-600 mx-auto" />
-            <h3 className="text-base font-bold text-white">No resources match your active filters</h3>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto">
-              Try adjusting your search keywords, broadening category filters, or resetting filters to view all equipment.
-            </p>
-            <button
-              onClick={handleResetFilters}
-              className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold shadow-md transition-all"
-            >
-              Reset All Filters
-            </button>
-          </div>
-        ) : viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {resources.map((resource) => (
-              <ResourceCard
-                key={resource._id}
-                resource={resource}
-                onQuickBook={(res) => setSelectedForBooking(res)}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {resources.map((resource) => (
-              <div
-                key={resource._id}
-                className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-slate-700 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all"
-              >
-                <div className="flex items-center gap-4">
-                  <img
-                    src={resource.images?.[0]}
-                    alt={resource.name}
-                    className="w-20 h-20 rounded-xl object-cover shrink-0"
-                  />
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-brand-500/10 text-brand-300 border border-brand-500/20">
-                        {resource.category}
-                      </span>
-                      <span className="text-xs text-emerald-400 font-semibold">• {resource.status}</span>
-                    </div>
-                    <h3
-                      onClick={() => navigate(`/dashboard/resources/${resource._id}`)}
-                      className="text-sm font-bold text-white hover:text-brand-300 cursor-pointer"
-                    >
-                      {resource.name}
-                    </h3>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      {resource.institution} — {resource.location}
-                    </p>
-                    <p className="text-[11px] text-slate-500 mt-1">
-                      Custodian: {resource.ownerName} • {resource.eligibility}
-                    </p>
-                  </div>
-                </div>
+        {/* Filter Summary & Reset */}
+        <div className="flex items-center justify-between pt-2 border-t border-[#E2E8F0] text-xs text-[#64748B]">
+          <span>
+            Showing <strong className="text-[#172033]">{resources.length}</strong> of{' '}
+            <strong className="text-[#172033]">{totalCount}</strong> assets
+          </span>
 
-                <div className="flex items-center gap-2 shrink-0 w-full md:w-auto">
-                  <button
-                    onClick={() => navigate(`/dashboard/resources/${resource._id}`)}
-                    className="flex-1 md:flex-none px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold"
-                  >
-                    Details
-                  </button>
-                  <button
-                    onClick={() => setSelectedForBooking(resource)}
-                    className="flex-1 md:flex-none px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold shadow-md shadow-brand-500/20"
-                  >
-                    Request
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              className="inline-flex items-center gap-1 text-xs text-[#DC2626] hover:underline"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>Reset Filters</span>
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Booking Modal */}
-      <BookingModal
-        isOpen={!!selectedForBooking}
-        resource={selectedForBooking}
-        onClose={() => setSelectedForBooking(null)}
-        onSuccess={() => {
-          navigate('/dashboard/bookings');
-        }}
-      />
+      {/* 3. Resource Grid */}
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <CardSkeleton key={i} />
+          ))}
+        </div>
+      ) : resources.length === 0 ? (
+        <EmptyState
+          title="No resources matched your search"
+          description="Try broadening your category filters, clearing the date requirement, or searching for a different apparatus."
+          actionLabel="Clear all filters"
+          onAction={handleResetFilters}
+        />
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {resources.map((resource) => (
+            <ResourceCard
+              key={resource._id}
+              resource={resource}
+              onQuickBook={(res) => setSelectedForBooking(res)}
+            />
+          ))}
+        </div>
+      )}
 
-      {/* AI Smart Resource Matcher Modal */}
+      {/* Booking Modal */}
+      {selectedForBooking && (
+        <BookingModal
+          resource={selectedForBooking}
+          isOpen={Boolean(selectedForBooking)}
+          onClose={() => setSelectedForBooking(null)}
+          onSuccess={() => {
+            setSelectedForBooking(null);
+            navigate('/dashboard/bookings');
+          }}
+        />
+      )}
+
+      {/* Smart Resource Matcher Modal */}
       <SmartResourceMatcherModal
         isOpen={isSmartMatcherOpen}
         onClose={() => setIsSmartMatcherOpen(false)}
-        onSelectResourceForBooking={(res) => {
+        onSelectResource={(res) => {
+          setIsSmartMatcherOpen(false);
           setSelectedForBooking(res);
         }}
       />
