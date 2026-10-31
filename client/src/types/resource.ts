@@ -30,6 +30,10 @@ export interface Resource {
   availabilityText: string;
   availableDates?: string[];
   eligibility: string;
+  isRestricted?: boolean;
+  requiredQualification?: string;
+  requiredCertifications?: string[];
+  conditionPhotosConfigured?: boolean;
   approvalRequired: boolean;
   approvalStatus?: 'approved' | 'pending' | 'rejected';
   minBookingDuration?: number;
