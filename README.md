@@ -1,5 +1,6 @@
 # 🏛️ RENTORA — Smart Institutional Resource Sharing Platform
-### *Access More. Own Less. Share Smarter.*
+
+> **Access More. Own Less. Share Smarter.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7.3-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -11,27 +12,29 @@
 ---
 
 ## 📋 Table of Contents
-1. [Project Overview](#-project-overview)
-2. [Technology Stack](#-technology-stack)
-3. [System Architecture & Lifecycle](#-system-architecture--lifecycle)
-4. [Environment Setup](#-environment-setup)
-5. [Installation & Quick Start](#-installation--quick-start)
-6. [Database Structure & Schemas](#-database-structure--schemas)
-7. [Comprehensive API Documentation](#-comprehensive-api-documentation)
-8. [Automated Testing Suite (15 Core Lifecycle Steps)](#-automated-testing-suite)
-9. [Demonstration Accounts & Roles](#-demonstration-accounts--roles)
-10. [Deployment Guide (MongoDB Atlas, Cloud Backend, & Frontend)](#-deployment-guide)
-11. [Known Limitations & Production Roadmap](#-known-limitations--production-roadmap)
+
+1. [Project Overview](#project-overview)
+2. [Technology Stack](#technology-stack)
+3. [System Architecture & Lifecycle](#system-architecture--lifecycle)
+4. [Environment Setup](#environment-setup)
+5. [Installation & Quick Start](#installation--quick-start)
+6. [Database Structure & Schemas](#database-structure--schemas)
+7. [Comprehensive API Documentation](#comprehensive-api-documentation)
+8. [Automated Testing Suite](#automated-testing-suite)
+9. [Demonstration Accounts & Roles](#demonstration-accounts--roles)
+10. [Deployment Guide](#deployment-guide)
+11. [Known Limitations & Production Roadmap](#known-limitations--production-roadmap)
 
 ---
 
 ## 🌟 Project Overview
 
-**RENTORA** is an institutional resource federation and asset-sharing ecosystem designed for universities, polytechnics, national research laboratories, and cross-institutional consortiums. 
+**RENTORA** is an institutional resource federation and asset-sharing ecosystem designed for universities, polytechnics, national research laboratories, and cross-institutional consortiums.
 
 In higher education and research, millions of dollars worth of advanced machinery—such as X-Ray Diffractometers, Electron Microscopes, 5-Axis CNC Routers, Cleanrooms, and GPU compute clusters—sit underutilized within departmental silos, while students and faculty from neighboring departments or partner colleges face long delays or lack of access.
 
 ### Core Capabilities
+
 * **Full-Spectrum Resource Discovery:** Full-text searchable catalog spanning laboratories, specialized instruments, workshops, and meeting facilities with criteria filtering (status, safety qualifications, capacity).
 * **14-Step Booking State Machine:** End-to-end reservation lifecycle from eligibility diagnostics, atomic double-booking prevention, custodian approval, physical handover check-in, to post-use condition sign-off.
 * **Trust, Safety & Fairness Engine:** Quota caps per student, monopolisation detection cooldown windows, and transparent priority-scored standby queues.
@@ -44,6 +47,7 @@ In higher education and research, millions of dollars worth of advanced machiner
 ## 🛠️ Technology Stack
 
 ### Frontend Architecture
+
 * **Core Framework:** React 19 (TypeScript) with Vite build toolchain.
 * **Styling & Design System:** Tailored Vanilla CSS tokens, glassmorphism overlays, accessible contrast ratios, and HSL palettes.
 * **Micro-Animations & Motion:** Framer Motion for spring physics transitions, modal entries, and animated metric counters.
@@ -52,6 +56,7 @@ In higher education and research, millions of dollars worth of advanced machiner
 * **Resilience:** React Error Boundaries with crash containment, skeleton loaders, confirmation dialogs, and non-blocking toast notifications.
 
 ### Backend Architecture
+
 * **Runtime & Framework:** Node.js 22 LTS with Express.js RESTful API architecture.
 * **Language:** TypeScript 5.7+ running ESM modules.
 * **Security & Auth:** JSON Web Tokens (JWT) in signed HTTP cookies / Bearer headers, bcryptjs salt rounds (10), strict Role-Based Access Control (RBAC) middleware.
@@ -59,6 +64,7 @@ In higher education and research, millions of dollars worth of advanced machiner
 * **Concurrency & Safety:** Mongoose transactions, atomic compound indexes (`{ resourceId, startTime, endTime, status }`) preventing double bookings, and Mongoose pre-save immutability locks on audit logs.
 
 ### Database
+
 * **Primary Store:** MongoDB Atlas / Local MongoDB Community Edition via Mongoose ODM.
 * **Indexing:** Compound indexes for high-speed timeslot overlap detection, category filtering, and full-text search indexing on assets.
 
@@ -67,6 +73,7 @@ In higher education and research, millions of dollars worth of advanced machiner
 ## 🔄 System Architecture & Lifecycle
 
 ### The 14-Step Booking State Machine
+
 ```mermaid
 stateDiagram-v2
     [*] --> Selected: 1. Student selects asset
@@ -88,7 +95,9 @@ stateDiagram-v2
 ## ⚙️ Environment Setup
 
 ### 1. Server Configuration (`server/.env`)
+
 Create `server/.env` based on `server/.env.example`:
+
 ```env
 PORT=5000
 NODE_ENV=development
@@ -109,7 +118,9 @@ ENFORCE_AUDIT_LEDGER_INTEGRITY=true
 ```
 
 ### 2. Client Configuration (`client/.env`)
+
 Create `client/.env` based on `client/.env.example`:
+
 ```env
 VITE_API_URL=http://localhost:5000/api
 ```
@@ -119,11 +130,13 @@ VITE_API_URL=http://localhost:5000/api
 ## 🚀 Installation & Quick Start
 
 ### Prerequisites
+
 * **Node.js**: v18.0.0 or higher (v20+ recommended)
 * **npm**: v9.0.0 or higher
 * **MongoDB**: Local MongoDB instance (`mongodb://127.0.0.1:27017`) or free MongoDB Atlas cluster
 
 ### Step 1: Clone & Install Dependencies
+
 ```bash
 # Clone the repository
 git clone https://github.com/Jaswant-Karun/RenTora.git
@@ -139,16 +152,20 @@ npm install
 ```
 
 ### Step 2: Seed Demonstration Database
+
 Populate MongoDB with partner universities, laboratory assets, pre-configured bookings, and demo accounts:
+
 ```bash
 cd ../server
 npm run seed
 ```
 
 ### Step 3: Run Development Servers
+
 Open two terminal windows:
 
 **Terminal 1 (Backend API):**
+
 ```bash
 cd server
 npm run dev
@@ -157,6 +174,7 @@ npm run dev
 ```
 
 **Terminal 2 (Frontend Client):**
+
 ```bash
 cd client
 npm run dev
@@ -170,12 +188,14 @@ npm run dev
 RENTORA relies on normalized Mongoose models:
 
 ### 1. `User` Schema
+
 * `name`, `email` (unique index), `password` (hashed, excluded by default), `role` (`student`, `owner`, `manager`, `admin`).
 * `institution`, `department`, `phone`, `avatar`, `isVerified`, `academicQualification`.
 * `trainingCertifications`: Array of `{ name, certifiedDate, expiresAt, credentialId }`.
 * `historicalUsage`: `{ weeklyHoursUsed, totalHoursLogged, totalCompletedBookings, penaltyPoints, monopolisationCooldownUntil }`.
 
 ### 2. `Resource` Schema
+
 * `name`, `category`, `institution`, `location`, `description`, `images`, `status` (`available`, `reserved`, `maintenance`, `in_use`).
 * `ownerId`, `ownerName`, `ownerEmail`, `ownerDepartment`.
 * `specifications`: Dynamic Key-Value Map.
@@ -187,6 +207,7 @@ RENTORA relies on normalized Mongoose models:
 * **Indexes:** Full-text index on `name`, `description`, `category`, `institution`, `tags`; compound index on `category`, `status`, `institution`.
 
 ### 3. `Booking` Schema
+
 * `resourceId`, `resourceName`, `resourceCategory`, `institution`, `userId`, `userName`, `userEmail`, `userDepartment`, `userRole`.
 * `date`, `timeSlot`, `startTime`, `endTime`, `durationHours`, `purpose`, `projectDescription`.
 * `status`: `pending`, `under_review`, `approved`, `rejected`, `waitlisted`, `checked_in`, `return_pending`, `completed`, `cancelled`.
@@ -196,16 +217,19 @@ RENTORA relies on normalized Mongoose models:
 * **Indexes:** Compound index on `{ resourceId: 1, startTime: 1, endTime: 1, status: 1 }` preventing timeslot collisions.
 
 ### 4. `Incident` Schema
+
 * `category`: `equipment_damage`, `late_return`, `missing_components`, `misuse`, `scheduling_conflict`, `safety_violation`.
 * `title`, `description`, `severity` (`low`, `medium`, `high`, `critical`), `status` (`open`, `under_review`, `resolved`, `dismissed`).
 * `resourceId`, `resourceName`, `bookingId`, `reportedByUserId`, `reportedByRole`, `evidence` (photo URLs).
 * `managerNotes`, `resolutionNotes`, `sanctionsApplied`, `resolvedBy`, `resolvedAt`.
 
 ### 5. `AuditLog` Schema (WORM Non-Repudiation Ledger)
+
 * `timestamp`, `action` (15 enum types), `entityType`, `entityId`, `entityTitle`, `actorId`, `actorName`, `actorRole`, `details`, `reason`.
 * **Immutability Hooks:** `pre('deleteOne')`, `pre('deleteMany')`, `pre('findOneAndUpdate')`, `pre('updateMany')` reject with `IMMUTABILITY_VIOLATION`.
 
 ### 6. `Institution` & `SystemSetting` Schemas
+
 * `Institution`: Partner campus registration, federation tier, trust domain, contact info.
 * `SystemSetting`: Platform maintenance mode, public registration toggle, maximum active bookings per student, monopolisation cooldown periods.
 
@@ -214,10 +238,12 @@ RENTORA relies on normalized Mongoose models:
 ## 📡 Comprehensive API Documentation
 
 ### System Health
+
 * `GET /health` & `GET /api/health` — Cloud orchestrator health status and MongoDB connection diagnostics.
 * `GET /api/db-status` — Detailed database connection state.
 
 ### Authentication (`/api/auth`)
+
 * `POST /register` — User registration with institutional role validation. Public self-registration of `admin`/`manager` is rejected.
 * `POST /login` — Authenticates credentials, sets secure cookie and returns JWT bearer token.
 * `GET /me` — Returns current authenticated user session and role capabilities.
@@ -225,11 +251,13 @@ RENTORA relies on normalized Mongoose models:
 * `GET /demo-accounts` — Returns list of pre-seeded credentials for rapid evaluation.
 
 ### Resource Catalog (`/api/resources`)
+
 * `GET /` — Search and filter catalog by search text, category, institution, status, and qualifications.
 * `GET /:id` — Retrieve detailed resource specification, availability schedule, and safety requirements.
 * `GET /categories` — Returns list of standardized institutional categories.
 
 ### Booking Lifecycle (`/api/bookings`)
+
 * `POST /pre-check` — Diagnostic pre-validation of training, academic qualification, timeslot collision, and active quota limits.
 * `POST /` — Lodge reservation request (returns 409 Conflict if timeslot collides; creates `waitlisted` entry if `allowWaitlist: true`).
 * `GET /` — List bookings for current authenticated user.
@@ -245,6 +273,7 @@ RENTORA relies on normalized Mongoose models:
 * `POST /:id/override` — Institution manager overrides booking decision with mandatory justification.
 
 ### Owner Management (`/api/owner`)
+
 * `GET /resources` — List assets managed by custodian.
 * `POST /resources` — Register new technical asset with availability schedules and safety instructions.
 * `PUT /resources/:id` — Update asset status, specifications, or calibration schedules.
@@ -252,11 +281,13 @@ RENTORA relies on normalized Mongoose models:
 * `GET /analytics` — Custodian utilization metrics, hours logged, and return rate.
 
 ### Manager Console (`/api/manager`)
+
 * `GET /overview` — Institution-wide equipment utilization, department breakdown, and active alerts.
 * `GET /fair-policy` & `PUT /fair-policy` — Configure max active bookings per student and monopolisation rules.
 * `GET /incidents` & `PATCH /incidents/:id` — Triage, investigate, and resolve reported safety and equipment incidents.
 
 ### Admin Central Control (`/api/admin`)
+
 * `GET /overview` — Systemwide metrics (Total Users, Institutions, Resources, Bookings, Active Incidents, Utilization).
 * `GET /users` & `PATCH /users/:id/role` & `DELETE /users/:id` — User governance and verification.
 * `GET /resources` & `PATCH /resources/:id/status` & `DELETE /resources/:id` — Asset governance.
@@ -264,11 +295,13 @@ RENTORA relies on normalized Mongoose models:
 * `GET /settings` & `PUT /settings` — Global configuration parameters.
 
 ### AI Assistance (`/api/ai`)
+
 * `POST /match-resource` — Multi-factor recommendation engine matching project keywords against asset specifications.
 * `POST /conflict-explainer` — Explains timeslot collisions and identifies next available openings.
 * `POST /incident-summary` — Generates executive summaries of technical incident reports for managers.
 
 ### Audit Ledger (`/api/audit-logs`)
+
 * `GET /` — Chronological read-only query of non-repudiable audit events.
 * `POST /`, `PUT /`, `DELETE /` — Explicitly rejected with HTTP 405 Method Not Allowed.
 
@@ -279,13 +312,16 @@ RENTORA relies on normalized Mongoose models:
 RENTORA includes a comprehensive end-to-end integration test suite verifying all 15 core lifecycle steps required by enterprise standards.
 
 ### Running the Test Suite
+
 Ensure the backend server is running, then execute:
+
 ```bash
 cd server
 node scratch/test-full-15-suite.mjs
 ```
 
 ### Verified Test Matrix
+
 | Step | Lifecycle Stage | Status | Verification Detail |
 | :---: | :--- | :---: | :--- |
 | **1** | **User Sign-Up** | `PASS` | Zod validation enforced; public admin registration blocked; student created. |
@@ -324,6 +360,7 @@ The platform is pre-configured with 4 personas across different tiers:
 ## 🌐 Deployment Guide
 
 ### 1. MongoDB Atlas Setup
+
 1. Create a free M0 cluster on [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).
 2. Under **Database Access**, create a user with `readWriteAnyDatabase` privileges.
 3. Under **Network Access**, add IP `0.0.0.0/0` (allow access from anywhere) or specific server IPs.
@@ -331,6 +368,7 @@ The platform is pre-configured with 4 personas across different tiers:
 5. Set `MONGODB_URI` in your production environment variables.
 
 ### 2. Backend Deployment (Render / Railway / AWS / DigitalOcean)
+
 * **Build Command:** `npm run build` (runs `tsc` into `dist/`)
 * **Start Command:** `npm start` (runs `node dist/server.js`)
 * **Environment Variables:**
@@ -342,6 +380,7 @@ The platform is pre-configured with 4 personas across different tiers:
   * `ALLOWED_ORIGINS=https://your-frontend-domain.vercel.app`
 
 ### 3. Frontend Deployment (Vercel / Netlify / Cloudflare Pages)
+
 * **Framework Preset:** Vite
 * **Build Command:** `npm run build`
 * **Output Directory:** `dist`
@@ -360,4 +399,5 @@ The platform is pre-configured with 4 personas across different tiers:
 ---
 
 ## 📄 License
+
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
