@@ -59,8 +59,7 @@ export const NotificationsPage: React.FC = () => {
     try {
       await markAllNotificationsReadApi();
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-      setToastMessage('All notifications marked as read.');
-      setTimeout(() => setToastMessage(''), 3000);
+      toast.success('All notifications marked as read.');
     } catch (err) {
       console.error('Error marking all read:', err);
     } finally {
@@ -94,13 +93,6 @@ export const NotificationsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Toast */}
-      {toastMessage && (
-        <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-[#16834A]">
-          {toastMessage}
-        </div>
-      )}
-
       {/* Header Section */}
       <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
