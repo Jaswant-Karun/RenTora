@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 import {
   Settings,
   Bell,
@@ -12,20 +13,32 @@ import {
 
 export const OwnerSettingsPage: React.FC = () => {
   const { user } = useAuth();
-  const [bufferTime, setBufferTime] = useState('15');
-  const [requireHandoverScan, setRequireHandoverScan] = useState(true);
-  const [autoApproveVerified, setAutoApproveVerified] = useState(false);
-  const [allowWeekendBookings, setAllowWeekendBookings] = useState(true);
-  const [emailAlerts, setEmailAlerts] = useState(true);
-  const [smsAlerts, setSmsAlerts] = useState(true);
-  const [incidentEscalation, setIncidentEscalation] = useState(true);
-  const [operatingHoursStart, setOperatingHoursStart] = useState('08:00');
-  const [operatingHoursEnd, setOperatingHoursEnd] = useState('20:00');
+  const { toast } = useToast();
+  const [bufferTime, setBufferTime] = useState(() => localStorage.getItem('owner_pref_buffer') || '15');
+  const [requireHandoverScan, setRequireHandoverScan] = useState(() => localStorage.getItem('owner_pref_handover') !== 'false');
+  const [autoApproveVerified, setAutoApproveVerified] = useState(() => localStorage.getItem('owner_pref_autoapprove') === 'true');
+  const [allowWeekendBookings, setAllowWeekendBookings] = useState(() => localStorage.getItem('owner_pref_weekend') !== 'false');
+  const [emailAlerts, setEmailAlerts] = useState(() => localStorage.getItem('owner_pref_email') !== 'false');
+  const [smsAlerts, setSmsAlerts] = useState(() => localStorage.getItem('owner_pref_sms') !== 'false');
+  const [incidentEscalation, setIncidentEscalation] = useState(() => localStorage.getItem('owner_pref_incident') !== 'false');
+  const [operatingHoursStart, setOperatingHoursStart] = useState(() => localStorage.getItem('owner_pref_start') || '08:00');
+  const [operatingHoursEnd, setOperatingHoursEnd] = useState(() => localStorage.getItem('owner_pref_end') || '20:00');
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    localStorage.setItem('owner_pref_buffer', bufferTime);
+    localStorage.setItem('owner_pref_handover', String(requireHandoverScan));
+    localStorage.setItem('owner_pref_autoapprove', String(autoApproveVerified));
+    localStorage.setItem('owner_pref_weekend', String(allowWeekendBookings));
+    localStorage.setItem('owner_pref_email', String(emailAlerts));
+    localStorage.setItem('owner_pref_sms', String(smsAlerts));
+    localStorage.setItem('owner_pref_incident', String(incidentEscalation));
+    localStorage.setItem('owner_pref_start', operatingHoursStart);
+    localStorage.setItem('owner_pref_end', operatingHoursEnd);
+
     setSavedSuccess(true);
+    toast.success('Custodian parameters & turnaround rules saved successfully');
     setTimeout(() => setSavedSuccess(false), 3000);
   };
 
