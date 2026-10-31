@@ -1,4 +1,5 @@
 import express from 'express';
+import path from 'path';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
@@ -49,6 +50,9 @@ app.use(
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Static uploads serving for condition reports & evidence images
+app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
 
 // Top-level /health check for cloud load-balancers & container orchestrators
 app.get('/health', (_req, res) => {
