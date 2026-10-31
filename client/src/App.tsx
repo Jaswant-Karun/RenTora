@@ -7,6 +7,14 @@ import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { ExploreResourcesPage } from './pages/ExploreResourcesPage';
+import { ResourceDetailPage } from './pages/ResourceDetailPage';
+import { MyBookingsPage } from './pages/MyBookingsPage';
+import { WaitlistPage } from './pages/WaitlistPage';
+import { ActivityPage } from './pages/ActivityPage';
+import { NotificationsPage } from './pages/NotificationsPage';
+import { ProfilePage } from './pages/ProfilePage';
+import { SettingsPage } from './pages/SettingsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { LoadingSpinner } from './components/common/LoadingSpinner';
 
@@ -77,12 +85,92 @@ export const App: React.FC = () => {
               }
             />
 
-            {/* Protected Console */}
+            {/* Protected Console Dashboard & Subroutes */}
             <Route
-              path="/dashboard/*"
+              path="/dashboard"
               element={
                 <ProtectedRoute>
                   <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/explore"
+              element={
+                <ProtectedRoute>
+                  <ExploreResourcesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/resources"
+              element={
+                <ProtectedRoute>
+                  <ExploreResourcesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/resources/:id"
+              element={
+                <ProtectedRoute>
+                  <ResourceDetailPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/explore/:id"
+              element={
+                <ProtectedRoute>
+                  <ResourceDetailPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/bookings"
+              element={
+                <ProtectedRoute>
+                  <MyBookingsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/waitlist"
+              element={
+                <ProtectedRoute>
+                  <WaitlistPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/activity"
+              element={
+                <ProtectedRoute>
+                  <ActivityPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/notifications"
+              element={
+                <ProtectedRoute>
+                  <NotificationsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/profile"
+              element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/settings"
+              element={
+                <ProtectedRoute>
+                  <SettingsPage />
                 </ProtectedRoute>
               }
             />

@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getResourcesApi } from '../../api/resource.api';
-import { Resource, ResourceCategory } from '../../types/resource';
-import { ResourceCard } from '../../components/resources/ResourceCard';
-import { BookingModal } from '../../components/resources/BookingModal';
-import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { getResourcesApi } from '../api/resource.api';
+import { Resource, ResourceCategory } from '../types/resource';
+import { ResourceCard } from '../components/resources/ResourceCard';
+import { BookingModal } from '../components/resources/BookingModal';
+import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import {
   Search,
   SlidersHorizontal,
