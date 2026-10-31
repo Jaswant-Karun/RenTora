@@ -98,23 +98,21 @@ export const AdminDashboardPage: React.FC = () => {
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(''), 3500);
+    setTimeout(() => setToastMessage(''), 4000);
   };
 
-  // Fetch Overview
   const fetchOverview = async () => {
     try {
       const res = await getAdminOverviewApi();
       if (res.success) {
         setStats(res.data.stats);
-        setInstitutionSummary(res.data.institutionsSummary);
+        setInstitutionSummary(res.data.institutionSummary);
       }
     } catch (err) {
       console.error('Error fetching admin overview:', err);
     }
   };
 
-  // Fetch Users
   const fetchUsers = async () => {
     setUserLoading(true);
     try {
@@ -132,7 +130,6 @@ export const AdminDashboardPage: React.FC = () => {
     }
   };
 
-  // Fetch Resources
   const fetchResources = async () => {
     setResourceLoading(true);
     try {
@@ -150,7 +147,6 @@ export const AdminDashboardPage: React.FC = () => {
     }
   };
 
-  // Fetch Institutions
   const fetchInstitutions = async () => {
     try {
       const res = await getAdminInstitutionsApi();
@@ -162,7 +158,6 @@ export const AdminDashboardPage: React.FC = () => {
     }
   };
 
-  // Fetch Settings
   const fetchSettings = async () => {
     try {
       const res = await getAdminSettingsApi();
@@ -183,12 +178,12 @@ export const AdminDashboardPage: React.FC = () => {
     init();
   }, []);
 
-  // Handle User Role Change
+  // Handle User Role Update
   const handleRoleChange = async (userId: string, newRole: string) => {
     try {
-      const res = await updateAdminUserRoleApi(userId, { role: newRole });
+      const res = await updateAdminUserRoleApi(userId, newRole);
       if (res.success) {
-        showToast(res.message);
+        showToast(`User role updated to ${newRole}`);
         fetchUsers();
       }
     } catch (err) {
@@ -196,16 +191,25 @@ export const AdminDashboardPage: React.FC = () => {
     }
   };
 
-  // Handle User Status Toggle
-  const handleToggleUserVerification = async (userId: string, currentStatus: boolean) => {
+  // Handle User Verification
+  const handleToggleUserVerification = async (userId: string, isVerified: boolean) => {
     try {
-      const res = await updateAdminUserRoleApi(userId, { isVerified: !currentStatus });
-      if (res.success) {
-        showToast(`User verification toggled to ${!currentStatus ? 'VERIFIED' : 'UNVERIFIED'}`);
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/manager/users/${userId}/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ isVerified: !isVerified }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`User verification ${!isVerified ? 'approved' : 'revoked'}`);
         fetchUsers();
       }
     } catch (err) {
-      console.error('Error updating status:', err);
+      console.error('Error toggling verification:', err);
     }
   };
 
@@ -215,7 +219,7 @@ export const AdminDashboardPage: React.FC = () => {
     try {
       const res = await deleteAdminUserApi(deleteUserModal.user._id);
       if (res.success) {
-        showToast(res.message);
+        showToast('User account successfully removed from platform.');
         setDeleteUserModal({ isOpen: false, user: null });
         fetchUsers();
         fetchOverview();
@@ -231,7 +235,7 @@ export const AdminDashboardPage: React.FC = () => {
     try {
       const res = await deleteAdminResourceApi(deleteResourceModal.resource._id);
       if (res.success) {
-        showToast(res.message);
+        showToast('Campus equipment successfully decommissioned.');
         setDeleteResourceModal({ isOpen: false, resource: null });
         fetchResources();
         fetchOverview();
@@ -292,7 +296,7 @@ export const AdminDashboardPage: React.FC = () => {
   ];
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto">
       {/* Toast Notification */}
       <AnimatePresence>
         {toastMessage && (
@@ -300,39 +304,39 @@ export const AdminDashboardPage: React.FC = () => {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="fixed top-6 right-6 z-50 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold flex items-center gap-2 shadow-2xl backdrop-blur-md"
+            className="fixed top-6 right-6 z-50 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2 shadow-lg"
           >
-            <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+            <Check className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>{toastMessage}</span>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800 shadow-2xl relative overflow-hidden">
-        <div className="space-y-1.5 relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-bold uppercase tracking-wider">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6 sm:p-7 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm">
+        <div className="space-y-1">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-rose-700 text-[11px] font-bold uppercase tracking-wider">
             <ShieldAlert className="w-3.5 h-3.5" />
             System Administration Console
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#172033] tracking-tight">
             RENTORA Global Administrative Control Center
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 max-w-2xl">
+          <p className="text-xs sm:text-sm text-[#64748B] max-w-2xl">
             Multi-institutional federated resource management, user access control, audit verification, and platform parameters.
           </p>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0 relative z-10">
-          <span className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-semibold text-emerald-400 flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+        <div className="flex items-center gap-3 shrink-0">
+          <span className="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-700 flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             All Systems Operational
           </span>
         </div>
       </div>
 
       {/* Primary Navigation Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-800">
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 border-b border-[#E2E8F0]">
         {navTabs.map((t) => {
           const Icon = t.icon;
           const isActive = activeTab === t.id;
@@ -340,10 +344,10 @@ export const AdminDashboardPage: React.FC = () => {
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border ${
                 isActive
-                  ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/20'
-                  : 'bg-slate-900/60 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                  ? 'bg-[#1769D2] text-white border-[#1769D2] shadow-sm'
+                  : 'bg-white text-[#64748B] border-[#E2E8F0] hover:text-[#172033] hover:bg-slate-50'
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -364,83 +368,83 @@ export const AdminDashboardPage: React.FC = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-lg space-y-1">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+              <div className="p-5 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm space-y-1">
+                <span className="text-xs font-semibold text-[#64748B] uppercase tracking-wider flex items-center justify-between">
                   <span>Total Users</span>
-                  <Users className="w-4 h-4 text-brand-400" />
+                  <Users className="w-4 h-4 text-[#1769D2]" />
                 </span>
-                <p className="text-3xl font-black text-white">{stats.totalUsers}</p>
-                <p className="text-[11px] text-slate-400">Enrolled researchers & faculty</p>
+                <p className="text-3xl font-extrabold text-[#172033]">{stats.totalUsers}</p>
+                <p className="text-[11px] text-[#64748B]">Enrolled researchers & faculty</p>
               </div>
 
-              <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-lg space-y-1">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+              <div className="p-5 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm space-y-1">
+                <span className="text-xs font-semibold text-[#64748B] uppercase tracking-wider flex items-center justify-between">
                   <span>Partner Institutions</span>
-                  <Building className="w-4 h-4 text-indigo-400" />
+                  <Building className="w-4 h-4 text-indigo-600" />
                 </span>
-                <p className="text-3xl font-black text-indigo-300">{stats.totalInstitutions}</p>
-                <p className="text-[11px] text-slate-400">Federated universities in consortium</p>
+                <p className="text-3xl font-extrabold text-indigo-600">{stats.totalInstitutions}</p>
+                <p className="text-[11px] text-[#64748B]">Federated universities in consortium</p>
               </div>
 
-              <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-lg space-y-1">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+              <div className="p-5 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm space-y-1">
+                <span className="text-xs font-semibold text-[#64748B] uppercase tracking-wider flex items-center justify-between">
                   <span>Catalog Assets</span>
-                  <Layers className="w-4 h-4 text-purple-400" />
+                  <Layers className="w-4 h-4 text-purple-600" />
                 </span>
-                <p className="text-3xl font-black text-purple-300">{stats.totalResources}</p>
-                <p className="text-[11px] text-slate-400">Laboratories, tools & compute clusters</p>
+                <p className="text-3xl font-extrabold text-purple-600">{stats.totalResources}</p>
+                <p className="text-[11px] text-[#64748B]">Laboratories, tools & compute clusters</p>
               </div>
 
-              <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-lg space-y-1">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+              <div className="p-5 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm space-y-1">
+                <span className="text-xs font-semibold text-[#64748B] uppercase tracking-wider flex items-center justify-between">
                   <span>Total Bookings</span>
-                  <Calendar className="w-4 h-4 text-teal-400" />
+                  <Calendar className="w-4 h-4 text-teal-600" />
                 </span>
-                <p className="text-3xl font-black text-teal-300">{stats.totalBookings}</p>
-                <p className="text-[11px] text-slate-400">Lifetime research sessions</p>
+                <p className="text-3xl font-extrabold text-teal-600">{stats.totalBookings}</p>
+                <p className="text-[11px] text-[#64748B]">Lifetime research sessions</p>
               </div>
 
-              <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-lg space-y-1">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+              <div className="p-5 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm space-y-1">
+                <span className="text-xs font-semibold text-[#64748B] uppercase tracking-wider flex items-center justify-between">
                   <span>Pending Approvals</span>
-                  <Clock className="w-4 h-4 text-amber-400" />
+                  <Clock className="w-4 h-4 text-amber-600" />
                 </span>
-                <p className="text-3xl font-black text-amber-300">{stats.pendingApprovals}</p>
-                <p className="text-[11px] text-slate-400">Awaiting custodian clearance</p>
+                <p className="text-3xl font-extrabold text-amber-600">{stats.pendingApprovals}</p>
+                <p className="text-[11px] text-[#64748B]">Awaiting custodian clearance</p>
               </div>
 
-              <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-lg space-y-1">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+              <div className="p-5 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm space-y-1">
+                <span className="text-xs font-semibold text-[#64748B] uppercase tracking-wider flex items-center justify-between">
                   <span>Active Incidents</span>
-                  <AlertTriangle className="w-4 h-4 text-rose-400" />
+                  <AlertTriangle className="w-4 h-4 text-rose-600" />
                 </span>
-                <p className="text-3xl font-black text-rose-300">{stats.activeIncidents}</p>
-                <p className="text-[11px] text-slate-400">Unresolved safety tickets</p>
+                <p className="text-3xl font-extrabold text-rose-600">{stats.activeIncidents}</p>
+                <p className="text-[11px] text-[#64748B]">Unresolved safety tickets</p>
               </div>
 
-              <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-lg space-y-1 sm:col-span-2">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+              <div className="p-5 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm space-y-1 sm:col-span-2">
+                <span className="text-xs font-semibold text-[#64748B] uppercase tracking-wider flex items-center justify-between">
                   <span>Overall Resource Utilization</span>
-                  <TrendingUp className="w-4 h-4 text-emerald-400" />
+                  <TrendingUp className="w-4 h-4 text-emerald-600" />
                 </span>
-                <p className="text-3xl font-black text-emerald-300">{stats.resourceUtilization}</p>
-                <p className="text-[11px] text-slate-400">Real-time facility capacity load across all partner campuses</p>
+                <p className="text-3xl font-extrabold text-emerald-600">{stats.resourceUtilization}</p>
+                <p className="text-[11px] text-[#64748B]">Real-time facility capacity load across all partner campuses</p>
               </div>
             </div>
           )}
 
           {/* Federated Institution Summary */}
-          <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-4">
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <Building className="w-4 h-4 text-brand-400" />
+          <div className="p-6 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm space-y-4">
+            <h3 className="text-sm font-bold text-[#172033] uppercase tracking-wider flex items-center gap-2">
+              <Building className="w-4 h-4 text-[#1769D2]" />
               Connected Partner Institutions
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {institutionSummary.map((instName, idx) => (
-                <div key={idx} className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-1">
-                  <h4 className="text-xs font-bold text-white">{instName}</h4>
-                  <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" /> Federated Node
+                <div key={idx} className="p-4 rounded-xl bg-slate-50 border border-[#E2E8F0] space-y-1">
+                  <h4 className="text-xs font-bold text-[#172033]">{instName}</h4>
+                  <span className="text-[10px] text-emerald-700 font-semibold flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Federated Node
                   </span>
                 </div>
               ))}
@@ -454,14 +458,14 @@ export const AdminDashboardPage: React.FC = () => {
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="relative flex-1 max-w-md w-full">
-              <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-[#64748B] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Search user by name, email, or department..."
                 value={userSearch}
                 onChange={(e) => setUserSearch(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && fetchUsers()}
-                className="w-full pl-9 pr-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500"
+                className="w-full pl-9 pr-4 py-2 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#172033] placeholder-[#64748B] focus:outline-none focus:border-[#1769D2]"
               />
             </div>
 
@@ -472,7 +476,7 @@ export const AdminDashboardPage: React.FC = () => {
                   setUserRoleFilter(e.target.value);
                   setTimeout(fetchUsers, 50);
                 }}
-                className="px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-brand-500"
+                className="px-3 py-2 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#172033] focus:outline-none focus:border-[#1769D2]"
               >
                 <option value="All">All Roles</option>
                 <option value="student">Student</option>
@@ -484,7 +488,7 @@ export const AdminDashboardPage: React.FC = () => {
 
               <button
                 onClick={fetchUsers}
-                className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-colors"
+                className="p-2 bg-white hover:bg-slate-50 border border-[#E2E8F0] text-[#64748B] rounded-xl transition-colors"
                 title="Refresh users"
               >
                 <RefreshCw className="w-4 h-4" />
@@ -492,39 +496,39 @@ export const AdminDashboardPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-800 overflow-hidden bg-slate-900/60 shadow-xl">
+          <div className="rounded-2xl border border-[#E2E8F0] overflow-hidden bg-white shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="border-b border-slate-800 bg-slate-950/80 text-slate-400 uppercase font-semibold text-[11px]">
-                    <th className="py-3.5 px-4">User</th>
-                    <th className="py-3.5 px-4">Role</th>
-                    <th className="py-3.5 px-4">Institution / Department</th>
-                    <th className="py-3.5 px-4">Status</th>
-                    <th className="py-3.5 px-4 text-right">Actions</th>
+                  <tr className="border-b border-[#E2E8F0] bg-slate-50 text-[#64748B] uppercase font-semibold text-[11px]">
+                    <th className="py-3 px-4">User</th>
+                    <th className="py-3 px-4">Role</th>
+                    <th className="py-3 px-4">Institution / Department</th>
+                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-[#E2E8F0]">
                   {userLoading ? (
                     Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} cols={5} />)
                   ) : users.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="py-12 text-center text-slate-400">
+                      <td colSpan={5} className="py-12 text-center text-[#64748B]">
                         No users match the search criteria.
                       </td>
                     </tr>
                   ) : (
                     users.map((u) => (
-                      <tr key={u._id} className="hover:bg-slate-800/40 transition-colors">
-                        <td className="py-3.5 px-4">
-                          <p className="font-bold text-white">{u.name}</p>
-                          <p className="text-[11px] text-slate-400">{u.email}</p>
+                      <tr key={u._id} className="hover:bg-slate-50/60 transition-colors">
+                        <td className="py-3 px-4">
+                          <p className="font-semibold text-[#172033]">{u.name}</p>
+                          <p className="text-[11px] text-[#64748B]">{u.email}</p>
                         </td>
-                        <td className="py-3.5 px-4">
+                        <td className="py-3 px-4">
                           <select
                             value={u.role}
                             onChange={(e) => handleRoleChange(u._id, e.target.value)}
-                            className="px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-xs font-semibold text-brand-300 focus:outline-none"
+                            className="px-2 py-1 bg-white border border-[#E2E8F0] rounded-lg text-xs font-semibold text-[#1769D2] focus:outline-none"
                           >
                             <option value="student">Student</option>
                             <option value="faculty">Faculty</option>
@@ -533,26 +537,26 @@ export const AdminDashboardPage: React.FC = () => {
                             <option value="admin">Administrator</option>
                           </select>
                         </td>
-                        <td className="py-3.5 px-4">
-                          <p className="text-white">{u.institution}</p>
-                          <p className="text-[11px] text-slate-400">{u.department || 'General'}</p>
+                        <td className="py-3 px-4">
+                          <p className="text-[#172033]">{u.institution}</p>
+                          <p className="text-[11px] text-[#64748B]">{u.department || 'General'}</p>
                         </td>
-                        <td className="py-3.5 px-4">
+                        <td className="py-3 px-4">
                           <button
                             onClick={() => handleToggleUserVerification(u._id, u.isVerified)}
                             className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase transition-all ${
                               u.isVerified
-                                ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
-                                : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : 'bg-amber-50 text-amber-700 border border-amber-200'
                             }`}
                           >
                             {u.isVerified ? 'Verified' : 'Pending Verification'}
                           </button>
                         </td>
-                        <td className="py-3.5 px-4 text-right">
+                        <td className="py-3 px-4 text-right">
                           <button
                             onClick={() => setDeleteUserModal({ isOpen: true, user: u })}
-                            className="p-1.5 text-slate-500 hover:text-rose-400 rounded-lg hover:bg-slate-800 transition-colors"
+                            className="p-1.5 text-[#64748B] hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors"
                             title="Delete User Account"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -573,14 +577,14 @@ export const AdminDashboardPage: React.FC = () => {
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="relative flex-1 max-w-md w-full">
-              <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-[#64748B] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Search equipment by name, custodian, or location..."
                 value={resourceSearch}
                 onChange={(e) => setResourceSearch(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && fetchResources()}
-                className="w-full pl-9 pr-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500"
+                className="w-full pl-9 pr-4 py-2 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#172033] placeholder-[#64748B] focus:outline-none focus:border-[#1769D2]"
               />
             </div>
 
@@ -591,7 +595,7 @@ export const AdminDashboardPage: React.FC = () => {
                   setResourceCategoryFilter(e.target.value);
                   setTimeout(fetchResources, 50);
                 }}
-                className="px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-brand-500"
+                className="px-3 py-2 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#172033] focus:outline-none focus:border-[#1769D2]"
               >
                 <option value="All">All Categories</option>
                 {ALL_CATEGORIES.map((cat) => (
@@ -603,7 +607,7 @@ export const AdminDashboardPage: React.FC = () => {
 
               <button
                 onClick={fetchResources}
-                className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-colors"
+                className="p-2 bg-white hover:bg-slate-50 border border-[#E2E8F0] text-[#64748B] rounded-xl transition-colors"
                 title="Refresh catalog"
               >
                 <RefreshCw className="w-4 h-4" />
@@ -611,41 +615,41 @@ export const AdminDashboardPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-800 overflow-hidden bg-slate-900/60 shadow-xl">
+          <div className="rounded-2xl border border-[#E2E8F0] overflow-hidden bg-white shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="border-b border-slate-800 bg-slate-950/80 text-slate-400 uppercase font-semibold text-[11px]">
-                    <th className="py-3.5 px-4">Equipment</th>
-                    <th className="py-3.5 px-4">Category</th>
-                    <th className="py-3.5 px-4">Location</th>
-                    <th className="py-3.5 px-4">Operational Status</th>
-                    <th className="py-3.5 px-4 text-right">Actions</th>
+                  <tr className="border-b border-[#E2E8F0] bg-slate-50 text-[#64748B] uppercase font-semibold text-[11px]">
+                    <th className="py-3 px-4">Equipment</th>
+                    <th className="py-3 px-4">Category</th>
+                    <th className="py-3 px-4">Location</th>
+                    <th className="py-3 px-4">Operational Status</th>
+                    <th className="py-3 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-[#E2E8F0]">
                   {resourceLoading ? (
                     Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} cols={5} />)
                   ) : resources.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="py-12 text-center text-slate-400">
+                      <td colSpan={5} className="py-12 text-center text-[#64748B]">
                         No equipment records match filter.
                       </td>
                     </tr>
                   ) : (
                     resources.map((r) => (
-                      <tr key={r._id} className="hover:bg-slate-800/40 transition-colors">
-                        <td className="py-3.5 px-4">
-                          <p className="font-bold text-white">{r.name}</p>
-                          <p className="text-[11px] text-slate-400">{r.ownerName} ({r.ownerDepartment})</p>
+                      <tr key={r._id} className="hover:bg-slate-50/60 transition-colors">
+                        <td className="py-3 px-4">
+                          <p className="font-semibold text-[#172033]">{r.name}</p>
+                          <p className="text-[11px] text-[#64748B]">{r.ownerName} ({r.ownerDepartment})</p>
                         </td>
-                        <td className="py-3.5 px-4">
-                          <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-medium">
+                        <td className="py-3 px-4">
+                          <span className="px-2 py-0.5 rounded bg-slate-100 text-[#172033] font-medium border border-slate-200">
                             {r.category}
                           </span>
                         </td>
-                        <td className="py-3.5 px-4 text-slate-300">{r.location}</td>
-                        <td className="py-3.5 px-4">
+                        <td className="py-3 px-4 text-[#64748B]">{r.location}</td>
+                        <td className="py-3 px-4">
                           <select
                             value={r.status}
                             onChange={async (e) => {
@@ -653,7 +657,7 @@ export const AdminDashboardPage: React.FC = () => {
                               showToast(`Resource status set to ${e.target.value}`);
                               fetchResources();
                             }}
-                            className="px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-xs font-semibold text-white focus:outline-none"
+                            className="px-2 py-1 bg-white border border-[#E2E8F0] rounded-lg text-xs font-semibold text-[#172033] focus:outline-none"
                           >
                             <option value="available">Available</option>
                             <option value="reserved">Reserved</option>
@@ -661,10 +665,10 @@ export const AdminDashboardPage: React.FC = () => {
                             <option value="in_use">In Use</option>
                           </select>
                         </td>
-                        <td className="py-3.5 px-4 text-right">
+                        <td className="py-3 px-4 text-right">
                           <button
                             onClick={() => setDeleteResourceModal({ isOpen: true, resource: r })}
-                            className="p-1.5 text-slate-500 hover:text-rose-400 rounded-lg hover:bg-slate-800 transition-colors"
+                            className="p-1.5 text-[#64748B] hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors"
                             title="Decommission Equipment"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -685,14 +689,14 @@ export const AdminDashboardPage: React.FC = () => {
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-base font-bold text-white">Federated Institution Registry</h2>
-              <p className="text-xs text-slate-400">
+              <h2 className="text-base font-bold text-[#172033]">Federated Institution Registry</h2>
+              <p className="text-xs text-[#64748B]">
                 Authorized university campuses participating in mutual asset sharing consortium.
               </p>
             </div>
             <button
               onClick={() => setNewInstModalOpen(true)}
-              className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold shadow-lg shadow-brand-500/20 transition-all flex items-center gap-1.5"
+              className="px-4 py-2 rounded-xl bg-[#1769D2] hover:bg-[#1256B0] text-white text-xs font-semibold shadow-sm transition-all flex items-center gap-1.5"
             >
               <Plus className="w-4 h-4" />
               Onboard Partner Campus
@@ -703,29 +707,29 @@ export const AdminDashboardPage: React.FC = () => {
             {institutions.map((inst) => (
               <div
                 key={inst._id}
-                className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-3 shadow-lg"
+                className="p-5 rounded-2xl bg-white border border-[#E2E8F0] space-y-3 shadow-sm"
               >
                 <div className="flex items-start justify-between">
                   <div>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-brand-500/10 text-brand-300 border border-brand-500/30">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#EFF6FF] text-[#1769D2] border border-blue-200">
                       {inst.code}
                     </span>
-                    <h3 className="text-sm font-bold text-white mt-1.5">{inst.name}</h3>
-                    <p className="text-xs text-slate-400">{inst.campusLocation}</p>
+                    <h3 className="text-sm font-bold text-[#172033] mt-1.5">{inst.name}</h3>
+                    <p className="text-xs text-[#64748B]">{inst.campusLocation}</p>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
                     {inst.status}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80 text-xs">
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#E2E8F0] text-xs">
                   <div>
-                    <span className="text-[10px] text-slate-500 uppercase">Tier</span>
-                    <p className="font-semibold text-slate-300">{inst.partnershipTier}</p>
+                    <span className="text-[10px] text-[#64748B] uppercase">Tier</span>
+                    <p className="font-semibold text-[#172033]">{inst.partnershipTier}</p>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-500 uppercase">Domain</span>
-                    <p className="font-semibold text-slate-300">@{inst.domain}</p>
+                    <span className="text-[10px] text-[#64748B] uppercase">Domain</span>
+                    <p className="font-semibold text-[#172033]">@{inst.domain}</p>
                   </div>
                 </div>
               </div>
@@ -744,37 +748,37 @@ export const AdminDashboardPage: React.FC = () => {
       {/* TAB 6: SYSTEM SETTINGS */}
       {activeTab === 'settings' && settings && (
         <form onSubmit={handleSaveSettings} className="space-y-6">
-          <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-6">
+          <div className="p-6 rounded-2xl bg-white border border-[#E2E8F0] space-y-6 shadow-sm">
             <div>
-              <h2 className="text-base font-bold text-white">Platform Parameters & Operational Controls</h2>
-              <p className="text-xs text-slate-400">
+              <h2 className="text-base font-bold text-[#172033]">Platform Parameters & Operational Controls</h2>
+              <p className="text-xs text-[#64748B]">
                 Institutional policies governing quotas, maintenance mode, and ledger integrity.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Platform Brand Name</label>
+                <label className="block text-xs font-semibold text-[#172033] mb-1.5">Platform Brand Name</label>
                 <input
                   type="text"
                   value={settings.platformName}
                   onChange={(e) => setSettings({ ...settings, platformName: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-brand-500"
+                  className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#172033] focus:outline-none focus:border-[#1769D2]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Official Support Email</label>
+                <label className="block text-xs font-semibold text-[#172033] mb-1.5">Official Support Email</label>
                 <input
                   type="email"
                   value={settings.supportEmail}
                   onChange={(e) => setSettings({ ...settings, supportEmail: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-brand-500"
+                  className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#172033] focus:outline-none focus:border-[#1769D2]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                <label className="block text-xs font-semibold text-[#172033] mb-1.5">
                   Max Active Reservations Per User
                 </label>
                 <input
@@ -785,12 +789,12 @@ export const AdminDashboardPage: React.FC = () => {
                   onChange={(e) =>
                     setSettings({ ...settings, maxActiveBookingsPerUser: parseInt(e.target.value, 10) })
                   }
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-brand-500"
+                  className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#172033] focus:outline-none focus:border-[#1769D2]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                <label className="block text-xs font-semibold text-[#172033] mb-1.5">
                   Monopolisation Cooldown Window (Days)
                 </label>
                 <input
@@ -801,17 +805,17 @@ export const AdminDashboardPage: React.FC = () => {
                   onChange={(e) =>
                     setSettings({ ...settings, monopolisationWindowDays: parseInt(e.target.value, 10) })
                   }
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-brand-500"
+                  className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#172033] focus:outline-none focus:border-[#1769D2]"
                 />
               </div>
             </div>
 
             {/* Toggle Switches */}
-            <div className="pt-4 border-t border-slate-800 space-y-4">
-              <label className="flex items-center justify-between p-4 rounded-2xl bg-slate-950/60 border border-slate-800 cursor-pointer">
+            <div className="pt-4 border-t border-[#E2E8F0] space-y-4">
+              <label className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-[#E2E8F0] cursor-pointer">
                 <div>
-                  <p className="text-xs font-bold text-white">Emergency Maintenance Mode</p>
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-xs font-bold text-[#172033]">Emergency Maintenance Mode</p>
+                  <p className="text-[11px] text-[#64748B]">
                     Temporarily halts new reservations while preserving existing checkouts.
                   </p>
                 </div>
@@ -819,14 +823,14 @@ export const AdminDashboardPage: React.FC = () => {
                   type="checkbox"
                   checked={settings.maintenanceMode}
                   onChange={(e) => setSettings({ ...settings, maintenanceMode: e.target.checked })}
-                  className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500"
+                  className="w-4 h-4 rounded text-[#1769D2] focus:ring-[#1769D2]"
                 />
               </label>
 
-              <label className="flex items-center justify-between p-4 rounded-2xl bg-slate-950/60 border border-slate-800 cursor-pointer">
+              <label className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-[#E2E8F0] cursor-pointer">
                 <div>
-                  <p className="text-xs font-bold text-white">Public Student & Faculty Registration</p>
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-xs font-bold text-[#172033]">Public Student & Faculty Registration</p>
+                  <p className="text-[11px] text-[#64748B]">
                     Allows academic members to self-register with institutional verification.
                   </p>
                 </div>
@@ -834,7 +838,7 @@ export const AdminDashboardPage: React.FC = () => {
                   type="checkbox"
                   checked={settings.allowPublicRegistration}
                   onChange={(e) => setSettings({ ...settings, allowPublicRegistration: e.target.checked })}
-                  className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500"
+                  className="w-4 h-4 rounded text-[#1769D2] focus:ring-[#1769D2]"
                 />
               </label>
             </div>
@@ -843,7 +847,7 @@ export const AdminDashboardPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={savingSettings}
-                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-semibold shadow-lg shadow-brand-500/25 text-xs transition-all flex items-center gap-2"
+                className="px-6 py-2.5 rounded-xl bg-[#1769D2] hover:bg-[#1256B0] text-white font-semibold shadow-sm text-xs transition-all flex items-center gap-2"
               >
                 <Save className="w-4 h-4" />
                 {savingSettings ? 'Committing...' : 'Save Configuration'}
@@ -855,66 +859,66 @@ export const AdminDashboardPage: React.FC = () => {
 
       {/* Onboard Institution Modal */}
       {newInstModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-lg rounded-3xl bg-slate-900 border border-slate-800 p-6 space-y-4 shadow-2xl"
+            className="w-full max-w-lg rounded-2xl bg-white border border-[#E2E8F0] p-6 space-y-4 shadow-xl"
           >
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-white">Onboard Partner University Campus</h3>
-              <button onClick={() => setNewInstModalOpen(false)} className="text-slate-400 hover:text-white">
+              <h3 className="text-sm font-bold text-[#172033]">Onboard Partner University Campus</h3>
+              <button onClick={() => setNewInstModalOpen(false)} className="text-[#64748B] hover:text-[#172033]">
                 ✕
               </button>
             </div>
 
             <form onSubmit={handleCreateInstitution} className="space-y-3">
               <div>
-                <label className="block text-[11px] font-semibold text-slate-300 mb-1">Institution Name</label>
+                <label className="block text-[11px] font-semibold text-[#172033] mb-1">Institution Name</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Indian Institute of Technology Bombay"
                   value={newInstForm.name}
                   onChange={(e) => setNewInstForm({ ...newInstForm, name: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white"
+                  className="w-full px-3 py-2 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#172033]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">Campus Code</label>
+                  <label className="block text-[11px] font-semibold text-[#172033] mb-1">Campus Code</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. IIT-B"
                     value={newInstForm.code}
                     onChange={(e) => setNewInstForm({ ...newInstForm, code: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white uppercase"
+                    className="w-full px-3 py-2 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#172033] uppercase"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">Campus Email Domain</label>
+                  <label className="block text-[11px] font-semibold text-[#172033] mb-1">Campus Email Domain</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. iitb.ac.in"
                     value={newInstForm.domain}
                     onChange={(e) => setNewInstForm({ ...newInstForm, domain: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white"
+                    className="w-full px-3 py-2 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#172033]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-slate-300 mb-1">Campus Location</label>
+                <label className="block text-[11px] font-semibold text-[#172033] mb-1">Campus Location</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Powai, Mumbai, Maharashtra"
                   value={newInstForm.campusLocation}
                   onChange={(e) => setNewInstForm({ ...newInstForm, campusLocation: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white"
+                  className="w-full px-3 py-2 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#172033]"
                 />
               </div>
 
@@ -922,13 +926,13 @@ export const AdminDashboardPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setNewInstModalOpen(false)}
-                  className="px-4 py-2 bg-slate-800 rounded-xl text-xs text-slate-300"
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs text-[#172033]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-brand-600 hover:bg-brand-500 rounded-xl text-xs font-semibold text-white"
+                  className="px-4 py-2 bg-[#1769D2] hover:bg-[#1256B0] rounded-xl text-xs font-semibold text-white shadow-sm"
                 >
                   Register Campus
                 </button>
