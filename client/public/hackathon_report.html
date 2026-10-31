@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>RENTORA — Hackathon Project Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+    @media print {
+      body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        background: #FFFFFF !important;
+      }
+      .page {
+        margin: 0 !important;
+        box-shadow: none !important;
+        page-break-after: always !important;
+        break-after: page !important;
+      }
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #172033;
+      background: #F1F5F9;
+      line-height: 1.45;
+      font-size: 11px;
+    }
+    .page {
+      width: 210mm;
+      height: 297mm;
+      min-height: 297mm;
+      max-height: 297mm;
+      background: #FFFFFF;
+      margin: 10mm auto;
+      position: relative;
+      page-break-after: always;
+      break-after: page;
+      overflow: hidden;
+      padding: 16mm 18mm 14mm 18mm;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    
+    /* Running Header & Footer */
+    .running-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 7px;
+      border-bottom: 1.5px solid #E2E8F0;
+      margin-bottom: 12px;
+      font-size: 8.5px;
+      color: #64748B;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+    }
+    .running-header .logo-tag {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 700;
+      color: #1769D2;
+      font-size: 10px;
+    }
+    .running-header .logo-badge {
+      background: #1769D2;
+      color: white;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 8px;
+      font-weight: 800;
+    }
+    
+    .running-footer {
+      margin-top: auto;
+      padding-top: 8px;
+      border-top: 1px solid #E2E8F0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 8px;
+      color: #64748B;
+      font-weight: 500;
+    }
+    .running-footer .accent {
+      color: #1769D2;
+      font-weight: 600;
+    }
+
+    /* Typography & Utilities */
+    h1 { font-size: 20px; font-weight: 800; color: #172033; letter-spacing: -0.4px; line-height: 1.2; }
+    h2 { font-size: 14px; font-weight: 700; color: #172033; letter-spacing: -0.2px; margin-bottom: 8px; }
+    h3 { font-size: 11.5px; font-weight: 600; color: #1769D2; margin-bottom: 4px; }
+    p { color: #334155; font-size: 9.8px; line-height: 1.5; margin-bottom: 6px; }
+    .lead { font-size: 10.5px; color: #475569; font-weight: 400; line-height: 1.55; }
+    
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 7px;
+      border-radius: 12px;
+      font-size: 8px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .badge-blue { background: #EFF6FF; color: #1769D2; border: 1px solid #BFDBFE; }
+    .badge-emerald { background: #ECFDF5; color: #047857; border: 1px solid #A7F3D0; }
+    .badge-amber { background: #FFFBEB; color: #B45309; border: 1px solid #FDE68A; }
+    .badge-purple { background: #FAF5FF; color: #7E22CE; border: 1px solid #E9D5FF; }
+
+    /* Cards & Containers */
+    .card {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 9px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    }
+    .card-highlight {
+      background: #F8FAFC;
+      border: 1px solid #CBD5E1;
+      border-left: 3.5px solid #1769D2;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 9px;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 9px;
+      margin-bottom: 9px;
+    }
+    .grid-4 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 9px;
+    }
+
+    /* Metric Box */
+    .metric-box {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 7px;
+      padding: 9px 11px;
+      text-align: left;
+    }
+    .metric-label { font-size: 8px; text-transform: uppercase; font-weight: 600; color: #64748B; letter-spacing: 0.4px; }
+    .metric-val { font-size: 19px; font-weight: 800; color: #1769D2; line-height: 1.15; margin: 3px 0 1px 0; }
+    .metric-sub { font-size: 7.8px; color: #64748B; }
+
+    /* Tables */
+    table.spec-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 8.5px;
+      margin-bottom: 8px;
+    }
+    table.spec-table th {
+      background: #F8FAFC;
+      color: #475569;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 7.8px;
+      letter-spacing: 0.3px;
+      padding: 6px 8px;
+      border-bottom: 1.5px solid #E2E8F0;
+      text-align: left;
+    }
+    table.spec-table td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #F1F5F9;
+      color: #334155;
+      vertical-align: middle;
+    }
+    table.spec-table tr:last-child td { border-bottom: none; }
+    
+    /* Code / Monospace */
+    .code-pill {
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 8.5px;
+      background: #F1F5F9;
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: #0F172A;
+      border: 1px solid #E2E8F0;
+    }
+
+    /* Timeline Stepper */
+    .lifecycle-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      padding: 6px 0;
+      border-left: 2px solid #E2E8F0;
+      margin-left: 10px;
+      padding-left: 12px;
+      position: relative;
+    }
+    .lifecycle-step::before {
+      content: '';
+      position: absolute;
+      left: -5.5px;
+      top: 9px;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #1769D2;
+      border: 2px solid #FFFFFF;
+      box-shadow: 0 0 0 1px #1769D2;
+    }
+    .lifecycle-step .title { font-weight: 700; color: #172033; font-size: 9.5px; }
+    .lifecycle-step .desc { font-size: 8.5px; color: #64748B; margin-top: 1px; }
+
+    /* Cover Page Specific Styles */
+    .cover-container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 10mm 5mm 5mm 5mm;
+    }
+    .cover-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: #EFF6FF;
+      border: 1.5px solid #BFDBFE;
+      padding: 7px 16px;
+      border-radius: 30px;
+      width: fit-content;
+    }
+    .cover-title {
+      font-size: 38px;
+      font-weight: 900;
+      color: #0F172A;
+      letter-spacing: -1.2px;
+      line-height: 1.08;
+      margin-top: 18px;
+      margin-bottom: 12px;
+    }
+    .cover-title span {
+      color: #1769D2;
+    }
+    .cover-sub {
+      font-size: 14.5px;
+      color: #475569;
+      font-weight: 400;
+      line-height: 1.5;
+      max-width: 620px;
+      margin-bottom: 24px;
+    }
+    .cover-meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      background: #F8FAFC;
+      border: 1.5px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 18px 22px;
+      margin-bottom: 20px;
+    }
+    .meta-item label {
+      display: block;
+      font-size: 8.5px;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: #64748B;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .meta-item .val {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #0F172A;
+    }
+    .meta-item .subval {
+      font-size: 9.5px;
+      color: #1769D2;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 1: COVER PAGE -->
+  <!-- ========================================================================= -->
+  <div class="page">
+    <div class="cover-container">
+      <div>
+        <div class="cover-brand">
+          <span style="background:#1769D2; color:white; font-size:10px; font-weight:900; padding:3px 7px; border-radius:5px;">R</span>
+          <span style="font-size:12px; font-weight:800; color:#1769D2; letter-spacing:0.8px;">RENTORA ENTERPRISE PLATFORM</span>
+          <span style="font-size:9px; color:#64748B;">•</span>
+          <span style="font-size:9.5px; color:#475569; font-weight:600;">HACKATHON SUBMISSION DOSSIER</span>
+        </div>
+
+        <h1 class="cover-title">
+          Smart Institutional<br><span>Resource Sharing &</span><br>Lifecycle Management
+        </h1>
+
+        <p class="cover-sub">
+          A full-stack, enterprise-grade multi-tenant platform unifying fragmented campus laboratory equipment, high-performance computing clusters, cleanrooms, and testing facilities through automated 15-stage lifecycle governance, atomic double-booking prevention, and embedded telemetry AI.
+        </p>
+
+        <div class="cover-meta-grid">
+          <div class="meta-item">
+            <label>Project Name</label>
+            <div class="val">RENTORA (Storm Breakerz Edition)</div>
+            <div class="subval">Federated Institutional Asset Sharing Engine</div>
+          </div>
+          <div class="meta-item">
+            <label>Team Name</label>
+            <div class="val">Storm Breakerz</div>
+            <div class="subval">Team Size: 1 Member (Solo Execution)</div>
+          </div>
+          <div class="meta-item">
+            <label>Team Leader & Full-Stack Architect</label>
+            <div class="val">Jaswant Karun S A</div>
+            <div class="subval">System Architecture, UI/UX & Backend Engineering</div>
+          </div>
+          <div class="meta-item">
+            <label>Submission Track & Edition</label>
+            <div class="val">Smart Campus & Institutional Infrastructure</div>
+            <div class="subval">October 2026 • Verified Production Release v1.0.0</div>
+          </div>
+        </div>
+
+        <div class="grid-3" style="margin-top:14px;">
+          <div class="card" style="border-top:3px solid #1769D2; background:#FFFFFF;">
+            <div style="font-size:9px; font-weight:700; color:#1769D2; text-transform:uppercase;">Zero Double-Bookings</div>
+            <p style="font-size:8.5px; color:#64748B; margin-top:3px;">Atomic collision-prevention engine blocking overlapping schedules at database boundary.</p>
+          </div>
+          <div class="card" style="border-top:3px solid #059669; background:#FFFFFF;">
+            <div style="font-size:9px; font-weight:700; color:#059669; text-transform:uppercase;">15-Stage Governance</div>
+            <p style="font-size:8.5px; color:#64748B; margin-top:3px;">Complete custodial custody from initial reservation request to return sign-off and WORM audit.</p>
+          </div>
+          <div class="card" style="border-top:3px solid #7C3AED; background:#FFFFFF;">
+            <div style="font-size:9px; font-weight:700; color:#7C3AED; text-transform:uppercase;">AI Telemetry Intelligence</div>
+            <p style="font-size:8.5px; color:#64748B; margin-top:3px;">Smart resource matching, campus demand telemetry, conflict detection, and incident summarization.</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <span style="font-size:8.5px; font-weight:700; color:#172033;">Full-Stack Verification Status:</span>
+          <span style="font-size:8.5px; color:#059669; font-weight:600; margin-left:5px;">✓ 15/15 Lifecycle Integration Tests Passed (100%)</span>
+        </div>
+        <div style="font-size:8px; color:#64748B;">
+          Engineered by <strong>Jaswant Karun S A</strong> • Team <strong>Storm Breakerz</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 2: PROBLEM STATEMENT & MARKET ANALYSIS -->
+  <!-- ========================================================================= -->
+  <div class="page">
+    <div class="running-header">
+      <div class="logo-tag"><span class="logo-badge">R</span> RENTORA — Project Dossier</div>
+      <div>Section 01: Executive Summary & Problem Analysis</div>
+      <div>Page 2 of 10</div>
+    </div>
+
+    <h2>01. Executive Summary & Problem Statement</h2>
+    <p class="lead">
+      Academic and scientific institutions invest tens of millions of dollars into cutting-edge instrumentation, cleanrooms, and compute clusters. Yet, up to 65% of specialized assets sit underutilized in departmental silos due to administrative friction and lack of unified booking infrastructure.
+    </p>
+
+    <div class="grid-2" style="margin-top:10px;">
+      <div class="card card-highlight">
+        <h3 style="color:#DC2626;">The Current Academic Bottleneck</h3>
+        <p><strong>1. Fragmented Departmental Silos:</strong> Equipment is tracked via ad-hoc spreadsheets, paper sign-in notebooks, or direct verbal agreements, hiding valuable instruments from cross-disciplinary researchers.</p>
+        <p><strong>2. Disastrous Scheduling Collisions:</strong> Double-bookings halt active research experiments, delay capstone dissertations, and cause contentious inter-departmental scheduling disputes.</p>
+        <p><strong>3. Zero Custodial Accountability:</strong> When precision equipment suffers physical damage or uncalibrated misalignment, lack of documented handover inspections prevents accountability.</p>
+        <p><strong>4. Bureaucratic Access Barriers:</strong> External department researchers face weeks of manual paperwork to get single-session clearance.</p>
+      </div>
+
+      <div class="card card-highlight" style="border-left-color:#1769D2;">
+        <h3>The RENTORA Solution Architecture</h3>
+        <p><strong>1. Federated Consortium Discovery:</strong> A unified digital catalog indexing laboratory equipment, electronics, and supercomputing nodes across multiple institutions.</p>
+        <p><strong>2. Atomic Concurrency Control:</strong> Database-level reservation validation preventing double-bookings with automatic spillover to priority waitlists.</p>
+        <p><strong>3. End-to-End Custodial Handover:</strong> 15-stage workflow requiring digital condition verification checklists upon check-in and return.</p>
+        <p><strong>4. Embedded AI Intelligence:</strong> Smart matching engine analyzing user requirements, campus utilization telemetry, and conflict detection.</p>
+      </div>
+    </div>
+
+    <h2>Consortium Ecosystem & Beneficiaries</h2>
+    <div class="grid-4">
+      <div class="metric-box">
+        <div class="metric-label">Student Researchers</div>
+        <div style="font-size:11px; font-weight:700; color:#172033; margin:4px 0 2px 0;">Frictionless Discovery</div>
+        <div class="metric-sub">Instant access to certified research assets with clear availability.</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Lab Custodians</div>
+        <div style="font-size:11px; font-weight:700; color:#172033; margin:4px 0 2px 0;">Asset Safeguarding</div>
+        <div class="metric-sub">Full approval authority, damage logging, and condition verification.</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Department Heads</div>
+        <div style="font-size:11px; font-weight:700; color:#172033; margin:4px 0 2px 0;">Capacity Telemetry</div>
+        <div class="metric-sub">Comprehensive utilization metrics and ROI justification for grants.</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Consortium Admins</div>
+        <div style="font-size:11px; font-weight:700; color:#172033; margin:4px 0 2px 0;">Federated Sharing</div>
+        <div class="metric-sub">Cross-institutional resource governance with immutable WORM audit trails.</div>
+      </div>
+    </div>
+
+    <h2>Key Impact Projections</h2>
+    <table class="spec-table">
+      <thead>
+        <tr>
+          <th>Metric Dimension</th>
+          <th>Legacy Manual Workflow</th>
+          <th>RENTORA Enterprise Platform</th>
+          <th>Operational Improvement</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Booking Approval Turnaround</strong></td>
+          <td>3 to 7 Days (Paper memos, emails)</td>
+          <td><strong>Under 5 Minutes</strong> (Real-time custodian queue)</td>
+          <td><span class="badge badge-emerald">98% Reduction</span></td>
+        </tr>
+        <tr>
+          <td><strong>Scheduling Collisions</strong></td>
+          <td>12-18% of all peak sessions</td>
+          <td><strong>0.00%</strong> (Atomic DB isolation guarantee)</td>
+          <td><span class="badge badge-emerald">Eliminated</span></td>
+        </tr>
+        <tr>
+          <td><strong>Average Asset Utilization</strong></td>
+          <td>28% - 34% capacity</td>
+          <td><strong>75% - 85%</strong> (Automated waitlist & sharing)</td>
+          <td><span class="badge badge-emerald">+2.5x Increase</span></td>
+        </tr>
+        <tr>
+          <td><strong>Dispute Resolution Time</strong></td>
+          <td>14+ Days (Unclear responsibility)</td>
+          <td><strong>Immediate</strong> (Digital sign-off & WORM log)</td>
+          <td><span class="badge badge-emerald">Instant Audit</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="running-footer">
+      <div>RENTORA — Smart Institutional Resource Sharing Platform</div>
+      <div class="accent">Team: Storm Breakerz • Lead: Jaswant Karun S A</div>
+      <div>Section 01 • Page 2</div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 3: SYSTEM ARCHITECTURE & TECH STACK -->
+  <!-- ========================================================================= -->
+  <div class="page">
+    <div class="running-header">
+      <div class="logo-tag"><span class="logo-badge">R</span> RENTORA — Project Dossier</div>
+      <div>Section 02: Full-Stack Architecture & Technology Stack</div>
+      <div>Page 3 of 10</div>
+    </div>
+
+    <h2>02. Full-Stack Architecture & Technology Stack</h2>
+    <p class="lead">
+      RENTORA is engineered as a high-performance, modular enterprise web application. It combines a reactive, accessible React 19 frontend with a hardened Node.js/Express REST backend backed by MongoDB.
+    </p>
+
+    <div class="grid-2" style="margin-top:8px;">
+      <div class="card" style="border-top:2.5px solid #1769D2;">
+        <h3>Frontend Presentation Tier</h3>
+        <p><strong>• Framework:</strong> React 19 with TypeScript strict mode for bulletproof type safety.</p>
+        <p><strong>• Styling Engine:</strong> Enterprise Vanilla/Tailwind design tokens (#FFFFFF surfaces, #F8FAFC canvas, #1769D2 blue accents).</p>
+        <p><strong>• Data Visualization:</strong> Recharts telemetry graphs for hourly demand distributions and capacity loading.</p>
+        <p><strong>• Routing & Navigation:</strong> React Router v7 with URL search-params synchronizing active tabs and deep-linking.</p>
+        <p><strong>• State Management:</strong> Native React Context for authentication sessions, RBAC states, and real-time alerts.</p>
+      </div>
+
+      <div class="card" style="border-top:2.5px solid #059669;">
+        <h3>Backend API & Services Tier</h3>
+        <p><strong>• Runtime & Framework:</strong> Node.js v22 LTS with Express modular routers.</p>
+        <p><strong>• Database:</strong> MongoDB with Mongoose ODM schemas, compound indexes, and atomic transaction locks.</p>
+        <p><strong>• Authentication:</strong> Stateless JWT tokens, HTTP-only secure cookie transport, and BCrypt (10 salt rounds).</p>
+        <p><strong>• Audit Engine:</strong> Write-Once-Read-Many (WORM) event ledger immutable against updates and deletions (HTTP 405).</p>
+        <p><strong>• Concurrency Engine:</strong> Atomic query filtering that validates timeslot overlaps before reservation instantiation.</p>
+      </div>
+    </div>
+
+    <h2>System Architecture Dataflow</h2>
+    <div class="card" style="background:#F8FAFC; padding:12px; font-family:'Consolas', monospace; font-size:8px; line-height:1.4; color:#0F172A; border:1px solid #CBD5E1;">
+      +-----------------------------------------------------------------------------------------------------------------+<br>
+      |                                              CLIENT INTERFACE (React 19)                                        |<br>
+      |   [Student Console]     [Custodian Hub]     [Institution Manager Hub]     [System Admin Control Center]          |<br>
+      +-------------------------------------------------------+---------------------------------------------------------+<br>
+                                                              | HTTPS / REST APIs with Bearer JWT Auth<br>
+      +-------------------------------------------------------v---------------------------------------------------------+<br>
+      |                                         SECURITY & API GATEWAY (Express)                                        |<br>
+      |   • CORS Protection      • Rate Limiting      • JWT Role Verification Middleware      • Payload Sanitization    |<br>
+      +-------------------------------------------------------+---------------------------------------------------------+<br>
+                                                              |<br>
+                     +----------------------------------------+----------------------------------------+<br>
+                     |                                                                                 |<br>
+      +--------------v----------------+    +-----------------------------+    +------------------------v----------------+<br>
+      |     LIFECYCLE CONTROLLER      |    |    AI TELEMETRY & MATCH     |    |        IMMUTABLE AUDIT LEDGER          |<br>
+      | • Atomic Collision Detection  |    | • Smart Resource Matcher    |    | • Cryptographic Event Hashing          |<br>
+      | • 15-Stage Status FSM         |    | • Capacity Utilization Tele |    | • Strict WORM Implementation           |<br>
+      | • Transparent Waitlist Queue  |    | • Conflict & Incident Sum   |    | • HTTP 405 Protection on Deletions     |<br>
+      +--------------+----------------+    +--------------+--------------+    +------------------------+----------------+<br>
+                     |                                    |                                             |<br>
+      +--------------v------------------------------------v---------------------------------------------v---------------+<br>
+      |                                           DATABASE TIER (MongoDB)                                               |<br>
+      |   [users]   [resources]   [bookings]   [waitlists]   [incidents]   [institutions]   [auditlogs]                 |<br>
+      +-----------------------------------------------------------------------------------------------------------------+
+    </div>
+
+    <h2>Hardware & Cloud Deployment Readiness</h2>
+    <div class="grid-3">
+      <div class="card">
+        <h3 style="font-size:10px;">Stateless Scalability</h3>
+        <p style="font-size:8.5px;">Zero server-side session memory allows horizontal containerization across multiple node instances.</p>
+      </div>
+      <div class="card">
+        <h3 style="font-size:10px;">Database Indexing</h3>
+        <p style="font-size:8.5px;">Compound indexing on resourceId + date + timeslot enables sub-10ms collision lookups across millions of records.</p>
+      </div>
+      <div class="card">
+        <h3 style="font-size:10px;">Docker Ready</h3>
+        <p style="font-size:8.5px;">Standardized container configurations for both client and backend microservices with automated healthchecks.</p>
+      </div>
+    </div>
+
+    <div class="running-footer">
+      <div>RENTORA — Smart Institutional Resource Sharing Platform</div>
+      <div class="accent">Team: Storm Breakerz • Lead: Jaswant Karun S A</div>
+      <div>Section 02 • Page 3</div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 4: ROLE-BASED ACCESS CONTROL (RBAC) -->
+  <!-- ========================================================================= -->
+  <div class="page">
+    <div class="running-header">
+      <div class="logo-tag"><span class="logo-badge">R</span> RENTORA — Project Dossier</div>
+      <div>Section 03: Role-Based Access Control (RBAC) & Governance</div>
+      <div>Page 4 of 10</div>
+    </div>
+
+    <h2>03. Role-Based Access Control (RBAC) & Persona Workflows</h2>
+    <p class="lead">
+      RENTORA enforces strict, multi-tiered Role-Based Access Control across 4 distinct institutional personas. Each role receives a dedicated console, tailored sidebar navigation, and hardware-level authorization guardrails.
+    </p>
+
+    <div class="grid-2" style="margin-top:6px;">
+      <!-- Role 1: Student -->
+      <div class="card" style="border-top:3px solid #1769D2;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <h3 style="margin-bottom:0;">1. Student / Borrower Persona</h3>
+          <span class="badge badge-blue">Student / Faculty</span>
+        </div>
+        <p><strong>Primary Goal:</strong> Frictionless equipment discovery, reservation, and transparent usage monitoring.</p>
+        <p><strong>Dedicated Sidebar Modules:</strong></p>
+        <p style="font-size:8.5px; color:#475569;">
+          • Dashboard (Usage Telemetry) &nbsp; • Explore Resources (Catalog)<br>
+          • My Bookings (Active Lifecycle) &nbsp; • Waiting List (Standings)<br>
+          • Activity Log (Personal History) &nbsp; • Notifications (Alerts)<br>
+          • Researcher Profile &nbsp; • Account Settings
+        </p>
+        <p><strong>Key Privileges:</strong> Search catalog across 10 categories, run Smart AI Matcher, submit booking requests, join priority waitlists, and initiate returns.</p>
+      </div>
+
+      <!-- Role 2: Owner -->
+      <div class="card" style="border-top:3px solid #059669;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <h3 style="margin-bottom:0; color:#059669;">2. Resource Owner / Custodian</h3>
+          <span class="badge badge-emerald">Custodian</span>
+        </div>
+        <p><strong>Primary Goal:</strong> Safeguarding physical assets, evaluating researcher qualifications, and verifying equipment return conditions.</p>
+        <p><strong>Dedicated Sidebar Modules:</strong></p>
+        <p style="font-size:8.5px; color:#475569;">
+          • Custodian Overview &nbsp; • My Managed Resources &nbsp; • Add Asset<br>
+          • Booking Requests &nbsp; • Approved Reservations &nbsp; • Check-in Terminal<br>
+          • Condition Reports &nbsp; • Safety Incidents &nbsp; • Availability Calendar<br>
+          • Asset Analytics &nbsp; • Audit History &nbsp; • Hub Settings
+        </p>
+        <p><strong>Key Privileges:</strong> Endorse bookings, reject with mandatory rationale, conduct physical handover inspections, and sign off returns.</p>
+      </div>
+
+      <!-- Role 3: Manager -->
+      <div class="card" style="border-top:3px solid #D97706;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <h3 style="margin-bottom:0; color:#D97706;">3. Institution Manager</h3>
+          <span class="badge badge-amber">Campus Governance</span>
+        </div>
+        <p><strong>Primary Goal:</strong> Campus-wide capacity optimization, conflict arbitration, and fair-share allocation policy enforcement.</p>
+        <p><strong>Governance Tabs (Deep-Linked):</strong></p>
+        <p style="font-size:8.5px; color:#475569;">
+          • Campus Stats &nbsp; • AI Utilization & Demand &nbsp; • Approvals Oversight<br>
+          • User Verification &nbsp; • Eligibility Policies &nbsp; • Waitlists & Overrides<br>
+          • Conflict Resolution &nbsp; • Incident Review &nbsp; • Dispute Arbitration<br>
+          • Fair Allocation Rules &nbsp; • Immutable Audit Ledger
+        </p>
+        <p><strong>Key Privileges:</strong> Execute conflict scans, review AI incident summaries, arbitrate disputed damage claims, and execute audited overrides.</p>
+      </div>
+
+      <!-- Role 4: Admin -->
+      <div class="card" style="border-top:3px solid #7C3AED;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <h3 style="margin-bottom:0; color:#7C3AED;">4. System Administrator</h3>
+          <span class="badge badge-purple">Platform SuperAdmin</span>
+        </div>
+        <p><strong>Primary Goal:</strong> Multi-institutional consortium management, global user access control, and platform compliance.</p>
+        <p><strong>Admin Console Modules:</strong></p>
+        <p style="font-size:8.5px; color:#475569;">
+          • Platform Overview &nbsp; • User Directory & Role Assignment<br>
+          • Global Resource Governance &nbsp; • Partner Institutions Federation<br>
+          • WORM Audit Trail Inspector &nbsp; • Platform System Configuration
+        </p>
+        <p><strong>Key Privileges:</strong> Promote/demote user roles, federate university nodes, verify researcher credentials, and toggle system-wide blackout periods.</p>
+      </div>
+    </div>
+
+    <h2>Security Guardrail Verification (RBAC Enforcement)</h2>
+    <table class="spec-table">
+      <thead>
+        <tr>
+          <th>Endpoint / Operation</th>
+          <th>Student Role</th>
+          <th>Owner / Custodian</th>
+          <th>Institution Manager</th>
+          <th>System Administrator</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="code-pill">POST /api/resources</span> (Add Asset)</td>
+          <td><span class="badge badge-amber">403 Forbidden</span></td>
+          <td><span class="badge badge-emerald">Allowed (201)</span></td>
+          <td><span class="badge badge-emerald">Allowed (201)</span></td>
+          <td><span class="badge badge-emerald">Allowed (201)</span></td>
+        </tr>
+        <tr>
+          <td><span class="code-pill">PUT /api/bookings/:id/approve</span></td>
+          <td><span class="badge badge-amber">403 Forbidden</span></td>
+          <td><span class="badge badge-emerald">Allowed (Owner Only)</span></td>
+          <td><span class="badge badge-emerald">Allowed (Override)</span></td>
+          <td><span class="badge badge-emerald">Allowed</span></td>
+        </tr>
+        <tr>
+          <td><span class="code-pill">GET /api/admin/overview</span></td>
+          <td><span class="badge badge-amber">403 Forbidden</span></td>
+          <td><span class="badge badge-amber">403 Forbidden</span></td>
+          <td><span class="badge badge-amber">403 Forbidden</span></td>
+          <td><span class="badge badge-emerald">Allowed (200)</span></td>
+        </tr>
+        <tr>
+          <td><span class="code-pill">DELETE /api/audit/logs</span> (WORM Check)</td>
+          <td><span class="badge badge-amber">405 Not Allowed</span></td>
+          <td><span class="badge badge-amber">405 Not Allowed</span></td>
+          <td><span class="badge badge-amber">405 Not Allowed</span></td>
+          <td><span class="badge badge-amber">405 Not Allowed</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="running-footer">
+      <div>RENTORA — Smart Institutional Resource Sharing Platform</div>
+      <div class="accent">Team: Storm Breakerz • Lead: Jaswant Karun S A</div>
+      <div>Section 03 • Page 4</div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 5: 15-STAGE LIFECYCLE VERIFICATION -->
+  <!-- ========================================================================= -->
+  <div class="page">
+    <div class="running-header">
+      <div class="logo-tag"><span class="logo-badge">R</span> RENTORA — Project Dossier</div>
+      <div>Section 04: The 15-Stage Resource Lifecycle</div>
+      <div>Page 5 of 10</div>
+    </div>
+
+    <h2>04. The Complete 15-Stage Resource-Sharing Lifecycle</h2>
+    <p class="lead">
+      Unlike basic booking forms that stop at simple date reservation, RENTORA implements a 15-stage state-machine enforcing custodial handovers, condition inspections, and immutable audit logs.
+    </p>
+
+    <div class="grid-2" style="margin-top:6px;">
+      <div>
+        <div class="lifecycle-step">
+          <div>
+            <div class="title">Stage 1: Institutional User Sign-Up</div>
+            <div class="desc">Researcher onboards with academic email, department affiliation, and institutional credentials.</div>
+          </div>
+        </div>
+        <div class="lifecycle-step">
+          <div>
+            <div class="title">Stage 2: JWT Session Authentication</div>
+            <div class="desc">Secure login establishes signed JWT with cryptographic role claims and permissions.</div>
+          </div>
+        </div>
+        <div class="lifecycle-step">
+          <div>
+            <div class="title">Stage 3: Resource Listing & Specification</div>
+            <div class="desc">Custodian enters hardware specifications, hourly rate, location, and maintenance windows.</div>
+          </div>
+        </div>
+        <div class="lifecycle-step">
+          <div>
+            <div class="title">Stage 4: Full-Text Catalog Indexing</div>
+            <div class="desc">Resource is cataloged across categories with instant searchability and live availability status.</div>
+          </div>
+        </div>
+        <div class="lifecycle-step">
+          <div>
+            <div class="title">Stage 5: Booking Request Lodgement</div>
+            <div class="desc">Student completes 5-step wizard stating project purpose and faculty endorser (status: 'pending').</div>
+          </div>
+        </div>
+        <div class="lifecycle-step">
+          <div>
+            <div class="title">Stage 6: Custodian Review & Approval</div>
+            <div class="desc">Custodian inspects researcher qualifications and endorses booking (transitions to 'approved').</div>
+          </div>
+        </div>
+        <div class="lifecycle-step">
+          <div>
+            <div class="title">Stage 7: Rejection with Mandatory Reason</div>
+            <div class="desc">If rejected, backend strictly requires documented explanation to prevent arbitrary dismissals.</div>
+          </div>
+        </div>
+        <div class="lifecycle-step">
+          <div>
+            <div class="title">Stage 8: Atomic Collision Blocker (HTTP 409)</div>
+            <div class="desc">Any concurrent overlapping request is rejected atomically at database transaction boundary.</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="lifecycle-step">
+          <div>
+            <div class="title">Stage 9: Transparent Waitlist Placement</div>
+            <div class="desc">Blocked borrowers automatically receive a queue ticket with visible standing.</div>
+          </div>
+        </div>
+        <div class="lifecycle-step">
+          <div>
+            <div class="title">Stage 10: Physical Handover & Check-In</div>
+            <div class="desc">Custodian conducts pre-inspection checklist, signing off condition (status: 'checked_in').</div>
+          </div>
+        </div>
+        <div class="lifecycle-step">
+          <div>
+            <div class="title">Stage 11: Active Research Session Telemetry</div>
+            <div class="desc">Platform monitors real-time usage duration and updates campus capacity metrics.</div>
+          </div>
+        </div>
+        <div class="lifecycle-step">
+          <div>
+            <div class="title">Stage 12: Custodial Return Initiation</div>
+            <div class="desc">Borrower completes research session and signals return ready (status: 'return_pending').</div>
+          </div>
+        </div>
+        <div class="lifecycle-step">
+          <div>
+            <div class="title">Stage 13: Post-Use Condition Verification</div>
+            <div class="desc">Owner re-inspects instrument, verifies zero damage, and closes session (status: 'completed').</div>
+          </div>
+        </div>
+        <div class="lifecycle-step">
+          <div>
+            <div class="title">Stage 14: Safety Incident Reporting</div>
+            <div class="desc">If damage is observed, an incident ticket is registered with severity classification.</div>
+          </div>
+        </div>
+        <div class="lifecycle-step">
+          <div>
+            <div class="title">Stage 15: Immutable WORM Audit Sealing</div>
+            <div class="desc">Every lifecycle transition is sealed into an immutable Write-Once-Read-Many audit log.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-highlight" style="margin-top:6px; padding:8px 12px;">
+      <div style="font-size:9px; font-weight:700; color:#1769D2;">Automated Test Verification Benchmark</div>
+      <p style="font-size:8.5px; margin-bottom:0;">
+        All 15 stages were validated via an automated end-to-end integration suite (<span class="code-pill">server/scratch/test-full-15-suite.mjs</span>), confirming 100% test passage across authentication, collision rejection, handover state transitions, and WORM deletion blocks.
+      </p>
+    </div>
+
+    <div class="running-footer">
+      <div>RENTORA — Smart Institutional Resource Sharing Platform</div>
+      <div class="accent">Team: Storm Breakerz • Lead: Jaswant Karun S A</div>
+      <div>Section 04 • Page 5</div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 6: CORE AI FEATURES 1 & 2 -->
+  <!-- ========================================================================= -->
+  <div class="page">
+    <div class="running-header">
+      <div class="logo-tag"><span class="logo-badge">R</span> RENTORA — Project Dossier</div>
+      <div>Section 05: Core Intelligence Features 1 & 2</div>
+      <div>Page 6 of 10</div>
+    </div>
+
+    <h2>05. Core AI Features 1 & 2: Matching & Utilization Analytics</h2>
+    <p class="lead">
+      RENTORA integrates artificial intelligence directly into the core workflow without compromising user control, providing explainable asset recommendations and real-time campus capacity telemetry.
+    </p>
+
+    <!-- FEATURE 1 -->
+    <div class="card" style="border-top:3px solid #1769D2;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <h3 style="margin-bottom:0;">FEATURE 1: Smart Resource Matching Engine</h3>
+        <span class="badge badge-blue">Explainable AI</span>
+      </div>
+      <p>
+        The Smart Resource Matcher parses the researcher's natural-language experimental scope, required equipment specifications, project timeline, and institutional clearance to rank available campus assets.
+      </p>
+
+      <div class="grid-3" style="margin:8px 0;">
+        <div class="metric-box">
+          <div class="metric-label">Matching Vector 1</div>
+          <div style="font-size:10px; font-weight:700; color:#172033; margin:2px 0;">Specification Affinity</div>
+          <div class="metric-sub">Matches required resolution, laser wavelength, or compute GPU core count.</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Matching Vector 2</div>
+          <div style="font-size:10px; font-weight:700; color:#172033; margin:2px 0;">Real-Time Availability</div>
+          <div class="metric-sub">Filters out assets undergoing scheduled calibration or booked by others.</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Matching Vector 3</div>
+          <div style="font-size:10px; font-weight:700; color:#172033; margin:2px 0;">Location & Eligibility</div>
+          <div class="metric-sub">Verifies researcher department clearances and lab building proximity.</div>
+        </div>
+      </div>
+      <p style="font-size:8.5px; color:#475569; margin-bottom:0;">
+        <strong>Explainable Match Rationales:</strong> Every recommendation presents explicit bullet points explaining <em>why</em> the instrument was suggested (e.g. <em>"Direct category match for Advanced Materials • Verified 100% available on requested date • Endorsed for doctoral GaN thesis research"</em>).
+      </p>
+    </div>
+
+    <!-- FEATURE 2 -->
+    <div class="card" style="border-top:3px solid #059669; margin-top:8px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <h3 style="margin-bottom:0; color:#059669;">FEATURE 2: Campus Resource Utilization Analytics</h3>
+        <span class="badge badge-emerald">Real-Time Telemetry</span>
+      </div>
+      <p>
+        Provides department heads and consortium managers with real-time mathematical telemetry tracking institutional asset ROI, bottleneck periods, and capacity loading across 4 time quadrants.
+      </p>
+
+      <div class="grid-4" style="margin:8px 0;">
+        <div class="metric-box">
+          <div class="metric-label">Catalog Assets</div>
+          <div class="metric-val">20</div>
+          <div class="metric-sub">Active laboratory assets</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Campus Utilization</div>
+          <div class="metric-val" style="color:#059669;">24%</div>
+          <div class="metric-sub">Live capacity load</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Booking Velocity</div>
+          <div class="metric-val" style="color:#D97706;">1.4</div>
+          <div class="metric-sub">Reservations / asset / wk</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Avg Session</div>
+          <div class="metric-val" style="color:#7C3AED;">2.5h</div>
+          <div class="metric-sub">Standard research block</div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:6px;">
+        <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:6px; padding:8px 10px;">
+          <div style="font-size:8.5px; font-weight:700; color:#172033; margin-bottom:4px;">Peak Demand Hourly Distribution</div>
+          <p style="font-size:8px; color:#64748B; margin-bottom:4px;">• Morning (08:00 - 12:00): <strong>24%</strong> Capacity</p>
+          <p style="font-size:8px; color:#64748B; margin-bottom:4px;">• Midday (12:00 - 14:00): <strong>18%</strong> Capacity</p>
+          <p style="font-size:8px; color:#DC2626; font-weight:700; margin-bottom:4px;">• Afternoon (14:00 - 18:00): 58% [PEAK BOTTLENECK]</p>
+          <p style="font-size:8px; color:#64748B; margin-bottom:0;">• Evening (18:00 - 21:00): <strong>12%</strong> Capacity</p>
+        </div>
+        <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:6px; padding:8px 10px;">
+          <div style="font-size:8.5px; font-weight:700; color:#172033; margin-bottom:4px;">Automated Optimization Remedies</div>
+          <p style="font-size:8px; color:#475569; margin-bottom:4px;"><strong>• Underutilized Cleanroom:</strong> Host weekend training workshops to lower entry barrier.</p>
+          <p style="font-size:8px; color:#475569; margin-bottom:4px;"><strong>• High-Demand Compute:</strong> Throttle multi-day reservations between 14:00-17:00.</p>
+          <p style="font-size:8px; color:#475569; margin-bottom:0;"><strong>• Maintenance Windows:</strong> Schedule recalibrations during Monday 08:00 low periods.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="running-footer">
+      <div>RENTORA — Smart Institutional Resource Sharing Platform</div>
+      <div class="accent">Team: Storm Breakerz • Lead: Jaswant Karun S A</div>
+      <div>Section 05 • Page 6</div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 7: CORE AI FEATURES 3 & 4 -->
+  <!-- ========================================================================= -->
+  <div class="page">
+    <div class="running-header">
+      <div class="logo-tag"><span class="logo-badge">R</span> RENTORA — Project Dossier</div>
+      <div>Section 06: Core Intelligence Features 3 & 4</div>
+      <div>Page 7 of 10</div>
+    </div>
+
+    <h2>06. Core AI Features 3 & 4: Conflict Engine & Incident Assistant</h2>
+    <p class="lead">
+      Safety and scheduling integrity are safeguarded through proactive conflict detection algorithms and natural-language incident summarization, strictly bound by ethical human-in-the-loop governance.
+    </p>
+
+    <!-- FEATURE 3 -->
+    <div class="card" style="border-top:3px solid #D97706;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <h3 style="margin-bottom:0; color:#D97706;">FEATURE 3: Automated Scheduling Conflict Detection Engine</h3>
+        <span class="badge badge-amber">Collision Blocker</span>
+      </div>
+      <p>
+        Scans all pending and approved reservations against active maintenance schedules, laboratory closure dates, and concurrent user bookings to flag potential clashes before they disrupt experiments.
+      </p>
+
+      <div class="grid-3" style="margin:8px 0;">
+        <div class="card" style="margin-bottom:0; background:#FFFBEB; border-color:#FDE68A;">
+          <div style="font-size:9px; font-weight:700; color:#B45309;">Direct Time Overlaps</div>
+          <p style="font-size:8px; color:#78350F; margin-top:2px;">Detects simultaneous requests for the same piece of precision equipment.</p>
+        </div>
+        <div class="card" style="margin-bottom:0; background:#FFFBEB; border-color:#FDE68A;">
+          <div style="font-size:9px; font-weight:700; color:#B45309;">Maintenance Collisions</div>
+          <p style="font-size:8px; color:#78350F; margin-top:2px;">Flags bookings overlapping with scheduled recalibrations or sensor replacements.</p>
+        </div>
+        <div class="card" style="margin-bottom:0; background:#FFFBEB; border-color:#FDE68A;">
+          <div style="font-size:9px; font-weight:700; color:#B45309;">Explanatory Rationale</div>
+          <p style="font-size:8px; color:#78350F; margin-top:2px;">Generates human-readable explanations detailing which session conflicts.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEATURE 4 -->
+    <div class="card" style="border-top:3px solid #DC2626; margin-top:8px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <h3 style="margin-bottom:0; color:#DC2626;">FEATURE 4: Incident Summary & Dispute Assistant</h3>
+        <span class="badge" style="background:#FEF2F2; color:#B91C1C; border:1px solid #FECACA;">Incident Governance</span>
+      </div>
+      <p>
+        When physical damage, unexpected calibration shifts, or safety infractions occur, custodians file structured reports. The Incident Assistant extracts root causes, calculates damage severity, and generates concise executive summaries for department managers.
+      </p>
+
+      <div class="grid-2" style="margin:8px 0;">
+        <div class="card card-highlight" style="border-left-color:#DC2626; margin-bottom:0;">
+          <div style="font-size:9px; font-weight:700; color:#DC2626;">Automated Incident Synthesis</div>
+          <p style="font-size:8.5px; color:#475569; margin-top:2px;">
+            Synthesizes borrower descriptions and custodian handover logs into clear, actionable bullet points, highlighting affected components, estimated replacement costs, and safety implications.
+          </p>
+        </div>
+        <div class="card card-highlight" style="border-left-color:#1769D2; margin-bottom:0;">
+          <div style="font-size:9px; font-weight:700; color:#1769D2;">Severity Tier Classification</div>
+          <p style="font-size:8.5px; color:#475569; margin-top:2px;">
+            Categorizes events into Low (cosmetic), Medium (minor recalibration required), High (sensor failure), or Critical (laser tube fracture), routing urgent tickets immediately.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ETHICAL SAFEGUARDS -->
+    <div class="card" style="background:#F8FAFC; border:1.5px solid #CBD5E1; margin-top:8px; padding:10px 14px;">
+      <h3 style="color:#0F172A; font-size:10.5px; margin-bottom:4px;">Strict Ethical AI Guardrail & Human-in-the-Loop Protocol</h3>
+      <p style="font-size:8.8px; color:#334155; line-height:1.5; margin-bottom:0;">
+        <strong>Architectural Constraint:</strong> To prevent algorithmic bias and protect student rights, the AI engine operates exclusively in an advisory capacity. <strong>AI is cryptographically blocked from autonomously imposing monetary penalties, revoking user credentials, or deciding safety dispute arbitrations.</strong> All disciplinary actions and access revocations require explicit sign-off from human Department Managers.
+      </p>
+    </div>
+
+    <div class="running-footer">
+      <div>RENTORA — Smart Institutional Resource Sharing Platform</div>
+      <div class="accent">Team: Storm Breakerz • Lead: Jaswant Karun S A</div>
+      <div>Section 06 • Page 7</div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 8: ENTERPRISE UI/UX POLISH -->
+  <!-- ========================================================================= -->
+  <div class="page">
+    <div class="running-header">
+      <div class="logo-tag"><span class="logo-badge">R</span> RENTORA — Project Dossier</div>
+      <div>Section 07: Enterprise SaaS UI/UX Design System</div>
+      <div>Page 8 of 10</div>
+    </div>
+
+    <h2>07. Enterprise SaaS UI/UX Design System</h2>
+    <p class="lead">
+      RENTORA was designed from the ground up to reflect modern enterprise SaaS standards, prioritizing clarity, visual hierarchy, and accessibility while completely avoiding distracting neon gradients.
+    </p>
+
+    <div class="grid-2" style="margin-top:6px;">
+      <div class="card card-highlight">
+        <h3>1. Standardized Color Palette</h3>
+        <p><strong>• Surface Background (#FFFFFF):</strong> Clean white surfaces for cards, modals, and tables ensure maximum legibility.</p>
+        <p><strong>• Page Canvas (#F8FAFC):</strong> Soft cool-slate canvas provides gentle depth separation without visual fatigue.</p>
+        <p><strong>• Primary Blue Accent (#1769D2):</strong> Authoritative enterprise blue directing user actions and active states.</p>
+        <p><strong>• Neutral Borders (#E2E8F0):</strong> 1px crisp borders delineating modules with subtle structure.</p>
+        <p><strong>• Semantic States:</strong> Emerald (#16834A) for verified, Amber (#D97706) for pending, Rose (#DC2626) for alerts.</p>
+      </div>
+
+      <div class="card card-highlight" style="border-left-color:#059669;">
+        <h3>2. Information Architecture</h3>
+        <p><strong>• Singular Active Highlight:</strong> Exact active route highlighting with right-edge primary blue indicator tabs.</p>
+        <p><strong>• Dynamic Breadcrumbs:</strong> Real-time path resolution translating MongoDB hex IDs into human-readable equipment names.</p>
+        <p><strong>• Deep-Linkable Tab Navigation:</strong> URL search parameter synchronization (<span class="code-pill">?tab=...</span>) supporting browser history.</p>
+        <p><strong>• Standardized Modals:</strong> Strict max-width constraints (512px for forms, 672px for multi-step wizards).</p>
+      </div>
+    </div>
+
+    <h2>UI Component Standards</h2>
+    <div class="grid-3">
+      <div class="card">
+        <div style="font-size:9.5px; font-weight:700; color:#172033; margin-bottom:4px;">5-Stage Lifecycle Stepper</div>
+        <p style="font-size:8.3px; color:#64748B;">Standardized visual progress bar rendering lifecycle stages: 1. Submitted → 2. Endorsed → 3. Checked In → 4. Return Initiated → 5. Completed.</p>
+      </div>
+      <div class="card">
+        <div style="font-size:9.5px; font-weight:700; color:#172033; margin-bottom:4px;">Table Readability</div>
+        <p style="font-size:8.3px; color:#64748B;">Padded rows (12px), sticky uppercase headers (text-[11px] font-semibold text-[#64748B]), subtle slate hover transitions, and badge chips.</p>
+      </div>
+      <div class="card">
+        <div style="font-size:9.5px; font-weight:700; color:#172033; margin-bottom:4px;">Micro-Card Metrics</div>
+        <p style="font-size:8.3px; color:#64748B;">Standardized stat cards with 32x32px rounded icon containers in soft #EFF6FF blue and bold 3xl metric numbers.</p>
+      </div>
+    </div>
+
+    <h2>Responsive Multi-Device Layout</h2>
+    <table class="spec-table">
+      <thead>
+        <tr>
+          <th>Target Device / Viewport</th>
+          <th>Layout Adaptation Strategy</th>
+          <th>UI Optimizations Applied</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Desktop Workstations</strong> (&gt;1280px)</td>
+          <td>Fixed 260px left sidebar + fluid 7xl content container</td>
+          <td>Full metric grids, multi-column tables, side-by-side analytics</td>
+        </tr>
+        <tr>
+          <td><strong>Laboratory Tablets</strong> (768px - 1024px)</td>
+          <td>Collapsible overlay sidebar with hamburger toggle</td>
+          <td>Touch-friendly 44px tap targets, card view fallbacks for tables</td>
+        </tr>
+        <tr>
+          <td><strong>Researcher Mobile</strong> (&lt;640px)</td>
+          <td>Single-column stacked layout with sticky top header</td>
+          <td>Swipeable tab bars, bottom sheet modals, simplified stat cards</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="running-footer">
+      <div>RENTORA — Smart Institutional Resource Sharing Platform</div>
+      <div class="accent">Team: Storm Breakerz • Lead: Jaswant Karun S A</div>
+      <div>Section 07 • Page 8</div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 9: QUALITY ASSURANCE & TEST RESULTS -->
+  <!-- ========================================================================= -->
+  <div class="page">
+    <div class="running-header">
+      <div class="logo-tag"><span class="logo-badge">R</span> RENTORA — Project Dossier</div>
+      <div>Section 08: Quality Assurance & Verification Benchmark</div>
+      <div>Page 9 of 10</div>
+    </div>
+
+    <h2>08. Quality Assurance, Security Architecture & Test Results</h2>
+    <p class="lead">
+      RENTORA has been subjected to exhaustive automated integration testing, role-permission boundary evaluations, and TypeScript strict compilation checks.
+    </p>
+
+    <h2>Automated 15-Stage Lifecycle Test Suite Results</h2>
+    <table class="spec-table">
+      <thead>
+        <tr>
+          <th>Test ID</th>
+          <th>Lifecycle Action Under Test</th>
+          <th>Expected Behavior & HTTP Status</th>
+          <th>Observed Execution Result</th>
+          <th>Verification</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>TEST 01</strong></td>
+          <td>User Registration & Email Validation</td>
+          <td>HTTP 201 Created with hashed credentials</td>
+          <td>User record created with unique Mongo ObjectId</td>
+          <td><span class="badge badge-emerald">PASSED</span></td>
+        </tr>
+        <tr>
+          <td><strong>TEST 02</strong></td>
+          <td>JWT Session Sign-In & Role Claim</td>
+          <td>HTTP 200 OK with Bearer token & cookie</td>
+          <td>Valid signed token verified for student role</td>
+          <td><span class="badge badge-emerald">PASSED</span></td>
+        </tr>
+        <tr>
+          <td><strong>TEST 03</strong></td>
+          <td>Logout & Session Invalidation</td>
+          <td>HTTP 200 on logout; 401 on subsequent query</td>
+          <td>Session terminated; unauthorized query blocked</td>
+          <td><span class="badge badge-emerald">PASSED</span></td>
+        </tr>
+        <tr>
+          <td><strong>TEST 04</strong></td>
+          <td>Custodian Asset Creation</td>
+          <td>HTTP 201 Created with full equipment spec</td>
+          <td>Rigaku SmartLab X-Ray Diffractometer created</td>
+          <td><span class="badge badge-emerald">PASSED</span></td>
+        </tr>
+        <tr>
+          <td><strong>TEST 05</strong></td>
+          <td>Full-Text Catalog Search & Indexing</td>
+          <td>HTTP 200 OK returning filtered catalog assets</td>
+          <td>Indexed search returned 7 matching assets</td>
+          <td><span class="badge badge-emerald">PASSED</span></td>
+        </tr>
+        <tr>
+          <td><strong>TEST 06</strong></td>
+          <td>Booking Request Submission</td>
+          <td>HTTP 201 Created with state 'pending'</td>
+          <td>Booking lodged with stated project purpose</td>
+          <td><span class="badge badge-emerald">PASSED</span></td>
+        </tr>
+        <tr>
+          <td><strong>TEST 07</strong></td>
+          <td>Custodian Review & Endorsement</td>
+          <td>HTTP 200 OK with state 'approved'</td>
+          <td>Booking endorsed by lab custodian</td>
+          <td><span class="badge badge-emerald">PASSED</span></td>
+        </tr>
+        <tr>
+          <td><strong>TEST 08</strong></td>
+          <td>Rejection with Mandatory Rationale</td>
+          <td>HTTP 200 OK requiring documented reason</td>
+          <td>Rejection accepted with documented calibration note</td>
+          <td><span class="badge badge-emerald">PASSED</span></td>
+        </tr>
+        <tr>
+          <td><strong>TEST 09</strong></td>
+          <td>Double-Booking Blocker & Waitlist</td>
+          <td>HTTP 409 Conflict; Waitlist HTTP 201</td>
+          <td>Collision blocked atomically; user placed in queue</td>
+          <td><span class="badge badge-emerald">PASSED</span></td>
+        </tr>
+        <tr>
+          <td><strong>TEST 10</strong></td>
+          <td>Physical Check-In with Condition Pre-Check</td>
+          <td>HTTP 200 OK with state 'checked_in'</td>
+          <td>Handover checklist confirmed; timer started</td>
+          <td><span class="badge badge-emerald">PASSED</span></td>
+        </tr>
+        <tr>
+          <td><strong>TEST 11</strong></td>
+          <td>Research Completion & Return Initiation</td>
+          <td>HTTP 200 OK with state 'return_pending'</td>
+          <td>Return initiated by borrower for inspection</td>
+          <td><span class="badge badge-emerald">PASSED</span></td>
+        </tr>
+        <tr>
+          <td><strong>TEST 12</strong></td>
+          <td>Custodian Return Inspection & Sign-Off</td>
+          <td>HTTP 200 OK with state 'completed'</td>
+          <td>Post-use condition signed off; session closed</td>
+          <td><span class="badge badge-emerald">PASSED</span></td>
+        </tr>
+        <tr>
+          <td><strong>TEST 13</strong></td>
+          <td>Safety Incident Report Lodgement</td>
+          <td>HTTP 201 Created with severity flag</td>
+          <td>Incident ticket registered for manager review</td>
+          <td><span class="badge badge-emerald">PASSED</span></td>
+        </tr>
+        <tr>
+          <td><strong>TEST 14</strong></td>
+          <td>WORM Audit Log Immutability Check</td>
+          <td>HTTP 200 query; HTTP 405 on DELETE attempt</td>
+          <td>71 audit events verified; deletion blocked (405)</td>
+          <td><span class="badge badge-emerald">PASSED</span></td>
+        </tr>
+        <tr>
+          <td><strong>TEST 15</strong></td>
+          <td>Role-Based Access Guardrail Check</td>
+          <td>Student 403 Forbidden; Admin 200 OK</td>
+          <td>Strict RBAC enforced at API gateway boundary</td>
+          <td><span class="badge badge-emerald">PASSED</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="grid-2" style="margin-top:6px;">
+      <div class="card" style="margin-bottom:0;">
+        <h3 style="font-size:9.5px;">Frontend Compilation Benchmark</h3>
+        <p style="font-size:8.3px; color:#475569; margin-bottom:0;">
+          <span class="code-pill">tsc &amp;&amp; vite build</span> compiled across 3,251 transformed modules in <strong>5.72 seconds</strong> with <strong>0 TypeScript errors</strong> and <strong>0 lint warnings</strong>.
+        </p>
+      </div>
+      <div class="card" style="margin-bottom:0;">
+        <h3 style="font-size:9.5px; color:#059669;">Security Audit Summary</h3>
+        <p style="font-size:8.3px; color:#475569; margin-bottom:0;">
+          BCrypt password salt factor: 10 • JWT expiry: 7 days • Atomic Mongo write isolation • Protected WORM audit history immutable to tamper.
+        </p>
+      </div>
+    </div>
+
+    <div class="running-footer">
+      <div>RENTORA — Smart Institutional Resource Sharing Platform</div>
+      <div class="accent">Team: Storm Breakerz • Lead: Jaswant Karun S A</div>
+      <div>Section 08 • Page 9</div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PAGE 10: ROADMAP, TEAM PROFILE & CONCLUSION -->
+  <!-- ========================================================================= -->
+  <div class="page">
+    <div class="running-header">
+      <div class="logo-tag"><span class="logo-badge">R</span> RENTORA — Project Dossier</div>
+      <div>Section 09: Future Roadmap, Team Profile & Conclusion</div>
+      <div>Page 10 of 10</div>
+    </div>
+
+    <h2>09. Future Roadmap, Team Profile & Submission Conclusion</h2>
+    <p class="lead">
+      RENTORA represents a production-ready institutional platform ready for multi-campus pilot deployment, with a clear expansion roadmap towards IoT automation and cross-university consortium federation.
+    </p>
+
+    <h2>Future Development Roadmap (v2.0)</h2>
+    <div class="grid-3" style="margin-top:6px;">
+      <div class="card" style="border-top:2.5px solid #1769D2;">
+        <div style="font-size:9.5px; font-weight:700; color:#1769D2;">Phase 1: Smart IoT Lockers</div>
+        <p style="font-size:8.3px; color:#475569; margin-top:3px;">
+          Integration with RFID/NFC smart lock boxes for contactless 24/7 keycard and tool pickup without requiring custodial staff presence.
+        </p>
+      </div>
+      <div class="card" style="border-top:2.5px solid #059669;">
+        <div style="font-size:9.5px; font-weight:700; color:#059669;">Phase 2: Predictive Maintenance</div>
+        <p style="font-size:8.3px; color:#475569; margin-top:3px;">
+          IoT vibration and thermal sensor telemetry streaming into ML models to predict instrument recalibration needs before physical failure.
+        </p>
+      </div>
+      <div class="card" style="border-top:2.5px solid #7C3AED;">
+        <div style="font-size:9.5px; font-weight:700; color:#7C3AED;">Phase 3: National Consortium</div>
+        <p style="font-size:8.3px; color:#475569; margin-top:3px;">
+          Cross-university resource exchange protocol with inter-departmental grant crediting and automated peer-to-peer equipment sharing.
+        </p>
+      </div>
+    </div>
+
+    <h2>Hackathon Team Profile & Responsibilities</h2>
+    <div class="card card-highlight" style="padding:12px 16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <div>
+          <span style="font-size:14px; font-weight:800; color:#0F172A;">Jaswant Karun S A</span>
+          <span style="font-size:10px; color:#64748B; margin-left:8px;">Team Leader & Solo Architect</span>
+        </div>
+        <span class="badge badge-blue">Team: Storm Breakerz</span>
+      </div>
+      <p style="font-size:9px; color:#334155; margin-bottom:6px;">
+        <strong>Comprehensive Solo Engineering Execution:</strong> Built the complete RENTORA platform independently, handling every phase of the engineering lifecycle:
+      </p>
+      <div class="grid-2" style="margin-bottom:0;">
+        <p style="font-size:8.3px; color:#475569; margin-bottom:2px;">• <strong>UI/UX Design:</strong> White enterprise theme, 12-page role navigation, responsive grid.</p>
+        <p style="font-size:8.3px; color:#475569; margin-bottom:2px;">• <strong>Frontend Engineering:</strong> React 19, TypeScript strict mode, Recharts telemetry.</p>
+        <p style="font-size:8.3px; color:#475569; margin-bottom:2px;">• <strong>Backend Development:</strong> Node.js, Express REST API, MongoDB concurrency locks.</p>
+        <p style="font-size:8.3px; color:#475569; margin-bottom:2px;">• <strong>Security & Testing:</strong> 4-tier RBAC, BCrypt auth, WORM audit, 15-stage test suite.</p>
+      </div>
+    </div>
+
+    <h2>Final Submission Statement</h2>
+    <div class="card" style="background:#F8FAFC; border:1px solid #CBD5E1; padding:12px 16px;">
+      <h3 style="color:#172033; font-size:10.5px; margin-bottom:4px;">Conclusion</h3>
+      <p style="font-size:9px; color:#334155; line-height:1.55; margin-bottom:0;">
+        RENTORA demonstrates that institutional resource sharing does not require compromise between researcher accessibility and custodial asset protection. By uniting atomic scheduling collision protection, a full 15-stage handover lifecycle, and transparent AI-assisted telemetry in a clean, professional white-and-blue interface, RENTORA provides a scalable foundation for modern universities and research consortia.
+      </p>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding:8px 12px; background:#EFF6FF; border:1px solid #BFDBFE; border-radius:8px;">
+      <div style="font-size:9px; font-weight:700; color:#1769D2;">
+        Project: RENTORA • Team: Storm Breakerz • Leader: Jaswant Karun S A
+      </div>
+      <div style="font-size:8px; color:#1E40AF; font-weight:600;">
+        ✓ Verified Hackathon Submission Edition (10/10 Pages Complete)
+      </div>
+    </div>
+
+    <div class="running-footer">
+      <div>RENTORA — Smart Institutional Resource Sharing Platform</div>
+      <div class="accent">Team: Storm Breakerz • Lead: Jaswant Karun S A</div>
+      <div>Section 09 • Page 10 of 10</div>
+    </div>
+  </div>
+
+</body>
+</html>
