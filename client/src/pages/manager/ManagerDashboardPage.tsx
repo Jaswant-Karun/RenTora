@@ -15,6 +15,9 @@ import {
   resolveDisputeApi,
   getFairAllocationSettingsApi,
   updateFairAllocationSettingsApi,
+  getManagerBookingsApi,
+  getManagerWaitlistsApi,
+  promoteWaitlistBookingApi,
   ManagerStatsData,
 } from '../../api/manager.api';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
@@ -23,6 +26,8 @@ import {
   Building2,
   BarChart3,
   CheckCircle2,
+  BookOpen,
+  Inbox,
   XCircle,
   Users,
   ShieldCheck,
