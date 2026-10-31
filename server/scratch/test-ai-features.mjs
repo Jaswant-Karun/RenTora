@@ -63,7 +63,7 @@ async function runTests() {
   console.log('--- TEST 4: Scheduling Conflict Detection ---');
   // First fetch an existing resource
   const resList = await fetch(`${API_BASE}/resources?limit=1`).then(r => r.json());
-  const sampleRes = resList.data?.resources?.[0];
+  const sampleRes = resList.data?.[0];
   if (!sampleRes) {
     throw new Error('No resources found for conflict testing');
   }
