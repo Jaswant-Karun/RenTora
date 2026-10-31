@@ -1,15 +1,24 @@
-import React, { useState } from 'react';
-import { Settings, Shield, Bell, Check } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Settings, Shield, Bell, Check, Lock, Smartphone, Mail } from 'lucide-react';
 import { Button } from '../components/common/Button';
+import { useToast } from '../context/ToastContext';
 
 export const SettingsPage: React.FC = () => {
-  const [emailAlerts, setEmailAlerts] = useState(true);
-  const [smsAlerts, setSmsAlerts] = useState(false);
+  const { toast } = useToast();
+  const [emailAlerts, setEmailAlerts] = useState(() => {
+    return localStorage.getItem('rentora_pref_email') !== 'false';
+  });
+  const [smsAlerts, setSmsAlerts] = useState(() => {
+    return localStorage.getItem('rentora_pref_sms') === 'true';
+  });
   const [saved, setSaved] = useState(false);
 
   const handleSave = () => {
+    localStorage.setItem('rentora_pref_email', String(emailAlerts));
+    localStorage.setItem('rentora_pref_sms', String(smsAlerts));
     setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    toast.success('Notification & security preferences saved successfully');
+    setTimeout(() => setSaved(false), 2500);
   };
 
   return (
@@ -18,7 +27,7 @@ export const SettingsPage: React.FC = () => {
       <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm">
         <h1 className="text-xl font-bold text-[#172033] tracking-tight">Account Settings & Preferences</h1>
         <p className="text-xs text-[#64748B] mt-0.5">
-          Manage your notification alerts, security preferences, and active credentials.
+          Manage your notification alerts, security preferences, and active institutional credentials.
         </p>
       </div>
 
@@ -28,14 +37,19 @@ export const SettingsPage: React.FC = () => {
         <div className="space-y-3">
           <h2 className="text-sm font-semibold text-[#172033] flex items-center gap-2">
             <Bell className="w-4 h-4 text-[#1769D2]" />
-            Notification Preferences
+            Notification Channels
           </h2>
 
           <div className="space-y-2 text-xs">
-            <label className="flex items-center justify-between p-3 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] cursor-pointer hover:bg-slate-100 transition-colors">
-              <div>
-                <span className="font-medium text-[#172033] block">Email Reservation Confirmations</span>
-                <span className="text-[#64748B] text-[11px]">Receive pass confirmations and custodian decisions via institutional email</span>
+            <label className="flex items-center justify-between p-3.5 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] cursor-pointer hover:bg-slate-100 transition-colors">
+              <div className="flex items-start gap-2.5">
+                <Mail className="w-4 h-4 text-[#1769D2] mt-0.5 shrink-0" />
+                <div>
+                  <span className="font-medium text-[#172033] block">Email Reservation Confirmations</span>
+                  <span className="text-[#64748B] text-[11px]">
+                    Receive pass confirmations, queue promotions, and custodian decisions via verified institutional email
+                  </span>
+                </div>
               </div>
               <input
                 type="checkbox"
@@ -45,10 +59,15 @@ export const SettingsPage: React.FC = () => {
               />
             </label>
 
-            <label className="flex items-center justify-between p-3 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] cursor-pointer hover:bg-slate-100 transition-colors">
-              <div>
-                <span className="font-medium text-[#172033] block">SMS Urgent Maintenance Alerts</span>
-                <span className="text-[#64748B] text-[11px]">Receive SMS notices if equipment experiences emergency downtime</span>
+            <label className="flex items-center justify-between p-3.5 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] cursor-pointer hover:bg-slate-100 transition-colors">
+              <div className="flex items-start gap-2.5">
+                <Smartphone className="w-4 h-4 text-[#D97706] mt-0.5 shrink-0" />
+                <div>
+                  <span className="font-medium text-[#172033] block">SMS Urgent Maintenance Alerts</span>
+                  <span className="text-[#64748B] text-[11px]">
+                    Receive critical SMS notices if equipment experiences emergency downtime or recall
+                  </span>
+                </div>
               </div>
               <input
                 type="checkbox"
@@ -69,7 +88,7 @@ export const SettingsPage: React.FC = () => {
           <div className="p-3.5 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-xs space-y-1">
             <p className="font-medium text-[#172033]">JWT Encrypted Session with httpOnly Cookie Storage</p>
             <p className="text-[11px] text-[#64748B]">
-              Your session is cryptographically signed and protected with sameSite cookie policies against CSRF vectors.
+              Your session is cryptographically signed and protected with sameSite none and secure flags across the federated network.
             </p>
           </div>
         </div>
@@ -82,7 +101,7 @@ export const SettingsPage: React.FC = () => {
             </span>
           )}
           <Button variant="primary" size="sm" onClick={handleSave}>
-            Save Changes
+            Save Preferences
           </Button>
         </div>
       </div>
