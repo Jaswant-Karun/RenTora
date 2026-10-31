@@ -241,6 +241,7 @@ class TrustPassService {
             cleanliness: snapshot.cleanliness,
             meterReading: snapshot.meterReading,
             observations: snapshot.conditionNotes,
+            conditionNotes: snapshot.conditionNotes,
             photos: snapshot.photos,
         });
         // Central Audit Log
@@ -365,11 +366,12 @@ class TrustPassService {
             bookingId: booking._id,
             inspectorName: custodianUser.name,
             inspectorRole: custodianUser.role,
-            type: 'return',
+            type: 'check_out',
             operationalStatus: snapshot.operationalStatus,
             cleanliness: snapshot.cleanliness,
             meterReading: snapshot.meterReading,
             observations: snapshot.conditionNotes,
+            conditionNotes: snapshot.conditionNotes,
             photos: snapshot.photos,
         });
         // Central Audit Log

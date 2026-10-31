@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Booking } from '../../types/resource';
 import { StatusBadge } from '../common/StatusBadge';
+import { getTrustPassTokenApi } from '../../api/trustpass.api';
 import {
   Printer,
   Download,
@@ -14,6 +15,11 @@ import {
   FileText,
   User,
   CheckCircle2,
+  Copy,
+  Check,
+  AlertCircle,
+  Loader2,
+  KeyRound,
 } from 'lucide-react';
 
 interface BookingReceiptModalProps {
@@ -27,13 +33,58 @@ export const BookingReceiptModal: React.FC<BookingReceiptModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  const [tokenData, setTokenData] = useState<{
+    token: string;
+    qrPayload: string;
+    expiresAt: string;
+    isValid: boolean;
+  } | null>(null);
+  const [tokenLoading, setTokenLoading] = useState(false);
+  const [copiedToken, setCopiedToken] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && booking && (booking.status === 'approved' || booking.status === 'checked_in')) {
+      let isMounted = true;
+      setTokenLoading(true);
+      getTrustPassTokenApi(booking._id)
+        .then((res) => {
+          if (isMounted && res.data) {
+            setTokenData(res.data);
+          }
+        })
+        .catch((err) => {
+          console.warn('TrustPass token fetch notice:', err?.response?.data?.message || err.message);
+        })
+        .finally(() => {
+          if (isMounted) setTokenLoading(false);
+        });
+      return () => {
+        isMounted = false;
+      };
+    } else {
+      setTokenData(null);
+    }
+  }, [isOpen, booking]);
+
   if (!isOpen || !booking) return null;
 
   const handlePrint = () => {
     window.print();
   };
 
+  const handleCopyToken = () => {
+    if (tokenData?.token) {
+      navigator.clipboard.writeText(tokenData.token);
+      setCopiedToken(true);
+      setTimeout(() => setCopiedToken(false), 2000);
+    }
+  };
+
   const bookingCode = `REN-${booking._id.slice(-6).toUpperCase()}`;
+  const qrDisplayData = tokenData?.qrPayload || tokenData?.token || `REN-PASS:${booking._id}`;
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&margin=2&data=${encodeURIComponent(
+    qrDisplayData
+  )}`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm overflow-y-auto">
