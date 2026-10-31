@@ -76,4 +76,29 @@ export const requireRole = (allowedRoles: string[]) => {
 
     next();
   };
+export const optionalAuth = async (
+  req: AuthenticatedRequest,
+  _res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    let token: string | undefined;
+    if (req.cookies && req.cookies.rentora_token) {
+      token = req.cookies.rentora_token;
+    }
+    if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+    if (token) {
+      const decoded = verifyToken(token);
+      const user = await User.findById(decoded.userId);
+      if (user) {
+        req.user = user;
+        req.tokenPayload = decoded;
+      }
+    }
+  } catch (_e) {
+    // Session token invalid or expired, continue as unauthenticated guest
+  }
+  next();
 };
