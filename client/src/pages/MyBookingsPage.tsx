@@ -6,6 +6,7 @@ import { Booking } from '../types/resource';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { BookingTimeline } from '../components/booking/BookingTimeline';
 import { UserCheckInOutModal } from '../components/booking/UserCheckInOutModal';
+import { IncidentReportModal } from '../components/incident/IncidentReportModal';
 import {
   CalendarCheck,
   Clock,
@@ -23,6 +24,7 @@ import {
   AlertTriangle,
   History,
   Info,
+  ShieldAlert,
 } from 'lucide-react';
 
 export const MyBookingsPage: React.FC = () => {
@@ -31,6 +33,7 @@ export const MyBookingsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedBookingForHandover, setSelectedBookingForHandover] = useState<Booking | null>(null);
+  const [selectedIncidentBooking, setSelectedIncidentBooking] = useState<Booking | null>(null);
   const [handoverMode, setHandoverMode] = useState<'check_in' | 'return'>('check_in');
 
   // Cancel Modal State

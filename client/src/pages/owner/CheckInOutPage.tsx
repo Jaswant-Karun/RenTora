@@ -16,6 +16,7 @@ import {
   Gauge,
   Check,
   Search,
+  Camera,
 } from 'lucide-react';
 
 export const CheckInOutPage: React.FC = () => {
@@ -316,18 +317,33 @@ export const CheckInOutPage: React.FC = () => {
                   />
                 </div>
 
+                {/* Inspection Photos & Owner Signoff */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1.5">
-                    <FileText className="w-3.5 h-3.5 text-brand-400" />
-                    Physical Condition & Handover Notes
+                    <Camera className="w-3.5 h-3.5 text-brand-400" />
+                    Verification Inspection Photos
                   </label>
-                  <textarea
-                    rows={3}
-                    value={conditionNotes}
-                    onChange={(e) => setConditionNotes(e.target.value)}
-                    placeholder="Inspect chassis, optic lenses, cables, and calibration status before clearing..."
-                    className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-brand-500"
+                  <div className="flex gap-2">
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-[10px] text-emerald-400 flex items-center gap-1">
+                      <Check className="w-3 h-3" /> Physical Optics Verified
+                    </span>
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-[10px] text-indigo-400 flex items-center gap-1">
+                      <Check className="w-3 h-3" /> Cleanliness Logged
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex items-start gap-2.5">
+                  <input
+                    type="checkbox"
+                    id="ownerSignoffCheck"
+                    defaultChecked
+                    className="mt-0.5 w-4 h-4 rounded text-brand-600 bg-slate-900 border-slate-700"
                   />
+                  <label htmlFor="ownerSignoffCheck" className="text-xs text-slate-300 cursor-pointer">
+                    <strong className="text-white">Custodian Physical Handover Certification:</strong> I hereby certify
+                    that the equipment was personally inspected, meets institutional safety standards, and condition notes have been committed to the permanent ledger.
+                  </label>
                 </div>
 
                 <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-3">

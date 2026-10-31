@@ -151,7 +151,18 @@ export interface NotificationItem {
   targetRole?: string;
   title: string;
   message: string;
-  type: 'booking' | 'approval' | 'maintenance' | 'system';
+  type:
+    | 'booking'
+    | 'approval'
+    | 'rejection'
+    | 'booking_confirmed'
+    | 'waitlist_update'
+    | 'upcoming_booking'
+    | 'return_reminder'
+    | 'overdue_alert'
+    | 'incident_update'
+    | 'maintenance'
+    | 'system';
   link?: string;
   isRead: boolean;
   createdAt: string;

@@ -40,7 +40,11 @@ import {
   Check,
   AlertCircle,
   Calendar,
+  History,
+  Lock,
 } from 'lucide-react';
+import { AuditLedgerViewer } from '../../components/manager/AuditLedgerViewer';
+import { ManagerOverrideModal } from '../../components/manager/ManagerOverrideModal';
 
 type ManagerTab =
   | 'stats'
@@ -51,12 +55,15 @@ type ManagerTab =
   | 'conflicts'
   | 'incidents'
   | 'disputes'
-  | 'fair-allocation';
+  | 'fair-allocation'
+  | 'audit';
 
 export const ManagerDashboardPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ManagerTab>('stats');
   const [loading, setLoading] = useState(true);
   const [statsData, setStatsData] = useState<ManagerStatsData | null>(null);
+  const [waitlistBookings, setWaitlistBookings] = useState<any[]>([]);
+  const [selectedOverrideBooking, setSelectedOverrideBooking] = useState<any | null>(null);
 
   // Module States
   const [approvals, setApprovals] = useState<any[]>([]);
@@ -99,6 +106,15 @@ export const ManagerDashboardPage: React.FC = () => {
         getManagerDisputesApi(),
         getFairAllocationSettingsApi(),
       ]);
+
+      const token = localStorage.getItem('rentora_token');
+      const waitlistResp = await fetch('http://localhost:5000/api/bookings/waitlist', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const waitlistData = await waitlistResp.json();
+      if (waitlistData.success) {
+        setWaitlistBookings(waitlistData.data);
+      }
 
       if (statsRes.success) setStatsData(statsRes.data);
       if (approvalsRes.success) setApprovals(approvalsRes.data);
@@ -242,11 +258,12 @@ export const ManagerDashboardPage: React.FC = () => {
     { id: 'approvals' as ManagerTab, label: 'Resource Approvals', icon: CheckCircle2, count: approvals.filter((a) => a.approvalStatus === 'pending').length },
     { id: 'users' as ManagerTab, label: 'User Verification', icon: Users, count: usersList.filter((u) => !u.isVerified).length },
     { id: 'eligibility' as ManagerTab, label: 'Eligibility Management', icon: ShieldCheck, count: null },
-    { id: 'waitlist' as ManagerTab, label: 'Waiting Lists', icon: Clock, count: null },
+    { id: 'waitlist' as ManagerTab, label: 'Waiting Lists & Overrides', icon: Clock, count: waitlistBookings.length },
     { id: 'conflicts' as ManagerTab, label: 'Conflict Resolution', icon: AlertTriangle, count: conflicts.length },
     { id: 'incidents' as ManagerTab, label: 'Incident Review', icon: AlertCircle, count: incidents.filter((i) => i.status !== 'resolved').length },
     { id: 'disputes' as ManagerTab, label: 'Dispute Arbitration', icon: Scale, count: disputes.filter((d) => d.status === 'open').length },
     { id: 'fair-allocation' as ManagerTab, label: 'Fair Allocation', icon: Settings, count: null },
+    { id: 'audit' as ManagerTab, label: 'Immutable Audit Ledger', icon: History, count: null },
   ];
 
   return (
@@ -606,6 +623,60 @@ export const ManagerDashboardPage: React.FC = () => {
                 <p className="text-[11px] text-slate-500">Thesis project weighting enabled</p>
               </div>
             </div>
+
+            {/* Live Standby Bookings Table */}
+            <div className="pt-4 border-t border-slate-800 space-y-3">
+              <h3 className="text-sm font-bold text-white flex items-center justify-between">
+                <span>Active Waitlist Standby Queue ({waitlistBookings.length})</span>
+                <span className="text-[11px] text-slate-400 font-normal">Managerial override requires mandatory justification</span>
+              </h3>
+
+              {waitlistBookings.length === 0 ? (
+                <div className="p-6 text-center rounded-xl bg-slate-950/60 border border-slate-800 text-xs text-slate-400">
+                  No reservations currently waitlisted. All active requests have been cleared.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {waitlistBookings.map((b: any) => (
+                    <div
+                      key={b._id}
+                      className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                            #{b.queuePosition || 1} in Line
+                          </span>
+                          <span className="text-sm font-bold text-white">{b.resourceName}</span>
+                          {b.monopolisationDetected && (
+                            <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-rose-500/20 text-rose-300">
+                              Fair-Share Cooldown
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-300">
+                          Borrower: <strong className="text-white">{b.userName || b.user?.name}</strong> • Date:{' '}
+                          <span className="text-brand-300">{b.date} ({b.timeSlot})</span>
+                        </p>
+                        <p className="text-[11px] text-slate-400">
+                          <strong>Waitlist Rationale:</strong> {b.transparencyRationale || b.waitlistReason || 'High campus demand.'}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          onClick={() => setSelectedOverrideBooking(b)}
+                          className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold shadow-md shadow-amber-500/20 flex items-center gap-1.5 transition-all"
+                        >
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                          <span>Manager Override</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -955,6 +1026,26 @@ export const ManagerDashboardPage: React.FC = () => {
             </div>
           </div>
         </form>
+      )}
+
+      {/* Tab 10: Immutable Audit Ledger */}
+      {activeTab === 'audit' && (
+        <div className="space-y-4">
+          <AuditLedgerViewer />
+        </div>
+      )}
+
+      {/* Manager Override Modal */}
+      {selectedOverrideBooking && (
+        <ManagerOverrideModal
+          isOpen={!!selectedOverrideBooking}
+          booking={selectedOverrideBooking}
+          onClose={() => setSelectedOverrideBooking(null)}
+          onSuccess={async () => {
+            showToast('Manager override applied successfully and committed to permanent ledger.');
+            await fetchAllData();
+          }}
+        />
       )}
     </div>
   );
