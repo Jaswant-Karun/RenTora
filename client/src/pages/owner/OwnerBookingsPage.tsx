@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   getOwnerBookingsApi,
@@ -26,9 +27,20 @@ import {
 } from 'lucide-react';
 
 export const OwnerBookingsPage: React.FC<{ initialTab?: string }> = ({ initialTab = 'requests' }) => {
+  const location = useLocation();
+  const defaultTab = location.pathname.includes('/approved') ? 'approved' : initialTab;
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<string>(initialTab);
+  const [activeTab, setActiveTab] = useState<string>(defaultTab);
+
+  useEffect(() => {
+    if (location.pathname.includes('/approved')) {
+      setActiveTab('approved');
+    } else if (location.pathname.includes('/requests')) {
+      setActiveTab('requests');
+    }
+  }, [location.pathname]);
+
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
 
@@ -128,14 +140,14 @@ export const OwnerBookingsPage: React.FC<{ initialTab?: string }> = ({ initialTa
   // Filter bookings based on activeTab
   const filteredBookings = bookings.filter((b) => {
     if (activeTab === 'requests') return b.status === 'pending';
-    if (activeTab === 'approved') return b.status === 'active';
+    if (activeTab === 'approved') return b.status === 'approved' || b.status === 'active' || b.status === 'checked_in' || b.status === 'return_pending';
     if (activeTab === 'waitlist') return b.status === 'waitlisted';
     if (activeTab === 'history') return b.status === 'completed' || b.status === 'cancelled' || b.status === 'rejected';
     return true;
   });
 
   const pendingRequestsCount = bookings.filter((b) => b.status === 'pending').length;
-  const approvedCount = bookings.filter((b) => b.status === 'active').length;
+  const approvedCount = bookings.filter((b) => b.status === 'approved' || b.status === 'active' || b.status === 'checked_in' || b.status === 'return_pending').length;
   const waitlistCount = bookings.filter((b) => b.status === 'waitlisted').length;
 
   return (

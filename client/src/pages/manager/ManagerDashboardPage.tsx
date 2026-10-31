@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   getManagerStatsApi,
@@ -63,7 +64,42 @@ type ManagerTab =
   | 'audit';
 
 export const ManagerDashboardPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<ManagerTab>('stats');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+
+  const getInitialTab = (): ManagerTab => {
+    const tabParam = searchParams.get('tab') as ManagerTab;
+    const validTabs: ManagerTab[] = [
+      'stats',
+      'ai-analytics',
+      'approvals',
+      'users',
+      'eligibility',
+      'waitlist',
+      'conflicts',
+      'incidents',
+      'disputes',
+      'fair-allocation',
+      'audit',
+    ];
+    if (tabParam && validTabs.includes(tabParam)) return tabParam;
+    const sub = location.pathname.replace('/manager/', '').replace('/manager', '').trim() as ManagerTab;
+    if (sub && validTabs.includes(sub)) return sub;
+    return 'stats';
+  };
+
+  const [activeTab, setActiveTab] = useState<ManagerTab>(getInitialTab);
+
+  useEffect(() => {
+    const tab = getInitialTab();
+    setActiveTab(tab);
+  }, [searchParams, location.pathname]);
+
+  const handleTabChange = (newTab: ManagerTab) => {
+    setActiveTab(newTab);
+    setSearchParams({ tab: newTab });
+  };
+
   const [loading, setLoading] = useState(true);
   const [statsData, setStatsData] = useState<ManagerStatsData | null>(null);
   const [waitlistBookings, setWaitlistBookings] = useState<any[]>([]);
@@ -329,7 +365,7 @@ export const ManagerDashboardPage: React.FC = () => {
           return (
             <button
               key={t.id}
-              onClick={() => setActiveTab(t.id)}
+              onClick={() => handleTabChange(t.id)}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border ${
                 isActive
                   ? 'bg-[#1769D2] text-white border-[#1769D2] shadow-sm'
