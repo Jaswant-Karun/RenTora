@@ -57,7 +57,7 @@ export const OwnerOverviewPage: React.FC = () => {
   const { stats, myResources, recentBookings } = data;
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6">
       {/* Header Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-xl bg-white border border-[#E2E8F0] shadow-sm">
         <div className="space-y-2">
