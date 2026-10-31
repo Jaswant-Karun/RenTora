@@ -5,6 +5,7 @@ import { getResourcesApi } from '../api/resource.api';
 import { Resource, ResourceCategory } from '../types/resource';
 import { ResourceCard } from '../components/resources/ResourceCard';
 import { BookingModal } from '../components/resources/BookingModal';
+import { SmartResourceMatcherModal } from '../components/ai/SmartResourceMatcherModal';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import {
   Search,
@@ -73,8 +74,9 @@ export const ExploreResourcesPage: React.FC = () => {
   // View mode
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  // Booking modal
+  // Booking modal & AI Smart Matcher modal
   const [selectedForBooking, setSelectedForBooking] = useState<Resource | null>(null);
+  const [isSmartMatcherOpen, setIsSmartMatcherOpen] = useState(false);
 
   // Search input debounce handler
   useEffect(() => {
@@ -189,13 +191,23 @@ export const ExploreResourcesPage: React.FC = () => {
           </p>
         </div>
 
-        {/* Live count badge */}
-        <div className="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 text-right shrink-0">
-          <p className="text-[10px] text-slate-400 uppercase font-semibold">Federated Catalog</p>
-          <p className="text-2xl font-extrabold text-white mt-0.5">{totalCount} Assets</p>
-          <span className="text-[11px] text-emerald-400 flex items-center justify-end gap-1 font-medium">
-            <CheckCircle2 className="w-3.5 h-3.5" /> Live in MongoDB
-          </span>
+        {/* Actions & Live count badge */}
+        <div className="flex items-center gap-3 shrink-0">
+          <button
+            onClick={() => setIsSmartMatcherOpen(true)}
+            className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white text-xs font-bold shadow-lg shadow-brand-500/30 border border-brand-400/30 transition-all flex items-center gap-2 group"
+          >
+            <Sparkles className="w-4 h-4 text-brand-200 group-hover:rotate-12 transition-transform animate-pulse" />
+            <span>AI Smart Matcher</span>
+          </button>
+
+          <div className="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 text-right">
+            <p className="text-[10px] text-slate-400 uppercase font-semibold">Federated Catalog</p>
+            <p className="text-xl font-extrabold text-white mt-0.5">{totalCount} Assets</p>
+            <span className="text-[10px] text-emerald-400 flex items-center justify-end gap-1 font-medium">
+              <CheckCircle2 className="w-3 h-3" /> MongoDB Active
+            </span>
+          </div>
         </div>
       </div>
 
