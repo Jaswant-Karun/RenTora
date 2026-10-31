@@ -18,6 +18,7 @@ import {
   ManagerStatsData,
 } from '../../api/manager.api';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { useToast } from '../../context/ToastContext';
 import {
   Building2,
   BarChart3,
@@ -121,9 +122,9 @@ export const ManagerDashboardPage: React.FC = () => {
     prioritizeUnderrepresentedDepts: true,
   });
 
+  const { toast } = useToast();
   // Action states
   const [actionLoading, setActionLoading] = useState(false);
-  const [successToast, setSuccessToast] = useState('');
   const [disputeResolutionText, setDisputeResolutionText] = useState('');
   const [selectedDisputeId, setSelectedDisputeId] = useState<string | null>(null);
 
@@ -183,8 +184,7 @@ export const ManagerDashboardPage: React.FC = () => {
   }, []);
 
   const showToast = (msg: string) => {
-    setSuccessToast(msg);
-    setTimeout(() => setSuccessToast(''), 4000);
+    toast.success(msg);
   };
 
   // 2. Resource Approval Handler
@@ -342,20 +342,7 @@ export const ManagerDashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Toast Notification */}
-      <AnimatePresence>
-        {successToast && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="fixed top-6 right-6 z-50 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2 shadow-lg"
-          >
-            <Check className="w-4 h-4 shrink-0 text-emerald-600" />
-            <span>{successToast}</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
 
       {/* Tabs Navigation */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-2 border-b border-[#E2E8F0]">
