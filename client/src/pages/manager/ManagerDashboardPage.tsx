@@ -597,76 +597,292 @@ export const ManagerDashboardPage: React.FC = () => {
       )}
 
       {/* Tab 3: User verification */}
-      {activeTab === 'users' && (
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-base font-bold text-[#172033]">Institutional User Verification & Roles</h2>
-            <span className="text-xs text-[#64748B]">{usersList.length} registered accounts</span>
-          </div>
+      {/* Tab 3: User & Owner Verification */}
+      {activeTab === 'users' && (() => {
+        const filteredUsers = usersList.filter((u) => {
+          const matchesRole = userRoleFilter === 'all' || u.role === userRoleFilter;
+          const matchesVerify =
+            userVerifyFilter === 'all'
+              ? true
+              : userVerifyFilter === 'verified'
+              ? !!u.isVerified
+              : !u.isVerified;
+          const matchesSearch =
+            !userSearchTerm.trim() ||
+            u.name.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+            u.email.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+            (u.department && u.department.toLowerCase().includes(userSearchTerm.toLowerCase()));
+          return matchesRole && matchesVerify && matchesSearch;
+        });
 
-          <div className="rounded-2xl border border-[#E2E8F0] bg-white overflow-hidden shadow-sm">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 border-b border-[#E2E8F0] text-[#64748B] uppercase tracking-wider font-semibold">
-                <tr>
-                  <th className="p-3.5">User Details</th>
-                  <th className="p-3.5">Department</th>
-                  <th className="p-3.5">System Role</th>
-                  <th className="p-3.5">Status</th>
-                  <th className="p-3.5 text-right">Verification Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#E2E8F0] text-[#172033]">
-                {usersList.map((u) => (
-                  <tr key={u._id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="p-3.5">
-                      <p className="font-semibold text-[#172033]">{u.name}</p>
-                      <p className="text-[11px] text-[#64748B]">{u.email}</p>
-                    </td>
-                    <td className="p-3.5 text-[#64748B]">{u.department || 'General Science'}</td>
-                    <td className="p-3.5">
-                      <span className="px-2 py-0.5 rounded font-mono text-[10px] uppercase bg-slate-100 text-[#172033] border border-slate-200">
-                        {u.role}
-                      </span>
-                    </td>
-                    <td className="p-3.5">
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                          u.isVerified
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            : 'bg-amber-50 text-amber-700 border border-amber-200'
-                        }`}
-                      >
-                        {u.isVerified ? 'Verified' : 'Pending Verification'}
-                      </span>
-                    </td>
-                    <td className="p-3.5 text-right">
-                      <button
-                        onClick={() => handleToggleUserVerification(u._id, !!u.isVerified)}
-                        disabled={actionLoading}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors inline-flex items-center gap-1.5 ${
-                          u.isVerified
-                            ? 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
-                            : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm'
-                        }`}
-                      >
-                        {u.isVerified ? (
-                          <>
-                            <UserX className="w-3.5 h-3.5" /> Revoke
-                          </>
-                        ) : (
-                          <>
-                            <UserCheck className="w-3.5 h-3.5" /> Verify User
-                          </>
-                        )}
-                      </button>
-                    </td>
+        return (
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-base font-bold text-[#172033]">Institutional User & Owner Verification</h2>
+                <p className="text-xs text-[#64748B]">Verify academic institutional credentials for borrowers and laboratory owners</p>
+              </div>
+              <span className="text-xs text-[#64748B] font-semibold">{filteredUsers.length} of {usersList.length} accounts</span>
+            </div>
+
+            {/* Filter and Search Bar */}
+            <div className="p-3.5 rounded-xl bg-white border border-[#E2E8F0] shadow-sm flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
+              <div className="relative w-full md:w-72">
+                <Search className="w-3.5 h-3.5 text-[#64748B] absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  placeholder="Search name, email, department..."
+                  value={userSearchTerm}
+                  onChange={(e) => setUserSearchTerm(e.target.value)}
+                  className="w-full pl-9 pr-3 py-1.5 rounded-lg border border-[#E2E8F0] focus:border-[#1769D2] focus:outline-none"
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                {/* Role Filter */}
+                <div className="flex items-center gap-1 bg-[#F8FAFC] p-1 rounded-lg border border-[#E2E8F0]">
+                  <span className="text-[10px] uppercase font-bold text-[#64748B] px-1.5">Role:</span>
+                  {(['all', 'student', 'owner'] as const).map((r) => (
+                    <button
+                      key={r}
+                      onClick={() => setUserRoleFilter(r)}
+                      className={`px-2.5 py-0.5 rounded text-[11px] font-semibold uppercase tracking-wider transition-all ${
+                        userRoleFilter === r
+                          ? 'bg-[#1769D2] text-white shadow-sm'
+                          : 'text-[#64748B] hover:text-[#172033]'
+                      }`}
+                    >
+                      {r === 'all' ? 'All Roles' : r === 'student' ? 'Students' : 'Resource Owners'}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Verification Status Filter */}
+                <div className="flex items-center gap-1 bg-[#F8FAFC] p-1 rounded-lg border border-[#E2E8F0]">
+                  <span className="text-[10px] uppercase font-bold text-[#64748B] px-1.5">Status:</span>
+                  {(['all', 'unverified', 'verified'] as const).map((st) => (
+                    <button
+                      key={st}
+                      onClick={() => setUserVerifyFilter(st)}
+                      className={`px-2.5 py-0.5 rounded text-[11px] font-semibold uppercase tracking-wider transition-all ${
+                        userVerifyFilter === st
+                          ? 'bg-[#1769D2] text-white shadow-sm'
+                          : 'text-[#64748B] hover:text-[#172033]'
+                      }`}
+                    >
+                      {st === 'all' ? 'All' : st === 'unverified' ? 'Pending' : 'Verified'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-[#E2E8F0] bg-white overflow-hidden shadow-sm">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 border-b border-[#E2E8F0] text-[#64748B] uppercase tracking-wider font-semibold">
+                  <tr>
+                    <th className="p-3.5">User Details</th>
+                    <th className="p-3.5">Department</th>
+                    <th className="p-3.5">System Role</th>
+                    <th className="p-3.5">Status</th>
+                    <th className="p-3.5 text-right">Verification Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-[#E2E8F0] text-[#172033]">
+                  {filteredUsers.map((u) => (
+                    <tr key={u._id} className="hover:bg-slate-50/60 transition-colors">
+                      <td className="p-3.5">
+                        <p className="font-semibold text-[#172033]">{u.name}</p>
+                        <p className="text-[11px] text-[#64748B]">{u.email}</p>
+                      </td>
+                      <td className="p-3.5 text-[#64748B]">{u.department || 'General Science'}</td>
+                      <td className="p-3.5">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                          u.role === 'owner' ? 'bg-purple-50 text-purple-700 border border-purple-200' :
+                          u.role === 'manager' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                          'bg-blue-50 text-[#1769D2] border border-blue-200'
+                        }`}>
+                          {u.role === 'owner' ? 'Resource Owner' : u.role}
+                        </span>
+                      </td>
+                      <td className="p-3.5">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                            u.isVerified
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                              : 'bg-amber-50 text-amber-700 border border-amber-200'
+                          }`}
+                        >
+                          {u.isVerified ? 'Verified' : 'Pending Verification'}
+                        </span>
+                      </td>
+                      <td className="p-3.5 text-right">
+                        <button
+                          onClick={() => handleToggleUserVerification(u._id, !!u.isVerified)}
+                          disabled={actionLoading}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors inline-flex items-center gap-1.5 ${
+                            u.isVerified
+                              ? 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
+                              : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm'
+                          }`}
+                        >
+                          {u.isVerified ? (
+                            <>
+                              <UserX className="w-3.5 h-3.5" /> Revoke
+                            </>
+                          ) : (
+                            <>
+                              <UserCheck className="w-3.5 h-3.5" /> Verify {u.role === 'owner' ? 'Owner' : 'User'}
+                            </>
+                          )}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredUsers.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="p-8 text-center text-[#64748B]">
+                        No user or owner accounts match your filter criteria.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
+
+      {/* Tab 4: Booking Oversight */}
+      {activeTab === 'bookings' && (() => {
+        const filteredBookings = institutionalBookings.filter((b) => {
+          const matchesStatus =
+            bookingFilterStatus === 'all' || b.status === bookingFilterStatus;
+          const matchesSearch =
+            !bookingSearch.trim() ||
+            (b.resourceName && b.resourceName.toLowerCase().includes(bookingSearch.toLowerCase())) ||
+            (b.userName && b.userName.toLowerCase().includes(bookingSearch.toLowerCase())) ||
+            (b.userEmail && b.userEmail.toLowerCase().includes(bookingSearch.toLowerCase()));
+          return matchesStatus && matchesSearch;
+        });
+
+        return (
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-base font-bold text-[#172033] flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-[#1769D2]" />
+                  Institutional Booking Oversight
+                </h2>
+                <p className="text-xs text-[#64748B]">Supervise all facility, lab, and equipment reservations across campus</p>
+              </div>
+              <span className="text-xs text-[#64748B] font-semibold">{filteredBookings.length} total bookings</span>
+            </div>
+
+            {/* Filter and Search Bar */}
+            <div className="p-3.5 rounded-xl bg-white border border-[#E2E8F0] shadow-sm flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
+              <div className="relative w-full md:w-80">
+                <Search className="w-3.5 h-3.5 text-[#64748B] absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  placeholder="Search asset, borrower, email..."
+                  value={bookingSearch}
+                  onChange={(e) => setBookingSearch(e.target.value)}
+                  className="w-full pl-9 pr-3 py-1.5 rounded-lg border border-[#E2E8F0] focus:border-[#1769D2] focus:outline-none"
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center gap-1.5">
+                {(['all', 'active', 'pending', 'waitlisted', 'completed', 'cancelled'] as const).map((st) => (
+                  <button
+                    key={st}
+                    onClick={() => setBookingFilterStatus(st)}
+                    className={`px-3 py-1 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all ${
+                      bookingFilterStatus === st
+                        ? 'bg-[#1769D2] text-white shadow-sm'
+                        : 'bg-[#F8FAFC] border border-[#E2E8F0] text-[#64748B] hover:text-[#172033]'
+                    }`}
+                  >
+                    {st}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Bookings Table */}
+            <div className="rounded-2xl border border-[#E2E8F0] bg-white overflow-hidden shadow-sm">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 border-b border-[#E2E8F0] text-[#64748B] uppercase tracking-wider font-semibold">
+                  <tr>
+                    <th className="p-3.5">Asset / Equipment</th>
+                    <th className="p-3.5">Borrower</th>
+                    <th className="p-3.5">Schedule</th>
+                    <th className="p-3.5">Stated Purpose</th>
+                    <th className="p-3.5">Status</th>
+                    <th className="p-3.5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#E2E8F0] text-[#172033]">
+                  {filteredBookings.map((b) => (
+                    <tr key={b._id} className="hover:bg-slate-50/60 transition-colors">
+                      <td className="p-3.5">
+                        <p className="font-semibold text-[#172033]">{b.resourceName}</p>
+                        <p className="text-[11px] text-[#64748B]">{b.resourceCategory} • {b.resourceLocation}</p>
+                      </td>
+                      <td className="p-3.5">
+                        <p className="font-semibold text-[#172033]">{b.userName}</p>
+                        <p className="text-[11px] text-[#64748B]">{b.userDepartment || 'Faculty'} • {b.userEmail}</p>
+                      </td>
+                      <td className="p-3.5">
+                        <p className="font-semibold text-[#172033]">{b.date}</p>
+                        <p className="text-[11px] text-[#64748B]">{b.timeSlot}</p>
+                      </td>
+                      <td className="p-3.5 max-w-xs truncate">
+                        <span className="text-[#64748B]">{b.purpose}</span>
+                        {b.suggestedAlternative && (
+                          <span className="block text-[10px] text-[#1769D2] font-semibold mt-0.5">
+                            Alt: {b.suggestedAlternative.date} ({b.suggestedAlternative.timeSlot})
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-3.5">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                            b.status === 'approved' || b.status === 'active'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                              : b.status === 'pending'
+                              ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                              : b.status === 'waitlisted'
+                              ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                              : 'bg-slate-100 text-[#64748B]'
+                          }`}
+                        >
+                          {b.status}
+                        </span>
+                      </td>
+                      <td className="p-3.5 text-right">
+                        <button
+                          onClick={() => setSelectedOverrideBooking(b)}
+                          className="px-2.5 py-1 rounded bg-[#EFF6FF] text-[#1769D2] hover:bg-blue-100 font-semibold text-[11px]"
+                        >
+                          Override
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredBookings.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="p-8 text-center text-[#64748B]">
+                        No bookings match your oversight filter criteria.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Tab 4: Eligibility management */}
       {activeTab === 'eligibility' && (
