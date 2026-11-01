@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { connectDB } from './config/db.js';
 import apiRouter from './routes/index.js';
 import { errorHandler } from './middleware/error.middleware.js';
+import { generalApiLimiter } from './middleware/rateLimit.middleware.js';
 
 // Load environment variables
 dotenv.config();
@@ -51,6 +52,18 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Standard Security Headers for OWASP Compliance
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  if (process.env.NODE_ENV === 'production') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  next();
+});
+
 // Static uploads serving for condition reports & evidence images
 app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
 
@@ -72,8 +85,8 @@ if (process.env.NODE_ENV !== 'production') {
   });
 }
 
-// API Routes
-app.use('/api', apiRouter);
+// API Routes with General Rate Limiting
+app.use('/api', generalApiLimiter, apiRouter);
 
 // 404 Handler
 app.use('*', (req, res) => {
