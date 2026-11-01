@@ -106,7 +106,7 @@ export const ProfilePage: React.FC = () => {
 
     setSavingPassword(true);
     try {
-      const res = await changePasswordApi(currentPassword, newPassword);
+      const res = await changePasswordApi({ currentPassword, newPassword });
       if (res.success) {
         toast.success('Security password updated successfully.');
         setCurrentPassword('');
@@ -158,7 +158,7 @@ export const ProfilePage: React.FC = () => {
             <div className="flex items-center gap-2 pt-0.5">
               <Badge role={user.role} size="sm" />
               <span className="text-[11px] text-[#64748B]">
-                ID: <strong className="font-mono text-[#172033]">REN-2026-{user._id.slice(-4).toUpperCase()}</strong>
+                ID: <strong className="font-mono text-[#172033]">REN-2026-{(user.id || '9842').slice(-4).toUpperCase()}</strong>
               </span>
             </div>
           </div>
