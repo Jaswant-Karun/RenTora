@@ -306,7 +306,7 @@ export const LoginPage: React.FC = () => {
                 <div className="relative">
                   <Input
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="Enter password (e.g. Password123!)"
+                    placeholder="Enter your institutional password"
                     leftIcon={<Lock className="w-4 h-4" />}
                     rightIcon={
                       <button
@@ -364,134 +364,80 @@ export const LoginPage: React.FC = () => {
         {/* Right Feature Showcase Column (Enterprise Split-Screen) */}
         <div className="hidden lg:flex flex-1 flex-col justify-between p-10 xl:p-12 bg-[#F8FAFC]">
           <div className="max-w-lg mx-auto my-auto space-y-6">
-            {/* Quick Demo Credentials Cheat Sheet Card */}
-            <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0]">
-                <div className="flex items-center space-x-2.5">
+            {/* Quick Demo Credentials Cheat Sheet Card (Rendered only when demo mode is active) */}
+            {demoModeEnabled && activeDemoAccounts.length > 0 ? (
+              <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 shadow-sm space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0]">
+                  <div className="flex items-center space-x-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-[#EFF6FF] text-[#1769D2] flex items-center justify-center font-bold">
+                      <Sparkles className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-[#172033]">Evaluator Sandbox Accounts</h3>
+                      <p className="text-xs text-[#64748B]">Pre-configured test personas with representative data</p>
+                    </div>
+                  </div>
+                  <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
+                    Sandbox Active
+                  </span>
+                </div>
+
+                {/* Table of Demo Accounts */}
+                <div className="overflow-hidden border border-[#E2E8F0] rounded-xl">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-[#F8FAFC] text-[11px] font-bold text-[#64748B] border-b border-[#E2E8F0]">
+                      <tr>
+                        <th className="py-2.5 px-3">Role</th>
+                        <th className="py-2.5 px-3">Email Address</th>
+                        <th className="py-2.5 px-3 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#E2E8F0] text-[11px]">
+                      {activeDemoAccounts.map((demo) => (
+                        <tr key={demo.role} className="hover:bg-slate-50 transition-colors">
+                          <td className="py-2.5 px-3">
+                            <Badge role={demo.role as any} size="sm" />
+                          </td>
+                          <td className="py-2.5 px-3 font-mono font-medium text-slate-800">
+                            {demo.email}
+                          </td>
+                          <td className="py-2.5 px-3 text-right">
+                            <button
+                              type="button"
+                              onClick={() => handleInstantLogin(demo.role)}
+                              disabled={instantLoggingIn !== null}
+                              className="text-[#1769D2] hover:underline font-bold disabled:opacity-50"
+                            >
+                              Launch ➔
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] text-[#64748B] pt-1">
+                  <span>Simulated institutional data only</span>
+                  <span className="text-[#1769D2] font-medium">Administrator accounts require private institutional auth</span>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 shadow-sm space-y-4">
+                <div className="flex items-center space-x-2.5 pb-3 border-b border-[#E2E8F0]">
                   <div className="w-9 h-9 rounded-xl bg-[#EFF6FF] text-[#1769D2] flex items-center justify-center font-bold">
-                    <Sparkles className="w-5 h-5" />
+                    <ShieldCheck className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-[#172033]">Evaluator Credentials Cheat Sheet</h3>
-                    <p className="text-xs text-[#64748B]">Pre-seeded accounts with complete sample data</p>
+                    <h3 className="text-sm font-bold text-[#172033]">RENTORA Federated Infrastructure</h3>
+                    <p className="text-xs text-[#64748B]">Cryptographic security & smart resource governance</p>
                   </div>
                 </div>
-                <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
-                  Verified Active
-                </span>
+                <p className="text-xs text-[#64748B] leading-relaxed">
+                  Sign in with your verified university credentials to access high-value institutional laboratories, research equipment, and compute clusters.
+                </p>
               </div>
-
-              {/* Table of Demo Accounts */}
-              <div className="overflow-hidden border border-[#E2E8F0] rounded-xl">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-[#F8FAFC] text-[11px] font-bold text-[#64748B] border-b border-[#E2E8F0]">
-                    <tr>
-                      <th className="py-2.5 px-3">Role</th>
-                      <th className="py-2.5 px-3">Email Address</th>
-                      <th className="py-2.5 px-3">Password</th>
-                      <th className="py-2.5 px-3 text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#E2E8F0] text-[11px]">
-                    <tr className="hover:bg-slate-50 transition-colors">
-                      <td className="py-2.5 px-3">
-                        <Badge role="student" size="sm" />
-                      </td>
-                      <td className="py-2.5 px-3 font-mono font-medium text-slate-800">
-                        student@rentora.edu
-                      </td>
-                      <td className="py-2.5 px-3 font-mono text-slate-700 font-semibold">
-                        Password123!
-                      </td>
-                      <td className="py-2.5 px-3 text-right">
-                        <button
-                          type="button"
-                          onClick={() => handleInstantLogin('student')}
-                          className="text-[#1769D2] hover:underline font-bold"
-                        >
-                          Launch ➔
-                        </button>
-                      </td>
-                    </tr>
-
-                    <tr className="hover:bg-slate-50 transition-colors">
-                      <td className="py-2.5 px-3">
-                        <Badge role="owner" size="sm" />
-                      </td>
-                      <td className="py-2.5 px-3 font-mono font-medium text-slate-800">
-                        owner@rentora.edu
-                      </td>
-                      <td className="py-2.5 px-3 font-mono text-slate-700 font-semibold">
-                        Password123!
-                      </td>
-                      <td className="py-2.5 px-3 text-right">
-                        <button
-                          type="button"
-                          onClick={() => handleInstantLogin('owner')}
-                          className="text-[#1769D2] hover:underline font-bold"
-                        >
-                          Launch ➔
-                        </button>
-                      </td>
-                    </tr>
-
-                    <tr className="hover:bg-slate-50 transition-colors">
-                      <td className="py-2.5 px-3">
-                        <Badge role="manager" size="sm" />
-                      </td>
-                      <td className="py-2.5 px-3 font-mono font-medium text-slate-800">
-                        manager@rentora.edu
-                      </td>
-                      <td className="py-2.5 px-3 font-mono text-slate-700 font-semibold">
-                        Password123!
-                      </td>
-                      <td className="py-2.5 px-3 text-right">
-                        <button
-                          type="button"
-                          onClick={() => handleInstantLogin('manager')}
-                          className="text-[#1769D2] hover:underline font-bold"
-                        >
-                          Launch ➔
-                        </button>
-                      </td>
-                    </tr>
-
-                    <tr className="hover:bg-slate-50 transition-colors">
-                      <td className="py-2.5 px-3">
-                        <Badge role="admin" size="sm" />
-                      </td>
-                      <td className="py-2.5 px-3 font-mono font-medium text-slate-800">
-                        admin@rentora.edu
-                      </td>
-                      <td className="py-2.5 px-3 font-mono text-slate-700 font-semibold">
-                        Password123!
-                      </td>
-                      <td className="py-2.5 px-3 text-right">
-                        <button
-                          type="button"
-                          onClick={() => handleInstantLogin('admin')}
-                          className="text-[#1769D2] hover:underline font-bold"
-                        >
-                          Launch ➔
-                        </button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="flex items-center justify-between text-[11px] text-[#64748B] pt-1">
-                <span>Safe simulated institutional data only</span>
-                <button
-                  type="button"
-                  onClick={(e) => handleCopy('Password123!', 'cheat-sheet-pass', e)}
-                  className="text-[#1769D2] hover:underline flex items-center gap-1 font-medium"
-                >
-                  <Copy className="w-3 h-3" />
-                  <span>{copiedKey === 'cheat-sheet-pass' ? 'Copied Password!' : 'Copy Password (Password123!)'}</span>
-                </button>
-              </div>
-            </div>
+            )}
 
             {/* Features summary */}
             <div className="grid grid-cols-2 gap-3 text-xs">
