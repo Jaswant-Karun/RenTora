@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.triggerNotificationCheck = exports.markAllNotificationsRead = exports.markNotificationRead = exports.getNotifications = void 0;
+exports.clearAllNotifications = exports.deleteNotification = exports.triggerNotificationCheck = exports.markAllNotificationsRead = exports.markNotificationRead = exports.getNotifications = void 0;
 const notification_model_js_1 = require("../models/notification.model.js");
 const booking_model_js_1 = require("../models/booking.model.js");
 // 1. Get User In-App Notifications
@@ -156,3 +156,38 @@ const triggerNotificationCheck = async (_req, res, next) => {
     }
 };
 exports.triggerNotificationCheck = triggerNotificationCheck;
+// 5. Delete Single Notification
+const deleteNotification = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        await notification_model_js_1.Notification.findByIdAndDelete(id);
+        res.status(200).json({
+            success: true,
+            message: 'Notification removed successfully.',
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.deleteNotification = deleteNotification;
+// 6. Clear All Notifications for Current User
+const clearAllNotifications = async (req, res, next) => {
+    try {
+        if (!req.user) {
+            res.status(401).json({ success: false, message: 'Authentication required' });
+            return;
+        }
+        await notification_model_js_1.Notification.deleteMany({
+            $or: [{ userId: req.user._id }, { targetRole: 'all' }, { targetRole: req.user.role }],
+        });
+        res.status(200).json({
+            success: true,
+            message: 'All notifications cleared.',
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.clearAllNotifications = clearAllNotifications;

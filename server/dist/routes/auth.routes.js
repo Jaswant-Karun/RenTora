@@ -9,5 +9,7 @@ router.post('/login', auth_controller_js_1.login);
 router.post('/logout', auth_controller_js_1.logout);
 router.post('/forgot-password', auth_controller_js_1.forgotPassword);
 router.get('/me', auth_middleware_js_1.authenticate, auth_controller_js_1.getMe);
+router.put('/profile', auth_middleware_js_1.authenticate, auth_controller_js_1.updateProfile);
+router.put('/change-password', auth_middleware_js_1.authenticate, auth_controller_js_1.changePassword);
 router.get('/demo-accounts', auth_controller_js_1.getDemoAccounts);
 exports.default = router;

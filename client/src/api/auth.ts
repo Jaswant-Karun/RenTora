@@ -49,3 +49,22 @@ export const getHealthApi = async (): Promise<any> => {
   const response = await apiClient.get('/health');
   return response.data;
 };
+
+export const updateProfileApi = async (data: {
+  name?: string;
+  phone?: string;
+  department?: string;
+  avatar?: string;
+  academicQualification?: string;
+}): Promise<{ success: boolean; message: string; data: User }> => {
+  const response = await apiClient.put('/auth/profile', data);
+  return response.data;
+};
+
+export const changePasswordApi = async (data: {
+  currentPassword: string;
+  newPassword: string;
+}): Promise<{ success: boolean; message: string }> => {
+  const response = await apiClient.put('/auth/change-password', data);
+  return response.data;
+};

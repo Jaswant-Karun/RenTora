@@ -5,4 +5,5 @@ const dashboard_controller_js_1 = require("../controllers/dashboard.controller.j
 const auth_middleware_js_1 = require("../middleware/auth.middleware.js");
 const router = (0, express_1.Router)();
 router.get('/', auth_middleware_js_1.authenticate, dashboard_controller_js_1.getDashboardData);
+router.get('/global-search', auth_middleware_js_1.optionalAuth, dashboard_controller_js_1.globalSearch);
 exports.default = router;

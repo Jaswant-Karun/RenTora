@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getDemoAccounts = exports.getMe = exports.forgotPassword = exports.logout = exports.login = exports.register = void 0;
+exports.changePassword = exports.updateProfile = exports.getDemoAccounts = exports.getMe = exports.forgotPassword = exports.logout = exports.login = exports.register = void 0;
 const user_model_js_1 = require("../models/user.model.js");
 const auth_schema_js_1 = require("../schemas/auth.schema.js");
 const jwt_js_1 = require("../utils/jwt.js");
@@ -213,3 +213,88 @@ const getDemoAccounts = (_req, res) => {
     });
 };
 exports.getDemoAccounts = getDemoAccounts;
+const updateProfile = async (req, res, next) => {
+    try {
+        if (!req.user) {
+            res.status(401).json({ success: false, message: 'Authentication required' });
+            return;
+        }
+        const { name, phone, department, avatar, academicQualification } = req.body;
+        const user = await user_model_js_1.User.findById(req.user._id);
+        if (!user) {
+            res.status(404).json({ success: false, message: 'User not found' });
+            return;
+        }
+        if (name && typeof name === 'string')
+            user.name = name.trim();
+        if (phone && typeof phone === 'string')
+            user.phone = phone.trim();
+        if (department && typeof department === 'string')
+            user.department = department.trim();
+        if (avatar && typeof avatar === 'string')
+            user.avatar = avatar.trim();
+        if (academicQualification && typeof academicQualification === 'string') {
+            user.academicQualification = academicQualification.trim();
+        }
+        await user.save();
+        res.status(200).json({
+            success: true,
+            message: 'Profile updated successfully.',
+            data: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                institution: user.institution,
+                department: user.department,
+                phone: user.phone,
+                avatar: user.avatar,
+                academicQualification: user.academicQualification,
+                isVerified: user.isVerified,
+                institutionMembershipVerified: user.institutionMembershipVerified,
+                trainingCertifications: user.trainingCertifications,
+            },
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.updateProfile = updateProfile;
+const changePassword = async (req, res, next) => {
+    try {
+        if (!req.user) {
+            res.status(401).json({ success: false, message: 'Authentication required' });
+            return;
+        }
+        const { currentPassword, newPassword } = req.body;
+        if (!currentPassword || !newPassword) {
+            res.status(400).json({ success: false, message: 'Current and new password are required' });
+            return;
+        }
+        if (newPassword.length < 6) {
+            res.status(400).json({ success: false, message: 'New password must be at least 6 characters' });
+            return;
+        }
+        const user = await user_model_js_1.User.findById(req.user._id).select('+password');
+        if (!user) {
+            res.status(404).json({ success: false, message: 'User not found' });
+            return;
+        }
+        const isMatch = await user.comparePassword(currentPassword);
+        if (!isMatch) {
+            res.status(400).json({ success: false, message: 'Incorrect current password' });
+            return;
+        }
+        user.password = newPassword;
+        await user.save();
+        res.status(200).json({
+            success: true,
+            message: 'Password updated successfully.',
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.changePassword = changePassword;

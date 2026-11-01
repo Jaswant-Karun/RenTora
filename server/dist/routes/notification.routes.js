@@ -9,4 +9,6 @@ router.get('/', notification_controller_js_1.getNotifications);
 router.post('/mark-all-read', notification_controller_js_1.markAllNotificationsRead);
 router.post('/trigger-check', notification_controller_js_1.triggerNotificationCheck);
 router.patch('/:id/read', notification_controller_js_1.markNotificationRead);
+router.delete('/:id', notification_controller_js_1.deleteNotification);
+router.delete('/', notification_controller_js_1.clearAllNotifications);
 exports.default = router;

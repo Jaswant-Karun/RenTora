@@ -1,9 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getDashboardData = void 0;
+exports.globalSearch = exports.getDashboardData = void 0;
 const resource_model_js_1 = require("../models/resource.model.js");
 const booking_model_js_1 = require("../models/booking.model.js");
 const notification_model_js_1 = require("../models/notification.model.js");
+const incident_model_js_1 = require("../models/incident.model.js");
 const getDashboardData = async (req, res, next) => {
     try {
         const user = req.user;
@@ -153,3 +154,137 @@ const getDashboardData = async (req, res, next) => {
     }
 };
 exports.getDashboardData = getDashboardData;
+const globalSearch = async (req, res, next) => {
+    try {
+        const q = (req.query.q || '').trim();
+        if (!q || q.length < 2) {
+            res.status(200).json({
+                success: true,
+                data: {
+                    resources: [],
+                    bookings: [],
+                    incidents: [],
+                    totalCount: 0,
+                },
+            });
+            return;
+        }
+        const regex = new RegExp(q, 'i');
+        const user = req.user;
+        // 1. Search Resources
+        const resources = await resource_model_js_1.Resource.find({
+            $or: [
+                { name: regex },
+                { category: regex },
+                { location: regex },
+                { tags: regex },
+                { description: regex },
+            ],
+            approvalStatus: 'approved',
+            isArchived: { $ne: true },
+        })
+            .select('name category location institution status images hourlyValueEstimated')
+            .limit(6)
+            .lean();
+        // 2. Search Bookings (Filtered to permitted scope)
+        let bookingFilter = {
+            $or: [
+                { resourceName: regex },
+                { userName: regex },
+                { purpose: regex },
+                { timeSlot: regex },
+                { date: regex },
+                { status: regex },
+            ],
+        };
+        if (user) {
+            if (user.role === 'student') {
+                bookingFilter.userId = user._id;
+            }
+            else if (user.role === 'owner') {
+                const ownerResourceIds = await resource_model_js_1.Resource.find({ ownerId: user._id }).distinct('_id');
+                bookingFilter.$and = [
+                    { $or: [{ userId: user._id }, { resourceId: { $in: ownerResourceIds } }] },
+                ];
+            }
+        }
+        else {
+            bookingFilter = null;
+        }
+        const bookings = bookingFilter
+            ? await booking_model_js_1.Booking.find(bookingFilter)
+                .select('resourceName resourceCategory userName date timeSlot status durationHours')
+                .sort({ date: -1 })
+                .limit(6)
+                .lean()
+            : [];
+        // 3. Search Incidents (Permitted scope)
+        let incidentFilter = {
+            $or: [
+                { incidentNumber: regex },
+                { resourceName: regex },
+                { description: regex },
+                { category: regex },
+            ],
+        };
+        if (user) {
+            if (user.role === 'student') {
+                incidentFilter.reportedByUserId = user._id;
+            }
+        }
+        else {
+            incidentFilter = null;
+        }
+        const incidents = incidentFilter
+            ? await incident_model_js_1.Incident.find(incidentFilter)
+                .select('incidentNumber resourceName category severity status createdAt')
+                .sort({ createdAt: -1 })
+                .limit(4)
+                .lean()
+            : [];
+        const totalCount = resources.length + bookings.length + incidents.length;
+        res.status(200).json({
+            success: true,
+            data: {
+                resources: resources.map((r) => ({
+                    id: r._id,
+                    title: r.name,
+                    category: r.category,
+                    location: r.location,
+                    institution: r.institution,
+                    status: r.status,
+                    image: r.images?.[0] || '',
+                    type: 'resource',
+                    link: `/dashboard/resources/${r._id}`,
+                })),
+                bookings: bookings.map((b) => ({
+                    id: b._id,
+                    title: b.resourceName,
+                    category: b.resourceCategory,
+                    user: b.userName,
+                    date: b.date,
+                    timeSlot: b.timeSlot,
+                    status: b.status,
+                    type: 'booking',
+                    link: `/dashboard/bookings?bookingId=${b._id}`,
+                })),
+                incidents: incidents.map((i) => ({
+                    id: i._id,
+                    title: `${i.incidentNumber || 'INC'} - ${i.resourceName}`,
+                    category: i.category,
+                    severity: i.severity,
+                    status: i.status,
+                    type: 'incident',
+                    link: user?.role === 'owner' || user?.role === 'manager' || user?.role === 'admin'
+                        ? '/owner/incidents'
+                        : '/dashboard/bookings',
+                })),
+                totalCount,
+            },
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.globalSearch = globalSearch;

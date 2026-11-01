@@ -26,14 +26,17 @@ const notificationSchema = new mongoose_1.Schema({
     type: {
         type: String,
         enum: [
+            'booking_submitted',
             'booking_confirmed',
             'approval',
             'rejection',
             'waitlist_update',
             'upcoming_booking',
+            'checkin_ready',
             'return_reminder',
             'overdue_alert',
             'incident_update',
+            'resource_availability',
             'booking',
             'maintenance',
             'system',

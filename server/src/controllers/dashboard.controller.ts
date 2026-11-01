@@ -250,7 +250,7 @@ export const globalSearch = async (
     // 3. Search Incidents (Permitted scope)
     let incidentFilter: any = {
       $or: [
-        { incidentReference: regex },
+        { incidentNumber: regex },
         { resourceName: regex },
         { description: regex },
         { category: regex },
@@ -259,7 +259,7 @@ export const globalSearch = async (
 
     if (user) {
       if (user.role === 'student') {
-        incidentFilter['reportedBy.id'] = user._id;
+        incidentFilter.reportedByUserId = user._id;
       }
     } else {
       incidentFilter = null;
@@ -267,7 +267,7 @@ export const globalSearch = async (
 
     const incidents = incidentFilter
       ? await Incident.find(incidentFilter)
-          .select('incidentReference resourceName category severity status createdAt')
+          .select('incidentNumber resourceName category severity status createdAt')
           .sort({ createdAt: -1 })
           .limit(4)
           .lean()
@@ -300,9 +300,9 @@ export const globalSearch = async (
           type: 'booking',
           link: `/dashboard/bookings?bookingId=${b._id}`,
         })),
-        incidents: incidents.map((i) => ({
+        incidents: incidents.map((i: any) => ({
           id: i._id,
-          title: `${i.incidentReference} - ${i.resourceName}`,
+          title: `${i.incidentNumber || 'INC'} - ${i.resourceName}`,
           category: i.category,
           severity: i.severity,
           status: i.status,

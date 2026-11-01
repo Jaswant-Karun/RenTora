@@ -92,3 +92,50 @@ export const markAllNotificationsReadApi = async () => {
   }>('/notifications/mark-all-read');
   return response.data;
 };
+
+export const deleteNotificationApi = async (id: string) => {
+  const response = await apiClient.delete<{
+    success: boolean;
+    message: string;
+  }>(`/notifications/${id}`);
+  return response.data;
+};
+
+export const clearAllNotificationsApi = async () => {
+  const response = await apiClient.delete<{
+    success: boolean;
+    message: string;
+  }>('/notifications');
+  return response.data;
+};
+
+export interface GlobalSearchResultItem {
+  id: string;
+  title: string;
+  category?: string;
+  location?: string;
+  institution?: string;
+  status?: string;
+  image?: string;
+  user?: string;
+  date?: string;
+  timeSlot?: string;
+  severity?: string;
+  type: 'resource' | 'booking' | 'incident';
+  link: string;
+}
+
+export interface GlobalSearchResponse {
+  resources: GlobalSearchResultItem[];
+  bookings: GlobalSearchResultItem[];
+  incidents: GlobalSearchResultItem[];
+  totalCount: number;
+}
+
+export const globalSearchApi = async (query: string) => {
+  const response = await apiClient.get<{
+    success: boolean;
+    data: GlobalSearchResponse;
+  }>('/dashboard/global-search', { params: { q: query } });
+  return response.data;
+};
