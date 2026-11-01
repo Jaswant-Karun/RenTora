@@ -762,14 +762,22 @@ export const getMyBookings = async (
       return;
     }
 
-    const { status } = req.query;
+    const { status, page = '1', limit = '50' } = req.query;
     const filter: any = { userId: req.user._id };
 
     if (status && status !== 'all') {
       filter.status = status;
     }
 
-    const bookings = await Booking.find(filter).sort({ createdAt: -1 });
+    const pageNum = Math.max(1, parseInt(page as string, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit as string, 10) || 50));
+    const skip = (pageNum - 1) * limitNum;
+
+    const [bookings, total] = await Promise.all([
+      Booking.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limitNum),
+      Booking.countDocuments(filter),
+    ]);
+
     const now = new Date();
 
     const enrichedBookings = bookings.map((b) => {
@@ -788,6 +796,12 @@ export const getMyBookings = async (
     res.status(200).json({
       success: true,
       data: enrichedBookings,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum),
+      },
     });
   } catch (error) {
     next(error);
@@ -806,6 +820,18 @@ export const getBookingById = async (
 
     if (!booking) {
       res.status(404).json({ success: false, message: 'Booking not found' });
+      return;
+    }
+
+    // Authorization Guard: Students may only view their own bookings
+    if (
+      req.user?.role === 'student' &&
+      booking.userId.toString() !== req.user._id.toString()
+    ) {
+      res.status(403).json({
+        success: false,
+        message: 'Forbidden: You do not have authorization to view this booking record.',
+      });
       return;
     }
 
