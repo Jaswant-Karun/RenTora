@@ -490,7 +490,7 @@ export const createBooking = async (
 
     // 2. MONOPOLISATION DETECTION
     const monopolisation = await checkMonopolisation(
-      req.user._id,
+      currentUser._id,
       resource._id,
       fairPolicy.cooldownPeriodDays || 14,
       fairPolicy.maxReservationsPerAssetPer14Days || 3
@@ -499,9 +499,9 @@ export const createBooking = async (
     // 3. ACTIVE BOOKING LIMITS CHECK FOR STUDENTS
     let activeLimitExceeded = false;
     let activeCount = 0;
-    if (req.user.role === 'student') {
+    if (currentUser.role === 'student') {
       activeCount = await Booking.countDocuments({
-        userId: req.user._id,
+        userId: currentUser._id,
         status: { $in: ['pending', 'under_review', 'approved', 'checked_in', 'return_pending', 'active'] },
       });
       if (activeCount >= (fairPolicy.maxActiveBookingsPerStudent || 3)) {
