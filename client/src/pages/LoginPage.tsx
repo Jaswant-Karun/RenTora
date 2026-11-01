@@ -39,7 +39,7 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export const LoginPage: React.FC = () => {
-  const { login, demoAccounts, switchDemoRole, forgotPassword } = useAuth();
+  const { login, demoModeEnabled, demoAccounts, switchDemoRole, forgotPassword } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -55,51 +55,8 @@ export const LoginPage: React.FC = () => {
   const [forgotSuccessMessage, setForgotSuccessMessage] = useState<string | null>(null);
   const [forgotError, setForgotError] = useState<string | null>(null);
 
-  // Fallback / standard demo accounts with explicit credentials
-  const defaultDemoAccounts = [
-    {
-      role: 'student' as const,
-      roleLabel: 'Student / Researcher',
-      name: 'Arun Kumar',
-      email: 'student@rentora.edu',
-      password: 'Password123!',
-      department: 'Computer Science & Engineering',
-      institution: 'National Institute of Technology',
-      description: 'Discover catalog, submit reservations, present TrustPass QR, inspect personal ESG impact.',
-    },
-    {
-      role: 'owner' as const,
-      roleLabel: 'Resource / Lab Owner',
-      name: 'Dr. Meera Raman',
-      email: 'owner@rentora.edu',
-      password: 'Password123!',
-      department: 'Robotics & Automation Lab',
-      institution: 'National Institute of Technology',
-      description: 'Catalogue specialized equipment, review booking requests, execute check-in/out, file condition reports.',
-    },
-    {
-      role: 'manager' as const,
-      roleLabel: 'Institution Manager',
-      name: 'Prof. Suresh Nair',
-      email: 'manager@rentora.edu',
-      password: 'Password123!',
-      department: 'Dean of Academic Infrastructure',
-      institution: 'National Institute of Technology',
-      description: 'Campus-wide equipment quotas, waitlist promotions, ESG sustainability analytics, incident resolutions.',
-    },
-    {
-      role: 'admin' as const,
-      roleLabel: 'Platform Administrator',
-      name: 'Central Platform Administrator',
-      email: 'admin@rentora.edu',
-      password: 'Password123!',
-      department: 'Central Platform Governance',
-      institution: 'RENTORA Central Network',
-      description: 'Institutional federation, system security, immutable audit logs, global settings, platform health.',
-    },
-  ];
-
-  const activeDemoAccounts = demoAccounts && demoAccounts.length > 0 ? demoAccounts : defaultDemoAccounts;
+  // Evaluator accounts strictly populated from server when demo mode is enabled
+  const activeDemoAccounts = demoModeEnabled && Array.isArray(demoAccounts) ? demoAccounts : [];
 
   const {
     register,
