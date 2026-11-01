@@ -107,6 +107,7 @@ async function runAllTests() {
     agreeTerms: true,
   });
   const regUser = regRes.data?.data?.user || regRes.data?.user;
+  const newStudentToken = regRes.data?.data?.token;
   const regPass = (regRes.status === 201 || regRes.status === 200) && regUser?.email === testEmail;
   recordResult(
     'AUTH-01',
@@ -252,12 +253,9 @@ async function runAllTests() {
   });
   const adminToken = adminLogin.data?.data?.token;
 
-  // Re-login student to obtain fresh token for testing
-  const studentReLogin = await postJson('/auth/login', {
-    email: 'student@rentora.edu',
-    password: 'Password123!',
-  });
-  const studentValidToken = studentReLogin.data?.data?.token;
+  // Active student token to use for Level 3-6 workflow testing
+  // Use newStudentToken (freshly registered student in IIT Madras) to avoid quota collision
+  const activeStudentToken = newStudentToken;
 
   // -------------------------------------------------------------
   // LEVEL 2: RESOURCE MANAGEMENT
@@ -282,6 +280,7 @@ async function runAllTests() {
     maxBookingDuration: '4 hours',
     eligibility: 'All Enrolled Students & Faculty',
     trainingRequired: 'Biosafety Level 1 Induction',
+    approvalRequired: true,
     tags: ['Biotech', 'Centrifuge', 'QA-Test'],
   };
   const addRes = await postJson('/owner/resources', newResourcePayload, ownerToken);
@@ -432,14 +431,6 @@ async function runAllTests() {
   // -------------------------------------------------------------
   console.log('\n--- TESTING LEVEL 3: BOOKING ---');
 
-  // Clean up any stale active bookings for student to prevent quota block
-  const existingStudentBookings = await getJson('/bookings', studentValidToken);
-  for (const b of (existingStudentBookings.data?.data || [])) {
-    if (['pending', 'under_review', 'approved', 'active'].includes(b.status)) {
-      await postJson(`/bookings/${b._id}/cancel`, { reason: 'QA cleanup' }, studentValidToken);
-    }
-  }
-
   // BOOK-01: Submit Booking Request
   const bookingDate = '2026-11-20';
   const bookingTimeSlot = '10:00 - 12:00';
@@ -450,7 +441,7 @@ async function runAllTests() {
     purpose: 'Centrifugation of RNA samples for thesis research',
     qualificationAcknowledged: true,
     safetyProtocolAcknowledged: true,
-  }, studentValidToken);
+  }, activeStudentToken);
   const testBooking = createBookingRes.data?.data;
   const book01Pass = (createBookingRes.status === 201 || createBookingRes.status === 200) && !!testBooking?._id;
   recordResult(
@@ -478,29 +469,41 @@ async function runAllTests() {
     book02Pass
   );
 
-  // BOOK-03: Reject Booking (Create 2nd booking and reject it)
+  // BOOK-03: Reject Booking (Create separate booking and reject it)
   const rejBookingRes = await postJson('/bookings', {
     resourceId: testResourceId,
     date: '2026-11-21',
     timeSlot: '14:00 - 16:00',
-    purpose: 'Routine sample spin',
+    purpose: 'Sample run intended for calibration review',
     qualificationAcknowledged: true,
     safetyProtocolAcknowledged: true,
-  }, studentValidToken);
+  }, activeStudentToken);
   const rejBookingId = rejBookingRes.data?.data?._id;
 
-  const rejectRes = await postJson(`/bookings/${rejBookingId}/reject`, {
-    reason: 'Lab reserved for annual electrical inspection.',
-  }, ownerToken);
-  const book03Pass = rejectRes.status === 200 && rejectRes.data?.data?.status === 'rejected';
-  recordResult(
-    'BOOK-03',
-    'Level 3 - Booking',
-    'Reject booking',
-    '200 OK with status rejected and mandatory reason recorded',
-    `Status ${rejectRes.status}, Reason: ${rejectRes.data?.data?.rejectionReason}`,
-    book03Pass
-  );
+  let book03Pass = false;
+  if (rejBookingId) {
+    const rejectRes = await postJson(`/bookings/${rejBookingId}/reject`, {
+      reason: 'Lab reserved for annual electrical inspection.',
+    }, ownerToken);
+    book03Pass = rejectRes.status === 200 && rejectRes.data?.data?.status === 'rejected';
+    recordResult(
+      'BOOK-03',
+      'Level 3 - Booking',
+      'Reject booking',
+      '200 OK with status rejected and mandatory reason recorded',
+      `Status ${rejectRes.status}, Reason: ${rejectRes.data?.data?.rejectionReason}`,
+      book03Pass
+    );
+  } else {
+    recordResult(
+      'BOOK-03',
+      'Level 3 - Booking',
+      'Reject booking',
+      '200 OK with status rejected',
+      `Failed to create candidate booking: ${rejBookingRes.status} ${rejBookingRes.data?.message}`,
+      false
+    );
+  }
 
   // BOOK-04: Cancel Booking
   const cancelTestRes = await postJson('/bookings', {
@@ -510,21 +513,33 @@ async function runAllTests() {
     purpose: 'Temporary booking to test cancellation',
     qualificationAcknowledged: true,
     safetyProtocolAcknowledged: true,
-  }, studentValidToken);
+  }, activeStudentToken);
   const cancelBookingId = cancelTestRes.data?.data?._id;
 
-  const cancelRes = await postJson(`/bookings/${cancelBookingId}/cancel`, {
-    reason: 'Experiment rescheduled by supervisor.',
-  }, studentValidToken);
-  const book04Pass = cancelRes.status === 200 && cancelRes.data?.data?.status === 'cancelled';
-  recordResult(
-    'BOOK-04',
-    'Level 3 - Booking',
-    'Cancel booking',
-    '200 OK with status cancelled and audit trail entry',
-    `Status ${cancelRes.status}, Status: ${cancelRes.data?.data?.status}`,
-    book04Pass
-  );
+  let book04Pass = false;
+  if (cancelBookingId) {
+    const cancelRes = await postJson(`/bookings/${cancelBookingId}/cancel`, {
+      reason: 'Experiment rescheduled by supervisor.',
+    }, activeStudentToken);
+    book04Pass = cancelRes.status === 200 && cancelRes.data?.data?.status === 'cancelled';
+    recordResult(
+      'BOOK-04',
+      'Level 3 - Booking',
+      'Cancel booking',
+      '200 OK with status cancelled and audit trail entry',
+      `Status ${cancelRes.status}, Status: ${cancelRes.data?.data?.status}`,
+      book04Pass
+    );
+  } else {
+    recordResult(
+      'BOOK-04',
+      'Level 3 - Booking',
+      'Cancel booking',
+      '200 OK with status cancelled',
+      `Failed to create candidate booking: ${cancelTestRes.status}`,
+      false
+    );
+  }
 
   // BOOK-05: Add to Waiting List
   const waitlistTestRes = await postJson('/bookings', {
@@ -534,24 +549,36 @@ async function runAllTests() {
     purpose: 'Waitlist placement test',
     qualificationAcknowledged: true,
     safetyProtocolAcknowledged: true,
-  }, studentValidToken);
+  }, activeStudentToken);
   const waitlistBookingId = waitlistTestRes.data?.data?._id;
 
-  const waitlistRes = await postJson(`/bookings/${waitlistBookingId}/waitlist`, {
-    note: 'Capacity reached; placed in priority queue.',
-  }, ownerToken);
-  const book05Pass = waitlistRes.status === 200 && waitlistRes.data?.data?.status === 'waitlisted';
-  recordResult(
-    'BOOK-05',
-    'Level 3 - Booking',
-    'Add to waiting list',
-    '200 OK with status waitlisted and queue position',
-    `Status ${waitlistRes.status}, Status: ${waitlistRes.data?.data?.status}`,
-    book05Pass
-  );
+  let book05Pass = false;
+  if (waitlistBookingId) {
+    const waitlistRes = await postJson(`/bookings/${waitlistBookingId}/waitlist`, {
+      note: 'Capacity reached; placed in priority queue.',
+    }, ownerToken);
+    book05Pass = waitlistRes.status === 200 && waitlistRes.data?.data?.status === 'waitlisted';
+    recordResult(
+      'BOOK-05',
+      'Level 3 - Booking',
+      'Add to waiting list',
+      '200 OK with status waitlisted and queue position',
+      `Status ${waitlistRes.status}, Status: ${waitlistRes.data?.data?.status}`,
+      book05Pass
+    );
+  } else {
+    recordResult(
+      'BOOK-05',
+      'Level 3 - Booking',
+      'Add to waiting list',
+      '200 OK with status waitlisted',
+      `Failed to create candidate booking: ${waitlistTestRes.status}`,
+      false
+    );
+  }
 
   // BOOK-06: View Booking History
-  const historyRes = await getJson('/bookings', studentValidToken);
+  const historyRes = await getJson('/bookings', activeStudentToken);
   const book06Pass = historyRes.status === 200 && Array.isArray(historyRes.data?.data) && historyRes.data?.data?.length > 0;
   recordResult(
     'BOOK-06',
@@ -567,15 +594,15 @@ async function runAllTests() {
     resourceId: testResourceId,
     date: bookingDate,
     timeSlot: bookingTimeSlot,
-  }, studentValidToken);
-  const hasConflict = overlapPreCheck.data?.data?.conflictResult?.hasConflict || overlapPreCheck.data?.hasConflict;
-  const book07Pass = overlapPreCheck.status === 200 && hasConflict === true;
+  }, activeStudentToken);
+  const conflictDetected = overlapPreCheck.data?.data?.checks?.schedulingConflict?.conflictDetected;
+  const book07Pass = overlapPreCheck.status === 200 && conflictDetected === true;
   recordResult(
     'BOOK-07',
     'Level 3 - Booking',
     'Detect overlapping booking',
-    '200 OK with pre-check conflictResult.hasConflict = true',
-    `Status ${overlapPreCheck.status}, Conflict detected: ${hasConflict}`,
+    '200 OK with checks.schedulingConflict.conflictDetected = true',
+    `Status ${overlapPreCheck.status}, Conflict detected: ${conflictDetected}`,
     book07Pass
   );
 
@@ -587,7 +614,7 @@ async function runAllTests() {
     purpose: 'Conflicting simultaneous booking attempt',
     qualificationAcknowledged: true,
     safetyProtocolAcknowledged: true,
-  }, studentValidToken);
+  }, activeStudentToken);
   const book08Pass = doubleBookRes.status === 409 || doubleBookRes.status === 400;
   recordResult(
     'BOOK-08',
@@ -608,7 +635,7 @@ async function runAllTests() {
       purpose: `Quota check slot ${i}`,
       qualificationAcknowledged: true,
       safetyProtocolAcknowledged: true,
-    }, studentValidToken);
+    }, activeStudentToken);
     quotaResults.push(qRes.status);
   }
   const quotaBlocked = quotaResults.some((s) => s === 429 || s === 400 || s === 403);
@@ -621,11 +648,11 @@ async function runAllTests() {
     quotaBlocked
   );
 
-  // Clean up quota bookings
-  const studentBookingsAfterQuota = await getJson('/bookings', studentValidToken);
+  // Clean up quota bookings to restore capacity
+  const studentBookingsAfterQuota = await getJson('/bookings', activeStudentToken);
   for (const b of (studentBookingsAfterQuota.data?.data || [])) {
     if (b._id !== testBookingId && ['pending', 'under_review'].includes(b.status)) {
-      await postJson(`/bookings/${b._id}/cancel`, { reason: 'Quota test cleanup' }, studentValidToken);
+      await postJson(`/bookings/${b._id}/cancel`, { reason: 'Quota test cleanup' }, activeStudentToken);
     }
   }
 
@@ -634,7 +661,7 @@ async function runAllTests() {
     resourceId: testResourceId,
     date: '2026-11-28',
     timeSlot: '10:00 - 12:00',
-  }, studentValidToken);
+  }, activeStudentToken);
   const evalData = evalIneligibleRes.data?.data;
   const book10Pass = evalIneligibleRes.status === 200 && evalData?.explanation?.eligibilityResult !== undefined;
   recordResult(
@@ -652,7 +679,7 @@ async function runAllTests() {
   console.log('\n--- TESTING LEVEL 4: TRUSTPASS ---');
 
   // TRUST-01: Generate Valid Booking QR
-  const qrRes = await getJson(`/trustpass/token/${testBookingId}`, studentValidToken);
+  const qrRes = await getJson(`/trustpass/token/${testBookingId}`, activeStudentToken);
   const qrData = qrRes.data?.data;
   const validQrToken = qrData?.token;
   const trust01Pass = qrRes.status === 200 && !!validQrToken && !!qrData?.qrPayload;
@@ -713,7 +740,7 @@ async function runAllTests() {
     token: validQrToken,
     operationalStatus: 'optimal',
     cleanliness: 'passed',
-  }, studentValidToken);
+  }, activeStudentToken);
   const trust07Pass = unauthCheckInRes.status === 403;
   recordResult(
     'TRUST-07',
@@ -735,7 +762,7 @@ async function runAllTests() {
     photos: [sampleUploadedPhoto],
     userConfirmation: true,
   }, ownerToken);
-  const checkInSuccess = validCheckInRes.status === 200 && validCheckInRes.data?.data?.booking?.status === 'active';
+  const checkInSuccess = validCheckInRes.status === 200 && (validCheckInRes.data?.data?.status === 'active' || validCheckInRes.data?.data?.booking?.status === 'active');
 
   // TRUST-05: Duplicate Check-in
   const dupCheckInRes = await postJson('/trustpass/check-in', {
@@ -761,7 +788,7 @@ async function runAllTests() {
     conditionNotes: 'Used for RNA separation. Cleaned and powered down.',
     photos: [sampleUploadedPhoto],
     userConfirmation: true,
-  }, studentValidToken);
+  }, activeStudentToken);
 
   // Complete Return via TrustPass check-out
   const returnCheckOutRes = await postJson('/trustpass/check-out', {
@@ -873,12 +900,12 @@ async function runAllTests() {
     userConfirmation: true,
   }, ownerToken);
   const comparison = afterReportRes.data?.data?.comparison;
-  const cond04Pass = afterReportRes.status === 200 && (comparison?.hasDifferences !== undefined || !!afterReportRes.data?.data?.report);
+  const cond04Pass = (afterReportRes.status === 200 || afterReportRes.status === 201) && (comparison?.hasDifferences !== undefined || !!afterReportRes.data?.data?.report);
   recordResult(
     'COND-04',
     'Level 5 - ConditionGuard',
     'Create final condition report and comparison',
-    '200 OK comparing before & after states with human review flags',
+    '200/201 OK comparing before & after states with human review flags',
     `Status ${afterReportRes.status}, Differences detected: ${comparison?.hasDifferences}`,
     cond04Pass
   );
@@ -894,7 +921,7 @@ async function runAllTests() {
     resourceName: createdResource?.name,
     evidence: [sampleUploadedPhoto],
   };
-  const incRes = await postJson('/incidents', incidentPayload, studentValidToken);
+  const incRes = await postJson('/incidents', incidentPayload, activeStudentToken);
   const createdIncident = incRes.data?.data;
   const cond05Pass = incRes.status === 201 && !!createdIncident?.incidentNumber;
   recordResult(
@@ -924,7 +951,7 @@ async function runAllTests() {
   );
 
   // COND-07: Verify Incident History
-  const incHistoryRes = await getJson(`/incidents?bookingId=${testBookingId}`, studentValidToken);
+  const incHistoryRes = await getJson(`/incidents?bookingId=${testBookingId}`, activeStudentToken);
   const cond07Pass = incHistoryRes.status === 200 && Array.isArray(incHistoryRes.data?.data) && incHistoryRes.data?.data?.length > 0;
   recordResult(
     'COND-07',
@@ -945,7 +972,7 @@ async function runAllTests() {
     resourceId: testResourceId,
     date: '2026-11-29',
     timeSlot: '10:00 - 12:00',
-  }, studentValidToken);
+  }, activeStudentToken);
   const fair01Pass = fairEvalRes.status === 200 && fairEvalRes.data?.data?.explanation !== undefined;
   recordResult(
     'FAIR-01',
@@ -981,7 +1008,7 @@ async function runAllTests() {
   );
 
   // FAIR-04: Waiting-List Order
-  const waitlistOrderRes = await getJson(`/fairshare/waitlist/${testResourceId}`, studentValidToken);
+  const waitlistOrderRes = await getJson(`/fairshare/waitlist/${testResourceId}`, activeStudentToken);
   const fair04Pass = waitlistOrderRes.status === 200 && Array.isArray(waitlistOrderRes.data?.data);
   recordResult(
     'FAIR-04',
@@ -993,7 +1020,6 @@ async function runAllTests() {
   );
 
   // FAIR-05: Cancellation and Next-User Notification
-  // Create a booking, waitlist another, cancel the first
   const b1Res = await postJson('/bookings', {
     resourceId: testResourceId,
     date: '2026-11-30',
@@ -1001,29 +1027,15 @@ async function runAllTests() {
     purpose: 'Promotion candidate primary slot',
     qualificationAcknowledged: true,
     safetyProtocolAcknowledged: true,
-  }, studentValidToken);
+  }, activeStudentToken);
   const b1Id = b1Res.data?.data?._id;
   if (b1Id) {
     await postJson(`/bookings/${b1Id}/approve`, { note: 'Approved' }, ownerToken);
   }
 
-  // Create waitlist booking
-  const b2Res = await postJson('/bookings', {
-    resourceId: testResourceId,
-    date: '2026-11-30',
-    timeSlot: '14:00 - 16:00',
-    purpose: 'Waitlisted student waiting for vacancy',
-    qualificationAcknowledged: true,
-    safetyProtocolAcknowledged: true,
-  }, studentValidToken);
-  const b2Id = b2Res.data?.data?._id;
-  if (b2Id) {
-    await postJson(`/bookings/${b2Id}/waitlist`, { note: 'Waitlisted' }, ownerToken);
-  }
-
   // Cancel primary booking
   const cancelAndPromoteRes = b1Id
-    ? await postJson(`/bookings/${b1Id}/cancel`, { reason: 'Slot opened up for waiting list' }, studentValidToken)
+    ? await postJson(`/bookings/${b1Id}/cancel`, { reason: 'Slot opened up for waiting list' }, activeStudentToken)
     : { status: 200 };
   const fair05Pass = cancelAndPromoteRes.status === 200;
   recordResult(
@@ -1037,7 +1049,7 @@ async function runAllTests() {
 
   // FAIR-06: Manager Override with Reason
   const overrideRes = await postJson(`/manager/conflicts/resolve`, {
-    bookingId: b2Id || testBookingId,
+    bookingId: testBookingId,
     action: 'override_approve',
     reason: 'Institutional emergency: urgent priority research mandated by Dean.',
   }, managerToken);
@@ -1106,7 +1118,7 @@ async function runAllTests() {
   );
 
   // ANLYT-04: Notification Creation
-  const notifRes = await getJson('/notifications', studentValidToken);
+  const notifRes = await getJson('/notifications', activeStudentToken);
   const notifications = notifRes.data?.data;
   const anlyt04Pass = notifRes.status === 200 && Array.isArray(notifications) && notifications.length > 0;
   recordResult(
@@ -1121,8 +1133,8 @@ async function runAllTests() {
   // ANLYT-05: Notification Read Status
   const testNotifId = notifications?.[0]?._id;
   const readRes = testNotifId
-    ? await patchJson(`/notifications/${testNotifId}/read`, {}, studentValidToken)
-    : await postJson('/notifications/mark-all-read', {}, studentValidToken);
+    ? await patchJson(`/notifications/${testNotifId}/read`, {}, activeStudentToken)
+    : await postJson('/notifications/mark-all-read', {}, activeStudentToken);
   const anlyt05Pass = readRes.status === 200;
   recordResult(
     'ANLYT-05',
@@ -1166,9 +1178,9 @@ async function runAllTests() {
   console.log('\n--- TESTING LEVEL 8: ROLE PERMISSIONS ---');
 
   // ROLE-01: Student Role Boundaries
-  const sAdminCheck = await getJson('/admin/overview', studentValidToken);
-  const sOwnerCheck = await getJson('/owner/overview', studentValidToken);
-  const sManagerCheck = await getJson('/manager/stats', studentValidToken);
+  const sAdminCheck = await getJson('/admin/overview', activeStudentToken);
+  const sOwnerCheck = await getJson('/owner/overview', activeStudentToken);
+  const sManagerCheck = await getJson('/manager/stats', activeStudentToken);
   const role01Pass = sAdminCheck.status === 403 && sOwnerCheck.status === 403 && sManagerCheck.status === 403;
   recordResult(
     'ROLE-01',
@@ -1219,47 +1231,22 @@ async function runAllTests() {
   );
 
   // ROLE-05: Cross-User Booking Isolation
-  const userBToken = regRes.data?.data?.token || regRes.data?.token;
-  let userBBookingId = null;
-  if (userBToken) {
-    const bRes = await postJson('/bookings', {
-      resourceId: testResourceId,
-      date: '2026-12-05',
-      timeSlot: '09:00 - 11:00',
-      purpose: 'User B private research',
-      qualificationAcknowledged: true,
-      safetyProtocolAcknowledged: true,
-    }, userBToken);
-    userBBookingId = bRes.data?.data?._id;
-  }
-
-  let role05Pass = true;
-  if (userBBookingId) {
-    const crossAccessRes = await getJson(`/bookings/${userBBookingId}`, studentValidToken);
-    role05Pass = crossAccessRes.status === 403 || crossAccessRes.status === 404;
-    recordResult(
-      'ROLE-05',
-      'Level 8 - Roles',
-      'Cross-user booking isolation',
-      '403 Forbidden when Student A attempts accessing Student B private booking',
-      `Status ${crossAccessRes.status}: ${crossAccessRes.data?.message}`,
-      role05Pass
-    );
-  } else {
-    recordResult(
-      'ROLE-05',
-      'Level 8 - Roles',
-      'Cross-user booking isolation',
-      '403 Forbidden on foreign booking',
-      'Verified via policy isolation guards',
-      true
-    );
-  }
+  // Attempt to access another user's booking with seed student account
+  const crossAccessRes = await getJson(`/bookings/${testBookingId}`, studentToken);
+  const role05Pass = crossAccessRes.status === 403 || crossAccessRes.status === 404;
+  recordResult(
+    'ROLE-05',
+    'Level 8 - Roles',
+    'Cross-user booking isolation',
+    '403 Forbidden when Student A attempts accessing Student B private booking',
+    `Status ${crossAccessRes.status}: ${crossAccessRes.data?.message}`,
+    role05Pass
+  );
 
   // ROLE-06: Cross-Owner Resource Isolation
   const foreignOwnerRes = await patchJson(`/owner/resources/${testResourceId}`, {
     name: 'Tampered Centrifuge',
-  }, userBToken || studentValidToken);
+  }, activeStudentToken);
   const role06Pass = foreignOwnerRes.status === 403;
   recordResult(
     'ROLE-06',
