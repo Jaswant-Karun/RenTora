@@ -526,6 +526,11 @@ export const ExploreResourcesPage: React.FC = () => {
       <SmartResourceMatcherModal
         isOpen={isSmartMatcherOpen}
         onClose={() => setIsSmartMatcherOpen(false)}
+        initialQuery={searchInput}
+        onSelectResourceForBooking={(res) => {
+          setIsSmartMatcherOpen(false);
+          setSelectedForBooking(res);
+        }}
         onSelectResource={(res) => {
           setIsSmartMatcherOpen(false);
           setSelectedForBooking(res);
