@@ -926,18 +926,59 @@ export const LandingPage: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-              {demoAccounts.map((account) => (
+              {(demoAccounts && demoAccounts.length > 0
+                ? demoAccounts
+                : [
+                    {
+                      role: 'student',
+                      name: 'Arun Kumar',
+                      email: 'student@rentora.edu',
+                      password: 'Password123!',
+                    },
+                    {
+                      role: 'owner',
+                      name: 'Dr. Meera Raman',
+                      email: 'owner@rentora.edu',
+                      password: 'Password123!',
+                    },
+                    {
+                      role: 'manager',
+                      name: 'Prof. Suresh Nair',
+                      email: 'manager@rentora.edu',
+                      password: 'Password123!',
+                    },
+                    {
+                      role: 'admin',
+                      name: 'Platform Administrator',
+                      email: 'admin@rentora.edu',
+                      password: 'Password123!',
+                    },
+                  ]
+              ).map((account: any) => (
                 <div
                   key={account.role}
                   className="p-4 rounded-xl border border-slate-200 hover:border-[#1769D2] hover:bg-blue-50/30 transition-all flex flex-col justify-between"
                 >
                   <div>
-                    <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center justify-between mb-1.5">
                       <span className="text-xs font-bold text-[#172033]">{account.name}</span>
                       <Badge role={account.role} size="sm" />
                     </div>
-                    <p className="text-[11px] font-mono text-slate-500">{account.email}</p>
-                    <p className="text-xs text-slate-600 mt-2">
+
+                    <div className="p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-mono space-y-1 mb-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500">Email:</span>
+                        <span className="text-slate-900 font-bold select-all">{account.email}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500">Password:</span>
+                        <span className="text-slate-900 font-bold bg-white px-1 rounded border border-slate-300">
+                          {account.password || 'Password123!'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-slate-600 mt-1">
                       {account.role === 'student' && 'Explore catalog, book slots, present TrustPass QR, inspect personal usage.'}
                       {account.role === 'owner' && 'Approve bookings, execute check-in/out, file condition reports & manage assets.'}
                       {account.role === 'manager' && 'Oversee campus quotas, promote waitlists, inspect ResourcePulse metrics.'}
@@ -946,13 +987,13 @@ export const LandingPage: React.FC = () => {
                   </div>
                   <Button
                     size="sm"
-                    className="w-full mt-4"
+                    className="w-full mt-3"
                     onClick={() => {
                       setIsDemoModalOpen(false);
                       handleQuickLogin(account.role);
                     }}
                   >
-                    Login as {account.role.toUpperCase()}
+                    1-Click Login as {account.role.toUpperCase()}
                   </Button>
                 </div>
               ))}
