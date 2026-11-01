@@ -21,6 +21,13 @@ import {
   Shield,
   Clock,
   Cpu,
+  Copy,
+  Check,
+  ArrowRight,
+  ExternalLink,
+  Users,
+  Building,
+  ShieldCheck,
 } from 'lucide-react';
 
 const loginSchema = z.object({
@@ -38,6 +45,8 @@ export const LoginPage: React.FC = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [instantLoggingIn, setInstantLoggingIn] = useState<string | null>(null);
 
   // Forgot Password Modal State
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
@@ -45,6 +54,52 @@ export const LoginPage: React.FC = () => {
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotSuccessMessage, setForgotSuccessMessage] = useState<string | null>(null);
   const [forgotError, setForgotError] = useState<string | null>(null);
+
+  // Fallback / standard demo accounts with explicit credentials
+  const defaultDemoAccounts = [
+    {
+      role: 'student' as const,
+      roleLabel: 'Student / Researcher',
+      name: 'Arun Kumar',
+      email: 'student@rentora.edu',
+      password: 'Password123!',
+      department: 'Computer Science & Engineering',
+      institution: 'National Institute of Technology',
+      description: 'Discover catalog, submit reservations, present TrustPass QR, inspect personal ESG impact.',
+    },
+    {
+      role: 'owner' as const,
+      roleLabel: 'Resource / Lab Owner',
+      name: 'Dr. Meera Raman',
+      email: 'owner@rentora.edu',
+      password: 'Password123!',
+      department: 'Robotics & Automation Lab',
+      institution: 'National Institute of Technology',
+      description: 'Catalogue specialized equipment, review booking requests, execute check-in/out, file condition reports.',
+    },
+    {
+      role: 'manager' as const,
+      roleLabel: 'Institution Manager',
+      name: 'Prof. Suresh Nair',
+      email: 'manager@rentora.edu',
+      password: 'Password123!',
+      department: 'Dean of Academic Infrastructure',
+      institution: 'National Institute of Technology',
+      description: 'Campus-wide equipment quotas, waitlist promotions, ESG sustainability analytics, incident resolutions.',
+    },
+    {
+      role: 'admin' as const,
+      roleLabel: 'Platform Administrator',
+      name: 'Central Platform Administrator',
+      email: 'admin@rentora.edu',
+      password: 'Password123!',
+      department: 'Central Platform Governance',
+      institution: 'RENTORA Central Network',
+      description: 'Institutional federation, system security, immutable audit logs, global settings, platform health.',
+    },
+  ];
+
+  const activeDemoAccounts = demoAccounts && demoAccounts.length > 0 ? demoAccounts : defaultDemoAccounts;
 
   const {
     register,
@@ -76,9 +131,37 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const handleSelectDemo = (role: string, email: string, pass: string) => {
+  const handleSelectDemo = (email: string, pass: string) => {
     setValue('email', email, { shouldValidate: true });
     setValue('password', pass, { shouldValidate: true });
+  };
+
+  const handleCopy = (text: string, key: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(text);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 2000);
+  };
+
+  const handleInstantLogin = async (role: any) => {
+    setInstantLoggingIn(role);
+    setServerError(null);
+    try {
+      await switchDemoRole(role);
+      navigate(
+        role === 'admin'
+          ? '/admin'
+          : role === 'manager'
+          ? '/manager'
+          : role === 'owner'
+          ? '/owner'
+          : '/dashboard'
+      );
+    } catch (err: any) {
+      setServerError(err.message || 'Instant login failed. Please sign in with email and password.');
+    } finally {
+      setInstantLoggingIn(null);
+    }
   };
 
   const handleForgotSubmit = async (e: React.FormEvent) => {
@@ -100,207 +183,410 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex bg-white text-[#172033]">
-      {/* Left Form Column */}
-      <div className="w-full lg:w-[480px] xl:w-[540px] flex flex-col justify-between p-6 sm:p-10 lg:p-12 shrink-0 border-r border-[#E2E8F0]">
-        <div>
-          {/* Brand */}
-          <Link to="/" className="inline-flex items-center space-x-2.5 mb-8">
-            <div className="w-9 h-9 rounded-lg bg-[#1769D2] flex items-center justify-center text-white shadow-sm">
-              <Layers className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="font-bold text-lg text-[#172033] tracking-tight">RENTORA</span>
-              <span className="block text-[10px] text-[#64748B] font-medium tracking-wide">ENTERPRISE PLATFORM</span>
-            </div>
-          </Link>
-
-          <div>
-            <h1 className="text-xl font-bold text-[#172033] tracking-tight">
-              Sign in to your account
-            </h1>
-            <p className="text-xs text-[#64748B] mt-1">
-              Enter your verified institutional credentials to schedule equipment
-            </p>
+    <div className="min-h-screen w-full flex flex-col bg-white text-[#172033]">
+      {/* Top Persistent Hackathon Demo Banner */}
+      <div className="w-full bg-[#172033] text-white px-4 sm:px-6 py-2.5 text-xs border-b border-slate-700">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 rounded bg-[#1769D2] font-bold text-[10px] uppercase tracking-wider text-white">
+              Judge Evaluation Mode
+            </span>
+            <span className="text-slate-300 font-medium">
+              Demo Credentials: All Accounts Use Password{' '}
+              <code className="bg-slate-800 text-amber-300 font-mono px-2 py-0.5 rounded border border-slate-700 font-bold">
+                Password123!
+              </code>
+            </span>
           </div>
 
-          {/* Quick Demo Selector */}
-          <div className="mt-6 p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-[#172033] flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-[#1769D2]" />
-                Demo Accounts
-              </span>
-              <span className="text-[10px] text-[#64748B]">Click to pre-fill</span>
-            </div>
-            <div className="grid grid-cols-2 gap-1.5">
-              {demoAccounts.map((demo) => (
-                <button
-                  key={demo.role}
-                  type="button"
-                  onClick={() => handleSelectDemo(demo.role, demo.email, demo.password)}
-                  className="p-2 rounded-lg bg-white hover:bg-slate-50 border border-[#E2E8F0] text-left transition-colors"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-[#172033]">{demo.name}</span>
-                    <Badge role={demo.role} size="sm" />
-                  </div>
-                  <p className="text-[10px] text-[#64748B] truncate mt-0.5">{demo.email}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Error Notice */}
-          {serverError && (
-            <div className="mt-4 p-3 rounded-lg bg-red-50 border border-red-200 flex items-start gap-2 text-xs text-[#DC2626]">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-              <span>{serverError}</span>
-            </div>
-          )}
-
-          {/* Login Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="mt-5 space-y-4">
-            <Input
-              label="Institutional Email"
-              type="email"
-              placeholder="e.g. researcher@college.edu"
-              leftIcon={<Mail className="w-4 h-4" />}
-              error={errors.email?.message}
-              {...register('email')}
-            />
-
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-medium text-[#172033]">
-                  Password
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setIsForgotModalOpen(true)}
-                  className="text-xs text-[#1769D2] hover:underline"
-                >
-                  Forgot password?
-                </button>
-              </div>
-              <div className="relative">
-                <Input
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter your account password"
-                  leftIcon={<Lock className="w-4 h-4" />}
-                  rightIcon={
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="text-[#64748B] hover:text-[#172033]"
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  }
-                  error={errors.password?.message}
-                  {...register('password')}
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center">
-              <input
-                id="rememberMe"
-                type="checkbox"
-                className="w-4 h-4 rounded border-[#E2E8F0] text-[#1769D2] focus:ring-[#1769D2]"
-                {...register('rememberMe')}
-              />
-              <label htmlFor="rememberMe" className="ml-2 text-xs text-[#64748B]">
-                Remember me on this browser
-              </label>
-            </div>
-
-            <Button
-              type="submit"
-              variant="primary"
-              size="md"
-              isLoading={isSubmitting}
-              className="w-full mt-2"
+          <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+            <span className="text-slate-400 hidden lg:inline">Instant 1-Click:</span>
+            <button
+              onClick={() => handleInstantLogin('student')}
+              className="px-2.5 py-1 rounded bg-emerald-950/80 hover:bg-emerald-800 border border-emerald-600/50 text-emerald-200 font-semibold transition-colors"
             >
-              Sign In
-            </Button>
-          </form>
-
-          <p className="mt-5 text-center text-xs text-[#64748B]">
-            Don't have an institutional profile?{' '}
-            <Link to="/register" className="font-semibold text-[#1769D2] hover:underline">
-              Create an account
-            </Link>
-          </p>
-        </div>
-
-        {/* Footer Credit */}
-        <div className="pt-6 border-t border-[#E2E8F0] flex items-center justify-between text-[11px] text-[#64748B]">
-          <span>Team: Storm Breakerz</span>
-          <span>Leader: Jaswant Karun S A</span>
+              Student (Arun)
+            </button>
+            <button
+              onClick={() => handleInstantLogin('owner')}
+              className="px-2.5 py-1 rounded bg-blue-950/80 hover:bg-blue-800 border border-blue-600/50 text-blue-200 font-semibold transition-colors"
+            >
+              Owner (Dr. Meera)
+            </button>
+            <button
+              onClick={() => handleInstantLogin('manager')}
+              className="px-2.5 py-1 rounded bg-amber-950/80 hover:bg-amber-800 border border-amber-600/50 text-amber-200 font-semibold transition-colors"
+            >
+              Manager (Prof. Suresh)
+            </button>
+            <button
+              onClick={() => handleInstantLogin('admin')}
+              className="px-2.5 py-1 rounded bg-indigo-950/80 hover:bg-indigo-800 border border-indigo-600/50 text-indigo-200 font-semibold transition-colors"
+            >
+              Admin (Platform)
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Right Feature Showcase Column (Enterprise Split-Screen) */}
-      <div className="hidden lg:flex flex-1 flex-col justify-between p-12 bg-[#F8FAFC]">
-        <div className="max-w-md mx-auto my-auto space-y-8">
-          {/* Resource Sharing Illustration Card */}
-          <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 shadow-sm space-y-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-xl bg-[#EFF6FF] text-[#1769D2] flex items-center justify-center">
-                <Cpu className="w-5 h-5" />
+      <div className="flex-1 w-full flex">
+        {/* Left Form Column */}
+        <div className="w-full lg:w-[500px] xl:w-[580px] flex flex-col justify-between p-6 sm:p-8 lg:p-10 shrink-0 border-r border-[#E2E8F0]">
+          <div>
+            {/* Brand */}
+            <Link to="/" className="inline-flex items-center space-x-2.5 mb-6">
+              <div className="w-9 h-9 rounded-lg bg-[#1769D2] flex items-center justify-center text-white shadow-sm">
+                <Layers className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-[#172033]">Campus Equipment Sharing</h3>
-                <p className="text-xs text-[#64748B]">Federated scientific & lab apparatus</p>
+                <span className="font-bold text-lg text-[#172033] tracking-tight">RENTORA</span>
+                <span className="block text-[10px] text-[#64748B] font-medium tracking-wide">ENTERPRISE PLATFORM</span>
+              </div>
+            </Link>
+
+            <div>
+              <h1 className="text-xl font-bold text-[#172033] tracking-tight">
+                Sign in to your account
+              </h1>
+              <p className="text-xs text-[#64748B] mt-1">
+                Enter your verified institutional credentials or select a pre-configured judge account below
+              </p>
+            </div>
+
+            {/* Prominent Demo Credentials Card for Hackathon Judges */}
+            <div className="mt-5 p-4 rounded-xl bg-gradient-to-br from-blue-50/70 to-indigo-50/50 border border-[#1769D2]/25 shadow-2xs">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-[#1769D2]" />
+                  <span className="text-xs font-bold text-[#172033]">
+                    Hackathon Demo Accounts
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] text-[#64748B]">Universal Pass:</span>
+                  <button
+                    type="button"
+                    onClick={(e) => handleCopy('Password123!', 'universal-pass', e)}
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white border border-[#E2E8F0] font-mono text-[10px] font-bold text-[#1769D2] hover:bg-slate-50 transition-colors"
+                    title="Click to copy password"
+                  >
+                    <span>Password123!</span>
+                    {copiedKey === 'universal-pass' ? (
+                      <Check className="w-3 h-3 text-[#16834A]" />
+                    ) : (
+                      <Copy className="w-3 h-3 text-[#64748B]" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* 4 Persona Cards with Explicit Credentials and 1-Click Action */}
+              <div className="space-y-2">
+                {activeDemoAccounts.map((demo) => {
+                  const pass = demo.password || 'Password123!';
+                  const isBusy = instantLoggingIn === demo.role;
+
+                  return (
+                    <div
+                      key={demo.role}
+                      className="p-2.5 rounded-lg bg-white border border-[#E2E8F0] hover:border-[#1769D2]/40 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold text-[#172033]">{demo.name}</span>
+                          <Badge role={demo.role as any} size="sm" />
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-[11px] font-mono text-[#64748B]">
+                          <span className="flex items-center gap-1">
+                            <span className="text-slate-400">Email:</span>
+                            <span className="text-slate-800 font-semibold select-all">{demo.email}</span>
+                            <button
+                              type="button"
+                              onClick={(e) => handleCopy(demo.email, `email-${demo.role}`, e)}
+                              className="text-slate-400 hover:text-[#1769D2] p-0.5"
+                              title="Copy email"
+                            >
+                              {copiedKey === `email-${demo.role}` ? (
+                                <Check className="w-3 h-3 text-[#16834A]" />
+                              ) : (
+                                <Copy className="w-3 h-3" />
+                              )}
+                            </button>
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <span className="text-slate-400">Pass:</span>
+                            <span className="text-slate-800 font-semibold">{pass}</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+                        <button
+                          type="button"
+                          onClick={() => handleSelectDemo(demo.email, pass)}
+                          className="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-[#172033] text-[11px] font-medium transition-colors"
+                          title="Pre-fill form inputs"
+                        >
+                          Auto-Fill
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={isBusy}
+                          onClick={() => handleInstantLogin(demo.role)}
+                          className="px-2.5 py-1 rounded bg-[#1769D2] hover:bg-[#1256B0] text-white text-[11px] font-semibold transition-colors flex items-center gap-1 disabled:opacity-50 shadow-2xs"
+                          title="Direct 1-click sign in"
+                        >
+                          <span>{isBusy ? 'Loading...' : '1-Click Login'}</span>
+                          <ArrowRight className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
-            {/* Micro visual showing resource scheduling */}
-            <div className="space-y-2 pt-2 border-t border-[#E2E8F0]">
-              <div className="flex items-center justify-between p-2.5 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-xs">
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 rounded-full bg-[#16834A]" />
-                  <span className="font-medium text-[#172033]">Rigaku X-Ray Diffractometer</span>
-                </div>
-                <Badge variant="success" size="sm">Available</Badge>
+            {/* Error Notice */}
+            {serverError && (
+              <div className="mt-4 p-3 rounded-lg bg-red-50 border border-red-200 flex items-start gap-2 text-xs text-[#DC2626]">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{serverError}</span>
               </div>
-              <div className="flex items-center justify-between p-2.5 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-xs">
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 rounded-full bg-[#1769D2]" />
-                  <span className="font-medium text-[#172033]">Cleanroom Lithography Suite</span>
+            )}
+
+            {/* Login Form */}
+            <form onSubmit={handleSubmit(onSubmit)} className="mt-5 space-y-3.5">
+              <Input
+                label="Institutional Email Address"
+                type="email"
+                placeholder="e.g. student@rentora.edu"
+                leftIcon={<Mail className="w-4 h-4" />}
+                error={errors.email?.message}
+                {...register('email')}
+              />
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-medium text-[#172033]">
+                    Password
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setIsForgotModalOpen(true)}
+                    className="text-xs text-[#1769D2] hover:underline"
+                  >
+                    Forgot password?
+                  </button>
                 </div>
-                <Badge variant="brand" size="sm">Reserved</Badge>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Enter password (e.g. Password123!)"
+                    leftIcon={<Lock className="w-4 h-4" />}
+                    rightIcon={
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="text-[#64748B] hover:text-[#172033]"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    }
+                    error={errors.password?.message}
+                    {...register('password')}
+                  />
+                </div>
               </div>
-            </div>
+
+              <div className="flex items-center">
+                <input
+                  id="rememberMe"
+                  type="checkbox"
+                  className="w-4 h-4 rounded border-[#E2E8F0] text-[#1769D2] focus:ring-[#1769D2]"
+                  {...register('rememberMe')}
+                />
+                <label htmlFor="rememberMe" className="ml-2 text-xs text-[#64748B]">
+                  Remember session on this device
+                </label>
+              </div>
+
+              <Button
+                type="submit"
+                variant="primary"
+                size="md"
+                isLoading={isSubmitting}
+                className="w-full mt-2"
+              >
+                Sign In With Credentials
+              </Button>
+            </form>
+
+            <p className="mt-4 text-center text-xs text-[#64748B]">
+              New campus researcher?{' '}
+              <Link to="/register" className="font-semibold text-[#1769D2] hover:underline">
+                Create institutional account
+              </Link>
+            </p>
           </div>
 
-          {/* Features list */}
-          <div className="space-y-4">
-            <div className="flex items-start space-x-3">
-              <div className="w-7 h-7 rounded-lg bg-[#EFF6FF] text-[#1769D2] flex items-center justify-center shrink-0 mt-0.5">
-                <Shield className="w-3.5 h-3.5" />
-              </div>
-              <div>
-                <h4 className="text-xs font-semibold text-[#172033]">Role-Based Safety Governance</h4>
-                <p className="text-[11px] text-[#64748B] mt-0.5">Strict credential checks, training verification, and custodian physical handovers.</p>
-              </div>
-            </div>
-
-            <div className="flex items-start space-x-3">
-              <div className="w-7 h-7 rounded-lg bg-[#EFF6FF] text-[#1769D2] flex items-center justify-center shrink-0 mt-0.5">
-                <Clock className="w-3.5 h-3.5" />
-              </div>
-              <div>
-                <h4 className="text-xs font-semibold text-[#172033]">Atomic Conflict Prevention</h4>
-                <p className="text-[11px] text-[#64748B] mt-0.5">Zero double-bookings with fair allocation quotas and transparent waitlists.</p>
-              </div>
-            </div>
+          {/* Footer Credit */}
+          <div className="pt-5 border-t border-[#E2E8F0] flex items-center justify-between text-[11px] text-[#64748B]">
+            <span>Team: Storm Breakerz</span>
+            <span>Lead: Jaswant Karun S A</span>
           </div>
         </div>
 
-        <div className="text-center text-[11px] text-[#64748B]">
-          RENTORA Institutional Network • Verified Academic Node
+        {/* Right Feature Showcase Column (Enterprise Split-Screen) */}
+        <div className="hidden lg:flex flex-1 flex-col justify-between p-10 xl:p-12 bg-[#F8FAFC]">
+          <div className="max-w-lg mx-auto my-auto space-y-6">
+            {/* Quick Demo Credentials Cheat Sheet Card */}
+            <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 shadow-sm space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0]">
+                <div className="flex items-center space-x-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-[#EFF6FF] text-[#1769D2] flex items-center justify-center font-bold">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-[#172033]">Evaluator Credentials Cheat Sheet</h3>
+                    <p className="text-xs text-[#64748B]">Pre-seeded accounts with complete sample data</p>
+                  </div>
+                </div>
+                <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
+                  Verified Active
+                </span>
+              </div>
+
+              {/* Table of Demo Accounts */}
+              <div className="overflow-hidden border border-[#E2E8F0] rounded-xl">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#F8FAFC] text-[11px] font-bold text-[#64748B] border-b border-[#E2E8F0]">
+                    <tr>
+                      <th className="py-2.5 px-3">Role</th>
+                      <th className="py-2.5 px-3">Email Address</th>
+                      <th className="py-2.5 px-3">Password</th>
+                      <th className="py-2.5 px-3 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#E2E8F0] text-[11px]">
+                    <tr className="hover:bg-slate-50 transition-colors">
+                      <td className="py-2.5 px-3">
+                        <Badge role="student" size="sm" />
+                      </td>
+                      <td className="py-2.5 px-3 font-mono font-medium text-slate-800">
+                        student@rentora.edu
+                      </td>
+                      <td className="py-2.5 px-3 font-mono text-slate-700 font-semibold">
+                        Password123!
+                      </td>
+                      <td className="py-2.5 px-3 text-right">
+                        <button
+                          type="button"
+                          onClick={() => handleInstantLogin('student')}
+                          className="text-[#1769D2] hover:underline font-bold"
+                        >
+                          Launch ➔
+                        </button>
+                      </td>
+                    </tr>
+
+                    <tr className="hover:bg-slate-50 transition-colors">
+                      <td className="py-2.5 px-3">
+                        <Badge role="owner" size="sm" />
+                      </td>
+                      <td className="py-2.5 px-3 font-mono font-medium text-slate-800">
+                        owner@rentora.edu
+                      </td>
+                      <td className="py-2.5 px-3 font-mono text-slate-700 font-semibold">
+                        Password123!
+                      </td>
+                      <td className="py-2.5 px-3 text-right">
+                        <button
+                          type="button"
+                          onClick={() => handleInstantLogin('owner')}
+                          className="text-[#1769D2] hover:underline font-bold"
+                        >
+                          Launch ➔
+                        </button>
+                      </td>
+                    </tr>
+
+                    <tr className="hover:bg-slate-50 transition-colors">
+                      <td className="py-2.5 px-3">
+                        <Badge role="manager" size="sm" />
+                      </td>
+                      <td className="py-2.5 px-3 font-mono font-medium text-slate-800">
+                        manager@rentora.edu
+                      </td>
+                      <td className="py-2.5 px-3 font-mono text-slate-700 font-semibold">
+                        Password123!
+                      </td>
+                      <td className="py-2.5 px-3 text-right">
+                        <button
+                          type="button"
+                          onClick={() => handleInstantLogin('manager')}
+                          className="text-[#1769D2] hover:underline font-bold"
+                        >
+                          Launch ➔
+                        </button>
+                      </td>
+                    </tr>
+
+                    <tr className="hover:bg-slate-50 transition-colors">
+                      <td className="py-2.5 px-3">
+                        <Badge role="admin" size="sm" />
+                      </td>
+                      <td className="py-2.5 px-3 font-mono font-medium text-slate-800">
+                        admin@rentora.edu
+                      </td>
+                      <td className="py-2.5 px-3 font-mono text-slate-700 font-semibold">
+                        Password123!
+                      </td>
+                      <td className="py-2.5 px-3 text-right">
+                        <button
+                          type="button"
+                          onClick={() => handleInstantLogin('admin')}
+                          className="text-[#1769D2] hover:underline font-bold"
+                        >
+                          Launch ➔
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex items-center justify-between text-[11px] text-[#64748B] pt-1">
+                <span>Safe simulated institutional data only</span>
+                <button
+                  type="button"
+                  onClick={(e) => handleCopy('Password123!', 'cheat-sheet-pass', e)}
+                  className="text-[#1769D2] hover:underline flex items-center gap-1 font-medium"
+                >
+                  <Copy className="w-3 h-3" />
+                  <span>{copiedKey === 'cheat-sheet-pass' ? 'Copied Password!' : 'Copy Password (Password123!)'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Features summary */}
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="p-3.5 rounded-xl bg-white border border-[#E2E8F0]">
+                <ShieldCheck className="w-4 h-4 text-[#16834A] mb-1.5" />
+                <h4 className="font-bold text-[#172033]">Cryptographic TrustPass</h4>
+                <p className="text-[11px] text-[#64748B] mt-0.5">QR token custody verification at physical apparatus check-in.</p>
+              </div>
+              <div className="p-3.5 rounded-xl bg-white border border-[#E2E8F0]">
+                <Clock className="w-4 h-4 text-[#1769D2] mb-1.5" />
+                <h4 className="font-bold text-[#172033]">FairShare Engine</h4>
+                <p className="text-[11px] text-[#64748B] mt-0.5">Transparent priority scoring and standby waitlist queue.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center text-[11px] text-[#64748B]">
+            RENTORA Institutional Network • Verified Academic Node
+          </div>
         </div>
       </div>
 
@@ -348,17 +634,17 @@ export const LoginPage: React.FC = () => {
                 />
                 <div className="flex justify-end gap-2 pt-2">
                   <Button
-                    variant="secondary"
-                    size="sm"
                     type="button"
+                    variant="outline"
+                    size="sm"
                     onClick={() => setIsForgotModalOpen(false)}
                   >
                     Cancel
                   </Button>
                   <Button
+                    type="submit"
                     variant="primary"
                     size="sm"
-                    type="submit"
                     isLoading={forgotLoading}
                   >
                     Send Recovery Link
@@ -372,5 +658,3 @@ export const LoginPage: React.FC = () => {
     </div>
   );
 };
-
-export default LoginPage;
