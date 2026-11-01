@@ -1389,6 +1389,28 @@ export const initiateReturn = async (
       return;
     }
 
+    // State Transition Guard
+    if (booking.status !== 'checked_in' && booking.status !== 'overdue') {
+      res.status(400).json({
+        success: false,
+        message: `Invalid state transition: Cannot initiate return for reservation currently in status '${booking.status}'. Session must be 'checked_in' or 'overdue'.`,
+      });
+      return;
+    }
+
+    // Authorization Guard: Borrower, resource custodian, or staff
+    const resource = await Resource.findById(booking.resourceId);
+    const isBorrower = booking.userId.toString() === req.user?._id.toString();
+    const isOwner = resource?.ownerId && resource.ownerId.toString() === req.user?._id.toString();
+    const isStaff = req.user?.role === 'manager' || req.user?.role === 'admin';
+    if (!isBorrower && !isOwner && !isStaff) {
+      res.status(403).json({
+        success: false,
+        message: 'Forbidden: You are not authorized to initiate return for this reservation.',
+      });
+      return;
+    }
+
     const previousStatus = booking.status;
     const returnTime = new Date();
     booking.returnInitiated = true;
