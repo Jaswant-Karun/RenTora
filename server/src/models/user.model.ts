@@ -30,6 +30,7 @@ export interface IUser extends Document {
   isVerified: boolean;
   institutionMembershipVerified: boolean;
   academicQualification: string;
+  bio?: string;
   trainingCertifications: ITrainingCertification[];
   historicalUsage: IHistoricalUsage;
   createdAt: Date;
@@ -125,6 +126,7 @@ const userSchema = new Schema<IUser>(
       totalCompletedBookings: { type: Number, default: 0 },
       penaltyPoints: { type: Number, default: 0 },
       monopolisationCooldownUntil: { type: Date },
+    },
     bio: {
       type: String,
       trim: true,
