@@ -101,9 +101,10 @@ export const App: React.FC = () => {
         <ToastProvider>
           <ErrorBoundary>
             <AppLayout>
-            <Routes>
-            {/* Public Landing Page */}
-            <Route path="/" element={<LandingPage />} />
+              <Suspense fallback={<RouteLoadingSkeleton />}>
+                <Routes>
+                  {/* Public Landing Page */}
+                  <Route path="/" element={<LandingPage />} />
             <Route path="/landing" element={<LandingPage />} />
             <Route path="/intro" element={<IntroScreen />} />
 
@@ -375,7 +376,8 @@ export const App: React.FC = () => {
 
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
-        </AppLayout>
+        </Suspense>
+      </AppLayout>
       </ErrorBoundary>
     </ToastProvider>
   </AuthProvider>
