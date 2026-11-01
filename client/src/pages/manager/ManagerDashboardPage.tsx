@@ -688,34 +688,98 @@ export const ManagerDashboardPage: React.FC = () => {
             </div>
 
             <div className="rounded-2xl border border-[#E2E8F0] bg-white overflow-hidden shadow-sm">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 border-b border-[#E2E8F0] text-[#64748B] uppercase tracking-wider font-semibold">
-                  <tr>
-                    <th className="p-3.5">User Details</th>
-                    <th className="p-3.5">Department</th>
-                    <th className="p-3.5">System Role</th>
-                    <th className="p-3.5">Status</th>
-                    <th className="p-3.5 text-right">Verification Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#E2E8F0] text-[#172033]">
-                  {filteredUsers.map((u) => (
-                    <tr key={u._id} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="p-3.5">
-                        <p className="font-semibold text-[#172033]">{u.name}</p>
-                        <p className="text-[11px] text-[#64748B]">{u.email}</p>
-                      </td>
-                      <td className="p-3.5 text-[#64748B]">{u.department || 'General Science'}</td>
-                      <td className="p-3.5">
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 border-b border-[#E2E8F0] text-[#64748B] uppercase tracking-wider font-semibold">
+                    <tr>
+                      <th className="p-3.5">User Details</th>
+                      <th className="p-3.5">Department</th>
+                      <th className="p-3.5">System Role</th>
+                      <th className="p-3.5">Status</th>
+                      <th className="p-3.5 text-right">Verification Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#E2E8F0] text-[#172033]">
+                    {filteredUsers.map((u) => (
+                      <tr key={u._id} className="hover:bg-slate-50/60 transition-colors">
+                        <td className="p-3.5">
+                          <p className="font-semibold text-[#172033]">{u.name}</p>
+                          <p className="text-[11px] text-[#64748B]">{u.email}</p>
+                        </td>
+                        <td className="p-3.5 text-[#64748B]">{u.department || 'General Science'}</td>
+                        <td className="p-3.5">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                            u.role === 'owner' ? 'bg-purple-50 text-purple-700 border border-purple-200' :
+                            u.role === 'manager' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                            'bg-blue-50 text-[#1769D2] border border-blue-200'
+                          }`}>
+                            {u.role === 'owner' ? 'Resource Owner' : u.role}
+                          </span>
+                        </td>
+                        <td className="p-3.5">
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                              u.isVerified
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : 'bg-amber-50 text-amber-700 border border-amber-200'
+                            }`}
+                          >
+                            {u.isVerified ? 'Verified' : 'Pending Verification'}
+                          </span>
+                        </td>
+                        <td className="p-3.5 text-right">
+                          <button
+                            onClick={() => handleToggleUserVerification(u._id, !!u.isVerified)}
+                            disabled={actionLoading}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors inline-flex items-center gap-1.5 ${
+                              u.isVerified
+                                ? 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
+                                : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm'
+                            }`}
+                          >
+                            {u.isVerified ? (
+                              <>
+                                <UserX className="w-3.5 h-3.5" /> Revoke
+                              </>
+                            ) : (
+                              <>
+                                <UserCheck className="w-3.5 h-3.5" /> Verify {u.role === 'owner' ? 'Owner' : 'User'}
+                              </>
+                            )}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {filteredUsers.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="p-8 text-center text-[#64748B]">
+                          No user or owner accounts match your filter criteria.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Stacked Card View */}
+              <div className="block md:hidden divide-y divide-[#E2E8F0]">
+                {filteredUsers.map((u) => (
+                  <div key={u._id} className="p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-sm text-[#172033] truncate">{u.name}</p>
+                        <p className="text-xs text-[#64748B] truncate">{u.email}</p>
+                        <p className="text-xs text-[#64748B] mt-0.5">Dept: {u.department || 'General Science'}</p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1.5 shrink-0">
                         <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
                           u.role === 'owner' ? 'bg-purple-50 text-purple-700 border border-purple-200' :
                           u.role === 'manager' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
                           'bg-blue-50 text-[#1769D2] border border-blue-200'
                         }`}>
-                          {u.role === 'owner' ? 'Resource Owner' : u.role}
+                          {u.role === 'owner' ? 'Owner' : u.role}
                         </span>
-                      </td>
-                      <td className="p-3.5">
                         <span
                           className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                             u.isVerified
@@ -723,41 +787,39 @@ export const ManagerDashboardPage: React.FC = () => {
                               : 'bg-amber-50 text-amber-700 border border-amber-200'
                           }`}
                         >
-                          {u.isVerified ? 'Verified' : 'Pending Verification'}
+                          {u.isVerified ? 'Verified' : 'Pending'}
                         </span>
-                      </td>
-                      <td className="p-3.5 text-right">
-                        <button
-                          onClick={() => handleToggleUserVerification(u._id, !!u.isVerified)}
-                          disabled={actionLoading}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors inline-flex items-center gap-1.5 ${
-                            u.isVerified
-                              ? 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
-                              : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm'
-                          }`}
-                        >
-                          {u.isVerified ? (
-                            <>
-                              <UserX className="w-3.5 h-3.5" /> Revoke
-                            </>
-                          ) : (
-                            <>
-                              <UserCheck className="w-3.5 h-3.5" /> Verify {u.role === 'owner' ? 'Owner' : 'User'}
-                            </>
-                          )}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {filteredUsers.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="p-8 text-center text-[#64748B]">
-                        No user or owner accounts match your filter criteria.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                      </div>
+                    </div>
+                    <div className="pt-2 border-t border-slate-100 flex justify-end">
+                      <button
+                        onClick={() => handleToggleUserVerification(u._id, !!u.isVerified)}
+                        disabled={actionLoading}
+                        className={`w-full py-2 px-3 rounded-lg text-xs font-semibold transition-colors inline-flex items-center justify-center gap-1.5 ${
+                          u.isVerified
+                            ? 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
+                            : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm'
+                        }`}
+                      >
+                        {u.isVerified ? (
+                          <>
+                            <UserX className="w-3.5 h-3.5" /> Revoke Verification
+                          </>
+                        ) : (
+                          <>
+                            <UserCheck className="w-3.5 h-3.5" /> Verify {u.role === 'owner' ? 'Owner' : 'User'}
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {filteredUsers.length === 0 && (
+                  <div className="p-8 text-center text-[#64748B] text-xs">
+                    No user or owner accounts match your filter criteria.
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         );
