@@ -40,7 +40,7 @@ export const getMeApi = async (): Promise<{ success: boolean; data: { user: User
   return response.data;
 };
 
-export const getDemoAccountsApi = async (): Promise<{ success: boolean; data: DemoAccount[] }> => {
+export const getDemoAccountsApi = async (): Promise<{ success: boolean; enabled?: boolean; message?: string; data: DemoAccount[] }> => {
   const response = await apiClient.get('/auth/demo-accounts');
   return response.data;
 };

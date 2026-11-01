@@ -13,6 +13,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   loading: boolean;
+  demoModeEnabled: boolean;
   demoAccounts: DemoAccount[];
   login: (email: string, password: string, rememberMe?: boolean) => Promise<User>;
   register: (userData: any) => Promise<User>;
@@ -28,18 +29,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem('rentora_auth_token'));
   const [loading, setLoading] = useState<boolean>(true);
+  const [demoModeEnabled, setDemoModeEnabled] = useState<boolean>(false);
   const [demoAccounts, setDemoAccounts] = useState<DemoAccount[]>([]);
 
-  // Fetch demo accounts for fast evaluative testing
+  // Fetch demo accounts strictly from server; disabled if server disables it or in production
   useEffect(() => {
     const fetchDemos = async () => {
       try {
         const res = await getDemoAccountsApi();
-        if (res.success) {
+        if (res.success && res.enabled !== false && Array.isArray(res.data) && res.data.length > 0) {
           setDemoAccounts(res.data);
+          setDemoModeEnabled(true);
+        } else {
+          setDemoAccounts([]);
+          setDemoModeEnabled(false);
         }
       } catch (err) {
-        console.warn('Could not load demo accounts:', err);
+        console.warn('Demo accounts disabled or unavailable from server:', err);
+        setDemoAccounts([]);
+        setDemoModeEnabled(false);
       }
     };
     fetchDemos();
@@ -135,6 +143,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         token,
         loading,
+        demoModeEnabled,
         demoAccounts,
         login,
         register,
