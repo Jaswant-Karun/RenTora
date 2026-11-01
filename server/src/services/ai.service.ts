@@ -14,6 +14,32 @@ export interface SmartMatchRequest {
   minRating?: number;
 }
 
+export interface SmartMatchAlternative {
+  resourceId: string;
+  name: string;
+  category: string;
+  location: string;
+  institution: string;
+  status: string;
+  reason: string;
+}
+
+export interface SmartMatchTimeSlot {
+  timeSlot: string;
+  isAvailable: boolean;
+  conflictReason?: string;
+}
+
+export interface ParsedSearchIntent {
+  rawQuery: string;
+  detectedCategory?: string;
+  detectedKeywords: string[];
+  detectedDate?: string;
+  detectedTimeSlot?: string;
+  detectedSpecs: string[];
+  confidence: number;
+}
+
 export interface SmartMatchResult {
   resource: IResource;
   matchScore: number; // 0 - 100%
@@ -25,13 +51,16 @@ export interface SmartMatchResult {
     certificationsCovered: boolean;
     missingCertifications?: string[];
     isRestricted: boolean;
+    actionRequired?: string;
   };
   availabilityStatus: {
     availableOnDate: boolean;
     operatingHoursMatch: boolean;
     reason?: string;
+    recommendedTimeSlots?: SmartMatchTimeSlot[];
   };
   specificationsMatched: string[];
+  alternatives?: SmartMatchAlternative[];
 }
 
 export interface UtilizationAnalyticsResult {
@@ -214,45 +243,216 @@ export class AiAssistanceService {
   }
 
   // ========================================================================
-  // FEATURE 1: SMART RESOURCE MATCHING
+  // FEATURE 1: SMART RESOURCE MATCHING & DISCOVERY ENGINE
   // ========================================================================
+  public static parseNaturalLanguageIntent(
+    query: string,
+    rawDate?: string,
+    rawSlot?: string
+  ): ParsedSearchIntent {
+    const text = (query || '').toLowerCase();
+    const detectedKeywords: string[] = [];
+    const detectedSpecs: string[] = [];
+    let detectedCategory: string | undefined;
+    let detectedDate = rawDate;
+    let detectedTimeSlot = rawSlot;
+
+    // 1. Natural Language Relative Dates
+    const now = new Date();
+    if (text.includes('tomorrow')) {
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      detectedDate = tomorrow.toISOString().split('T')[0];
+    } else if (text.includes('today')) {
+      detectedDate = now.toISOString().split('T')[0];
+    } else if (text.includes('day after tomorrow')) {
+      const dayAfter = new Date(now);
+      dayAfter.setDate(dayAfter.getDate() + 2);
+      detectedDate = dayAfter.toISOString().split('T')[0];
+    }
+
+    // Explicit date regex YYYY-MM-DD
+    const dateMatch = text.match(/\b\d{4}-\d{2}-\d{2}\b/);
+    if (dateMatch) {
+      detectedDate = dateMatch[0];
+    }
+
+    // 2. Natural Language Time Slots
+    if (text.includes('afternoon') || text.includes('post-lunch') || text.includes('pm')) {
+      detectedTimeSlot = '02:00 - 04:00 PM';
+    } else if (text.includes('morning') || text.includes('early') || text.includes('am')) {
+      detectedTimeSlot = '09:00 - 11:00 AM';
+    } else if (text.includes('evening') || text.includes('late')) {
+      detectedTimeSlot = '04:00 - 06:00 PM';
+    }
+
+    // 3. Category Heuristics
+    if (text.includes('computer') || text.includes('gpu') || text.includes('workstation') || text.includes('deep learning') || text.includes('pytorch') || text.includes('tensor')) {
+      detectedCategory = 'Computers';
+    } else if (text.includes('cleanroom') || text.includes('microscope') || text.includes('spectrometer') || text.includes('photolithography') || text.includes('fume hood') || text.includes('semiconductor') || text.includes('chemistry') || text.includes('bio')) {
+      detectedCategory = 'Laboratories';
+    } else if (text.includes('3d print') || text.includes('additive') || text.includes('filament') || text.includes('resin') || text.includes('prototype')) {
+      detectedCategory = '3D Printers';
+    } else if (text.includes('oscilloscope') || text.includes('multimeter') || text.includes('spectrum analyzer') || text.includes('testing instrument') || text.includes('signal generator')) {
+      detectedCategory = 'Testing Instruments';
+    } else if (text.includes('camera') || text.includes('dslr') || text.includes('lens') || text.includes('video') || text.includes('tripod') || text.includes('4k recording')) {
+      detectedCategory = 'Cameras';
+    } else if (text.includes('circuit') || text.includes('soldering') || text.includes('breadboard') || text.includes('pcb') || text.includes('electronics')) {
+      detectedCategory = 'Electronics Equipment';
+    } else if (text.includes('cnc') || text.includes('lathe') || text.includes('mill') || text.includes('workshop tool') || text.includes('saw') || text.includes('drill')) {
+      detectedCategory = 'Workshop Tools';
+    } else if (text.includes('classroom') || text.includes('lecture') || text.includes('hall')) {
+      detectedCategory = 'Classrooms';
+    } else if (text.includes('meeting') || text.includes('conference') || text.includes('boardroom')) {
+      detectedCategory = 'Meeting Rooms';
+    }
+
+    // 4. Specifications Extraction
+    if (text.includes('gpu') || text.includes('nvidia') || text.includes('cuda') || text.includes('rtx')) {
+      detectedSpecs.push('GPU Acceleration');
+    }
+    if (text.includes('4k') || text.includes('high resolution') || text.includes('ultra-hd')) {
+      detectedSpecs.push('4K High Resolution');
+    }
+    if (text.includes('cleanroom') || text.includes('iso')) {
+      detectedSpecs.push('Cleanroom Grade (ISO Standard)');
+    }
+    if (text.includes('laser') || text.includes('optics')) {
+      detectedSpecs.push('Precision Optics');
+    }
+    if (text.includes('carbon fiber') || text.includes('composite')) {
+      detectedSpecs.push('Reinforced Composite');
+    }
+
+    // 5. Keyword Extraction (filter stop words)
+    const stopWords = new Set([
+      'need', 'want', 'looking', 'for', 'with', 'the', 'and', 'from', 'this',
+      'that', 'some', 'any', 'tomorrow', 'today', 'afternoon', 'morning', 'evening',
+      'access', 'slot', 'book', 'please', 'can', 'find', 'equipment', 'resource'
+    ]);
+
+    const rawWords = text.split(/[\s,.;!?]+/).filter((w) => w.length > 2);
+    for (const word of rawWords) {
+      if (!stopWords.has(word)) {
+        detectedKeywords.push(word);
+      }
+    }
+
+    return {
+      rawQuery: query,
+      detectedCategory,
+      detectedKeywords,
+      detectedDate,
+      detectedTimeSlot,
+      detectedSpecs,
+      confidence: detectedCategory ? 92 : detectedKeywords.length > 0 ? 75 : 50,
+    };
+  }
+
   public static async matchResources(
     req: SmartMatchRequest,
     currentUser?: any
   ): Promise<{
     results: SmartMatchResult[];
     totalMatched: number;
+    parsedIntent?: ParsedSearchIntent;
     aiProvider: string;
     disclosure: string;
   }> {
-    const queryFilter: any = { approvalStatus: 'approved' };
-    if (req.category && req.category !== 'All') {
-      queryFilter.category = req.category;
+    // 1. Natural Language Intent Parsing
+    const parsedIntent = this.parseNaturalLanguageIntent(
+      req.requirements || '',
+      req.date,
+      req.timeSlot
+    );
+
+    const effectiveCategory =
+      req.category && req.category !== 'All'
+        ? req.category
+        : parsedIntent.detectedCategory;
+
+    const effectiveDate = parsedIntent.detectedDate || req.date;
+    const effectiveTimeSlot = parsedIntent.detectedTimeSlot || req.timeSlot;
+
+    // 2. Build Query Filters (Respecting Soft and Hard Filters)
+    const queryFilter: any = { approvalStatus: 'approved', isArchived: { $ne: true } };
+
+    if (effectiveCategory && effectiveCategory !== 'All') {
+      queryFilter.category = effectiveCategory;
     }
     if (req.location && req.location !== 'All') {
       queryFilter.location = { $regex: req.location, $options: 'i' };
     }
 
-    const allResources = await Resource.find(queryFilter).lean();
+    let allResources = await Resource.find(queryFilter).lean();
 
-    const searchKeywords = (req.requirements || '')
-      .toLowerCase()
-      .split(/\s+/)
-      .filter((w) => w.length > 2);
+    // Fallback: If strict category filter returns 0 results, widen to all approved resources
+    if (allResources.length === 0 && effectiveCategory) {
+      allResources = await Resource.find({ approvalStatus: 'approved', isArchived: { $ne: true } }).lean();
+    }
 
-    const userCerts = currentUser?.trainingCertifications || [];
+    // 3. User Context: Previous Resource Interests & Usage Patterns
+    const userFrequentCategories = new Set<string>();
+    const userPreviousResourceIds = new Set<string>();
+
+    if (currentUser?._id) {
+      try {
+        const pastBookings = await Booking.find({ userId: currentUser._id })
+          .select('resourceCategory resourceId')
+          .limit(20)
+          .lean();
+
+        for (const pb of pastBookings) {
+          if (pb.resourceCategory) userFrequentCategories.add(pb.resourceCategory);
+          if (pb.resourceId) userPreviousResourceIds.add(pb.resourceId.toString());
+        }
+      } catch (err) {
+        console.warn('Could not query past user bookings for interest profiling:', err);
+      }
+    }
+
+    // User Certifications & Qualification
+    const rawUserCerts = currentUser?.trainingCertifications || [];
+    const userCertNames = rawUserCerts
+      .map((c: any) => (typeof c === 'string' ? c : c.name || ''))
+      .map((s: string) => s.toLowerCase().trim());
+
     const userQual = currentUser?.academicQualification || 'Undergraduate';
     const isMemberVerified = currentUser?.institutionMembershipVerified ?? true;
+    const userInstitution = currentUser?.institution || '';
+
+    const standardTimeSlots = [
+      '09:00 - 11:00 AM',
+      '11:00 - 01:00 PM',
+      '02:00 - 04:00 PM',
+      '04:00 - 06:00 PM',
+    ];
 
     const matchedList: SmartMatchResult[] = [];
 
+    // Preload bookings on effectiveDate for availability check if date provided
+    let dateBookingsMap: Record<string, string[]> = {};
+    if (effectiveDate) {
+      const activeBookingsOnDate = await Booking.find({
+        date: effectiveDate,
+        status: { $in: ['approved', 'checked_in', 'active', 'return_pending'] },
+      })
+        .select('resourceId timeSlot')
+        .lean();
+
+      for (const b of activeBookingsOnDate) {
+        const rId = b.resourceId.toString();
+        if (!dateBookingsMap[rId]) dateBookingsMap[rId] = [];
+        dateBookingsMap[rId].push(b.timeSlot);
+      }
+    }
+
     for (const res of allResources) {
-      let score = 50; // base score
+      let score = 50; // Base baseline score
       const whyRecommended: string[] = [];
       const specsMatched: string[] = [];
 
-      // 1. User requirements keyword matching
-      let keywordHits = 0;
+      // 1. Natural Language & Requirement Keyword Matching
       const searchableBlob = `
         ${res.name} 
         ${res.description} 
@@ -262,57 +462,108 @@ export class AiAssistanceService {
         ${Object.entries(res.specifications || {}).map(([k, v]) => `${k} ${v}`).join(' ')}
       `.toLowerCase();
 
-      for (const kw of searchKeywords) {
-        if (searchableBlob.includes(kw)) {
+      let keywordHits = 0;
+      for (const kw of parsedIntent.detectedKeywords) {
+        if (searchableBlob.includes(kw.toLowerCase())) {
           keywordHits++;
         }
       }
 
-      if (searchKeywords.length > 0) {
-        const keywordFraction = keywordHits / searchKeywords.length;
-        score += Math.round(keywordFraction * 35);
+      if (parsedIntent.detectedKeywords.length > 0) {
+        const hitRatio = keywordHits / parsedIntent.detectedKeywords.length;
+        score += Math.round(hitRatio * 30);
         if (keywordHits > 0) {
           whyRecommended.push(
-            `High semantic match: contains ${keywordHits} specification keyword${keywordHits > 1 ? 's' : ''} matching your research scope.`
+            `High specification alignment: Contains ${keywordHits} relevant hardware keyword${keywordHits > 1 ? 's' : ''} matching your research scope.`
           );
         }
-      } else {
-        score += 15;
       }
 
       // 2. Category Match
-      if (req.category && req.category !== 'All') {
-        if (res.category === req.category) {
-          score += 10;
-          whyRecommended.push(`Direct category match: Located under ${res.category}.`);
+      if (effectiveCategory && res.category === effectiveCategory) {
+        score += 15;
+        whyRecommended.push(`Category Match: Direct match under ${res.category}.`);
+      }
+
+      // 3. User's Institution & Department Proximity
+      if (userInstitution && res.institution) {
+        if (res.institution.toLowerCase() === userInstitution.toLowerCase()) {
+          score += 15;
+          whyRecommended.push(`Institutional Proximity: Located at your home campus (${res.institution}).`);
         }
       }
 
-      // 3. Availability Check
-      let isAvailableOnDate = res.status === 'available';
-      if (res.status === 'available') {
-        score += 10;
-        whyRecommended.push('Ready for immediate booking: Currently marked available.');
-      } else if (res.status === 'reserved') {
-        score += 2;
-        whyRecommended.push('Active queue: Resource has reservations but waitlist entry is open.');
-      } else {
-        score -= 25;
-      }
-
-      // 4. Location Proximity
       if (currentUser?.department && res.location) {
-        if (
-          res.location.toLowerCase().includes(currentUser.department.toLowerCase()) ||
-          (res.ownerDepartment &&
-            res.ownerDepartment.toLowerCase() === currentUser.department.toLowerCase())
-        ) {
+        if (res.location.toLowerCase().includes(currentUser.department.toLowerCase())) {
           score += 10;
-          whyRecommended.push(`Departmental proximity: Located in your faculty sector (${res.location}).`);
+          whyRecommended.push(`Department Proximity: Situated within ${res.location}.`);
         }
       }
 
-      // 5. Eligibility Verification
+      // 4. Previous Resource Interests & Usage Patterns
+      if (userFrequentCategories.has(res.category)) {
+        score += 10;
+        whyRecommended.push(`Research Continuity: Matches your previous reservation history in ${res.category}.`);
+      }
+      if (userPreviousResourceIds.has(res._id.toString())) {
+        score += 5;
+        whyRecommended.push('Frequently Accessed: You have previously successfully utilized this apparatus.');
+      }
+      if (res.rating && res.rating >= 4.8) {
+        score += 5;
+        whyRecommended.push(`High Institutional Rating (${res.rating}★): Highly recommended by campus researchers.`);
+      }
+
+      // 5. Hardware Specification Extraction
+      if (parsedIntent.detectedSpecs.length > 0) {
+        for (const spec of parsedIntent.detectedSpecs) {
+          if (searchableBlob.includes(spec.toLowerCase().split(' ')[0])) {
+            specsMatched.push(spec);
+            score += 8;
+          }
+        }
+        if (specsMatched.length > 0) {
+          whyRecommended.push(
+            `Verified Hardware Capabilities: Supports ${specsMatched.join(', ')}.`
+          );
+        }
+      }
+
+      // 6. Time Slot & Real-time Booking Availability
+      const reservedSlotsOnDate = dateBookingsMap[res._id.toString()] || [];
+      const recommendedTimeSlots: SmartMatchTimeSlot[] = standardTimeSlots.map((slot) => {
+        const isReserved = reservedSlotsOnDate.includes(slot);
+        return {
+          timeSlot: slot,
+          isAvailable: !isReserved,
+          conflictReason: isReserved ? 'Reserved by an active approved booking' : undefined,
+        };
+      });
+
+      let isAvailableOnDate = res.status === 'available';
+      if (effectiveDate && reservedSlotsOnDate.length >= standardTimeSlots.length) {
+        isAvailableOnDate = false;
+      }
+
+      if (effectiveTimeSlot) {
+        const targetSlotMatch = recommendedTimeSlots.find((s) => s.timeSlot.includes(effectiveTimeSlot) || effectiveTimeSlot.includes(s.timeSlot.split(' ')[0]));
+        if (targetSlotMatch && targetSlotMatch.isAvailable) {
+          score += 15;
+          whyRecommended.push(
+            `Target Window Open: Confirmed conflict-free availability for ${effectiveTimeSlot}${effectiveDate ? ` on ${effectiveDate}` : ''}.`
+          );
+        } else if (targetSlotMatch && !targetSlotMatch.isAvailable) {
+          score -= 15;
+          whyRecommended.push(
+            `Slot Booked: ${effectiveTimeSlot} is reserved on ${effectiveDate}; alternative open slots are suggested.`
+          );
+        }
+      } else if (isAvailableOnDate) {
+        score += 8;
+        whyRecommended.push('Immediate Availability: Resource currently ready for scheduling.');
+      }
+
+      // 7. Eligibility Verification & Missing Requirements
       const requiredQualification = res.requiredQualification || 'None';
       let qualificationMet = true;
       if (requiredQualification !== 'None') {
@@ -324,42 +575,72 @@ export class AiAssistanceService {
       }
 
       const reqCerts = res.requiredCertifications || [];
-      const missingCerts = reqCerts.filter((c: string) => !userCerts.includes(c));
+      const missingCerts: string[] = [];
+      for (const rc of reqCerts) {
+        const normalizedRc = rc.toLowerCase().trim();
+        const hasCert = userCertNames.some((uc) => uc.includes(normalizedRc) || normalizedRc.includes(uc));
+        if (!hasCert) {
+          missingCerts.push(rc);
+        }
+      }
+
       const certificationsCovered = missingCerts.length === 0;
+      let isRestrictedAccess = res.isRestricted || false;
+      if (res.isRestricted && userInstitution && res.institution !== userInstitution) {
+        isRestrictedAccess = true;
+      }
 
       const fullyEligible = isMemberVerified && qualificationMet && certificationsCovered;
+      let actionRequired: string | undefined;
 
       if (fullyEligible) {
-        score += 15;
-        whyRecommended.push(
-          '100% Verified Eligibility: Meets all institutional qualifications and laboratory certification prerequisites.'
-        );
+        score += 12;
+        whyRecommended.push('Verified Eligibility: You satisfy all institutional qualifications and laboratory certification prerequisites.');
       } else {
         score -= 20;
         if (!certificationsCovered) {
-          whyRecommended.push(
-            `Certification gap: Missing required induction (${missingCerts.join(', ')}). Training clearance required.`
-          );
+          actionRequired = `Complete mandatory prerequisite training: ${missingCerts.join(', ')} before booking.`;
+          whyRecommended.push(`Prerequisite Gap: Missing required laboratory clearance (${missingCerts.join(', ')}).`);
+        } else if (!qualificationMet) {
+          actionRequired = `Requires ${requiredQualification} level or faculty supervisor co-endorsement.`;
+          whyRecommended.push(`Academic Level Requirement: Designated for ${requiredQualification} access.`);
         }
       }
 
-      // 6. Equipment specifications matching
-      if (req.equipmentSpecs && res.specifications) {
-        for (const [key, expectedVal] of Object.entries(req.equipmentSpecs)) {
-          const actualVal = (res.specifications as any)[key] || (res.specifications as any).get?.(key);
-          if (actualVal) {
-            specsMatched.push(`${key}: ${actualVal}`);
-            score += 5;
-          }
+      // 8. Unavailable Alternatives Identification (Suggest nearby apparatus if unavailable)
+      const alternatives: SmartMatchAlternative[] = [];
+      if (!isAvailableOnDate || res.status !== 'available') {
+        score -= 25;
+        // Query nearby / institution-approved available substitutes
+        const altQuery: any = {
+          _id: { $ne: res._id },
+          category: res.category,
+          status: 'available',
+          approvalStatus: 'approved',
+          isArchived: { $ne: true },
+        };
+        if (res.institution) {
+          altQuery.institution = res.institution;
         }
-        if (specsMatched.length > 0) {
-          whyRecommended.push(
-            `Precision hardware verified: Matches ${specsMatched.length} target hardware parameter${specsMatched.length > 1 ? 's' : ''}.`
-          );
+
+        const altResources = await Resource.find(altQuery).limit(2).lean();
+        for (const alt of altResources) {
+          alternatives.push({
+            resourceId: alt._id.toString(),
+            name: alt.name,
+            category: alt.category,
+            location: alt.location,
+            institution: alt.institution,
+            status: alt.status,
+            reason: `Institution-approved substitute in ${alt.category} with immediate open capacity.`,
+          });
+        }
+
+        if (alternatives.length > 0) {
+          whyRecommended.push('Primary apparatus currently has reservations; 2 verified campus alternatives are identified below.');
         }
       }
 
-      // Cap score
       const finalScore = Math.min(100, Math.max(15, score));
 
       matchedList.push({
@@ -372,14 +653,19 @@ export class AiAssistanceService {
           qualificationMet,
           certificationsCovered,
           missingCertifications: missingCerts,
-          isRestricted: res.isRestricted || false,
+          isRestricted: isRestrictedAccess,
+          actionRequired,
         },
         availabilityStatus: {
           availableOnDate: isAvailableOnDate,
           operatingHoursMatch: true,
-          reason: isAvailableOnDate ? 'Asset in operation' : 'Asset reserved or undergoing turnaround',
+          reason: isAvailableOnDate
+            ? 'Conflict-free intervals available'
+            : 'Turnaround or reservation in progress',
+          recommendedTimeSlots,
         },
         specificationsMatched: specsMatched,
+        alternatives: alternatives.length > 0 ? alternatives : undefined,
       });
     }
 
@@ -391,6 +677,7 @@ export class AiAssistanceService {
     return {
       results: matchedList.slice(0, 15),
       totalMatched: matchedList.length,
+      parsedIntent,
       aiProvider: disclosure.provider,
       disclosure: disclosure.disclosureText,
     };
