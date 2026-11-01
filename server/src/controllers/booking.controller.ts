@@ -346,7 +346,69 @@ export const createBooking = async (
       return;
     }
 
+    // 1. Resource Availability Check
+    if (resource.isArchived || resource.status === 'disabled') {
+      res.status(400).json({
+        success: false,
+        message: 'This resource has been decommissioned or archived and cannot be reserved.',
+      });
+      return;
+    }
+    if (resource.status === 'maintenance') {
+      res.status(400).json({
+        success: false,
+        message: 'This resource is currently offline undergoing scheduled maintenance.',
+      });
+      return;
+    }
+
+    // 2. Institution Access Check
+    if (
+      resource.isRestricted &&
+      resource.institution &&
+      req.user.institution &&
+      resource.institution.trim().toLowerCase() !== req.user.institution.trim().toLowerCase()
+    ) {
+      res.status(403).json({
+        success: false,
+        message: `Cross-institutional restriction: "${resource.name}" is reserved exclusively for researchers from ${resource.institution}.`,
+      });
+      return;
+    }
+
     const userProfile = await User.findById(req.user._id);
+
+    // 3. User Membership Eligibility Check
+    const isMemberVerified = Boolean(userProfile?.institutionMembershipVerified || req.user.isVerified);
+    if (!isMemberVerified) {
+      res.status(403).json({
+        success: false,
+        message: 'Institutional membership verification required before reserving campus apparatus.',
+      });
+      return;
+    }
+
+    // 4. Academic Qualification Check
+    if (
+      resource.requiredQualification &&
+      resource.requiredQualification !== 'None' &&
+      resource.requiredQualification !== 'Any'
+    ) {
+      const userQual = userProfile?.academicQualification || 'Undergraduate';
+      const qualifies =
+        userQual === resource.requiredQualification ||
+        userQual === 'PhD Scholar' ||
+        userQual === 'Faculty' ||
+        req.user.role === 'admin' ||
+        req.user.role === 'manager';
+      if (!qualifies) {
+        res.status(403).json({
+          success: false,
+          message: `Academic qualification requirement not met. Required: ${resource.requiredQualification}, Current: ${userQual}.`,
+        });
+        return;
+      }
+    }
 
     // Parse and validate start and end times
     let parsedStart: Date;
