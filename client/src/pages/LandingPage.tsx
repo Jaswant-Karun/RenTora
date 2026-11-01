@@ -612,14 +612,14 @@ export const LandingPage: React.FC = () => {
                 <p className="text-xs text-[#64748B] mt-2 leading-relaxed">
                   Discover apparatus across campus, verify training prerequisites, book conflict-free slots, check in with TrustPass, and view personal sustainability impact.
                 </p>
-                <div className="mt-4 p-3 bg-slate-100 rounded-lg text-xs space-y-1.5 border border-slate-200">
+                <div className="mt-4 p-3 bg-slate-100 rounded-lg text-xs space-y-1 border border-slate-200">
                   <div className="flex items-center justify-between">
-                    <span className="text-[#64748B] text-[10px] uppercase font-bold">Email:</span>
-                    <span className="font-mono text-slate-900 font-bold select-all">student@rentora.edu</span>
+                    <span className="text-[#64748B] text-[10px] uppercase font-bold">Role:</span>
+                    <span className="font-mono text-slate-900 font-bold select-all">Student Researcher</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-[#64748B] text-[10px] uppercase font-bold">Password:</span>
-                    <span className="font-mono text-slate-900 font-bold bg-white px-1.5 py-0.5 rounded border border-slate-300">Password123!</span>
+                    <span className="text-[#64748B] text-[10px] uppercase font-bold">Campus:</span>
+                    <span className="text-slate-700 font-medium">National Institute of Tech</span>
                   </div>
                 </div>
               </div>
@@ -630,7 +630,7 @@ export const LandingPage: React.FC = () => {
                   className="w-full text-[#16834A] border-emerald-200 hover:bg-emerald-50"
                   onClick={() => handleQuickLogin('student')}
                 >
-                  Launch as Student
+                  Explore as Student
                 </Button>
               </div>
             </Card>
@@ -646,14 +646,14 @@ export const LandingPage: React.FC = () => {
                 <p className="text-xs text-[#64748B] mt-2 leading-relaxed">
                   Catalogue department assets, configure operating windows, review applicant research goals, execute physical check-in/out, and sign condition reports.
                 </p>
-                <div className="mt-4 p-3 bg-slate-100 rounded-lg text-xs space-y-1.5 border border-slate-200">
+                <div className="mt-4 p-3 bg-slate-100 rounded-lg text-xs space-y-1 border border-slate-200">
                   <div className="flex items-center justify-between">
-                    <span className="text-[#64748B] text-[10px] uppercase font-bold">Email:</span>
-                    <span className="font-mono text-slate-900 font-bold select-all">owner@rentora.edu</span>
+                    <span className="text-[#64748B] text-[10px] uppercase font-bold">Role:</span>
+                    <span className="font-mono text-slate-900 font-bold select-all">Lab Custodian</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-[#64748B] text-[10px] uppercase font-bold">Password:</span>
-                    <span className="font-mono text-slate-900 font-bold bg-white px-1.5 py-0.5 rounded border border-slate-300">Password123!</span>
+                    <span className="text-[#64748B] text-[10px] uppercase font-bold">Facility:</span>
+                    <span className="text-slate-700 font-medium">Robotics & Automation Lab</span>
                   </div>
                 </div>
               </div>
@@ -664,7 +664,7 @@ export const LandingPage: React.FC = () => {
                   className="w-full text-[#1769D2] border-[#1769D2]/30 hover:bg-[#EFF6FF]"
                   onClick={() => handleQuickLogin('owner')}
                 >
-                  Launch as Lab Owner
+                  Explore as Lab Owner
                 </Button>
               </div>
             </Card>
@@ -680,14 +680,14 @@ export const LandingPage: React.FC = () => {
                 <p className="text-xs text-[#64748B] mt-2 leading-relaxed">
                   Campus-wide governance, inter-departmental allocation policies, waitlist promotion overrides, incident resolution, and avoided procurement cost accounting.
                 </p>
-                <div className="mt-4 p-3 bg-slate-100 rounded-lg text-xs space-y-1.5 border border-slate-200">
+                <div className="mt-4 p-3 bg-slate-100 rounded-lg text-xs space-y-1 border border-slate-200">
                   <div className="flex items-center justify-between">
-                    <span className="text-[#64748B] text-[10px] uppercase font-bold">Email:</span>
-                    <span className="font-mono text-slate-900 font-bold select-all">manager@rentora.edu</span>
+                    <span className="text-[#64748B] text-[10px] uppercase font-bold">Role:</span>
+                    <span className="font-mono text-slate-900 font-bold select-all">Dean of Infrastructure</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-[#64748B] text-[10px] uppercase font-bold">Password:</span>
-                    <span className="font-mono text-slate-900 font-bold bg-white px-1.5 py-0.5 rounded border border-slate-300">Password123!</span>
+                    <span className="text-[#64748B] text-[10px] uppercase font-bold">Oversight:</span>
+                    <span className="text-slate-700 font-medium">Consortium Assets</span>
                   </div>
                 </div>
               </div>
@@ -698,7 +698,7 @@ export const LandingPage: React.FC = () => {
                   className="w-full text-[#D97706] border-amber-200 hover:bg-amber-50"
                   onClick={() => handleQuickLogin('manager')}
                 >
-                  Launch as Manager
+                  Explore as Manager
                 </Button>
               </div>
             </Card>
@@ -714,14 +714,13 @@ export const LandingPage: React.FC = () => {
                 <p className="text-xs text-[#64748B] mt-2 leading-relaxed">
                   Multi-institution federation, enterprise security controls, immutable audit log verification, system health telemetry, and global data governance.
                 </p>
-                <div className="mt-4 p-3 bg-slate-100 rounded-lg text-xs space-y-1.5 border border-slate-200">
+                <div className="mt-4 p-3 bg-slate-100 rounded-lg text-xs space-y-1 border border-slate-200">
                   <div className="flex items-center justify-between">
-                    <span className="text-[#64748B] text-[10px] uppercase font-bold">Email:</span>
-                    <span className="font-mono text-slate-900 font-bold select-all">admin@rentora.edu</span>
+                    <span className="text-[#64748B] text-[10px] uppercase font-bold">Access Tier:</span>
+                    <span className="font-mono text-indigo-700 font-bold">System Administrator</span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[#64748B] text-[10px] uppercase font-bold">Password:</span>
-                    <span className="font-mono text-slate-900 font-bold bg-white px-1.5 py-0.5 rounded border border-slate-300">Password123!</span>
+                  <div className="text-[11px] text-[#64748B]">
+                    Protected tier: requires verified institutional auth
                   </div>
                 </div>
               </div>
@@ -730,9 +729,9 @@ export const LandingPage: React.FC = () => {
                   variant="outline"
                   size="sm"
                   className="w-full text-indigo-700 border-indigo-200 hover:bg-indigo-50"
-                  onClick={() => handleQuickLogin('admin')}
+                  onClick={() => navigate('/login')}
                 >
-                  Launch as Admin
+                  Administrator Sign In
                 </Button>
               </div>
             </Card>
@@ -921,40 +920,12 @@ export const LandingPage: React.FC = () => {
               </button>
             </div>
 
-            <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
-              <strong>Simulated Demo Environment:</strong> All accounts pre-loaded with representative resources, pending/approved reservations, waitlist queue, condition reports, and audit logs. All passwords are <code className="font-mono bg-white px-1.5 py-0.5 rounded border border-amber-300">Password123!</code>.
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900">
+              <strong>Institutional Sandbox Active:</strong> Evaluator personas are pre-configured with representative research equipment, pending/approved reservations, and verified audit history. Administrator access requires private institutional authentication.
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-              {(demoAccounts && demoAccounts.length > 0
-                ? demoAccounts
-                : [
-                    {
-                      role: 'student',
-                      name: 'Arun Kumar',
-                      email: 'student@rentora.edu',
-                      password: 'Password123!',
-                    },
-                    {
-                      role: 'owner',
-                      name: 'Dr. Meera Raman',
-                      email: 'owner@rentora.edu',
-                      password: 'Password123!',
-                    },
-                    {
-                      role: 'manager',
-                      name: 'Prof. Suresh Nair',
-                      email: 'manager@rentora.edu',
-                      password: 'Password123!',
-                    },
-                    {
-                      role: 'admin',
-                      name: 'Platform Administrator',
-                      email: 'admin@rentora.edu',
-                      password: 'Password123!',
-                    },
-                  ]
-              ).map((account: any) => (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
+              {(demoAccounts && demoAccounts.length > 0 ? demoAccounts : []).map((account: any) => (
                 <div
                   key={account.role}
                   className="p-4 rounded-xl border border-slate-200 hover:border-[#1769D2] hover:bg-blue-50/30 transition-all flex flex-col justify-between"
@@ -965,24 +936,17 @@ export const LandingPage: React.FC = () => {
                       <Badge role={account.role} size="sm" />
                     </div>
 
-                    <div className="p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-mono space-y-1 mb-2">
+                    <div className="p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-mono mb-2">
                       <div className="flex items-center justify-between">
                         <span className="text-slate-500">Email:</span>
                         <span className="text-slate-900 font-bold select-all">{account.email}</span>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-500">Password:</span>
-                        <span className="text-slate-900 font-bold bg-white px-1 rounded border border-slate-300">
-                          {account.password || 'Password123!'}
-                        </span>
-                      </div>
                     </div>
 
-                    <p className="text-xs text-slate-600 mt-1">
-                      {account.role === 'student' && 'Explore catalog, book slots, present TrustPass QR, inspect personal usage.'}
+                    <p className="text-[11px] text-slate-600 mt-1 leading-snug">
+                      {account.role === 'student' && 'Explore catalog, reserve assets, present TrustPass QR, inspect personal ESG impact.'}
                       {account.role === 'owner' && 'Approve bookings, execute check-in/out, file condition reports & manage assets.'}
-                      {account.role === 'manager' && 'Oversee campus quotas, promote waitlists, inspect ResourcePulse metrics.'}
-                      {account.role === 'admin' && 'Audit logs, system health, security policies, and institutional federation.'}
+                      {account.role === 'manager' && 'Oversee campus quotas, arbitrate disputes, inspect ResourcePulse metrics.'}
                     </p>
                   </div>
                   <Button
@@ -993,7 +957,7 @@ export const LandingPage: React.FC = () => {
                       handleQuickLogin(account.role);
                     }}
                   >
-                    1-Click Login as {account.role.toUpperCase()}
+                    1-Click Evaluation
                   </Button>
                 </div>
               ))}
