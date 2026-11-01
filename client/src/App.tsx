@@ -1,44 +1,47 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { AppLayout } from './components/layout/AppLayout';
-import { IntroScreen } from './pages/IntroScreen';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { LoadingSpinner } from './components/common/LoadingSpinner';
+import { RouteLoadingSkeleton } from './components/common/RouteLoadingSkeleton';
+
+// Fast Initial Core Pages (Auth & Landing)
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
-import { DashboardPage } from './pages/DashboardPage';
-import { ExploreResourcesPage } from './pages/ExploreResourcesPage';
-import { ResourceDetailPage } from './pages/ResourceDetailPage';
-import { MyBookingsPage } from './pages/MyBookingsPage';
-import { WaitlistPage } from './pages/WaitlistPage';
-import { ActivityPage } from './pages/ActivityPage';
-import { NotificationsPage } from './pages/NotificationsPage';
-import { ProfilePage } from './pages/ProfilePage';
-import { HelpSupportPage } from './pages/HelpSupportPage';
-import { SettingsPage } from './pages/SettingsPage';
+import { IntroScreen } from './pages/IntroScreen';
 import { NotFoundPage } from './pages/NotFoundPage';
-import { LoadingSpinner } from './components/common/LoadingSpinner';
 
-// Owner Pages
-import { OwnerOverviewPage } from './pages/owner/OwnerOverviewPage';
-import { MyResourcesPage } from './pages/owner/MyResourcesPage';
-import { AddResourcePage } from './pages/owner/AddResourcePage';
-import { OwnerBookingsPage } from './pages/owner/OwnerBookingsPage';
-import { CheckInOutPage } from './pages/owner/CheckInOutPage';
-import { ConditionReportsPage } from './pages/owner/ConditionReportsPage';
-import { OwnerIncidentsPage } from './pages/owner/OwnerIncidentsPage';
-import { OwnerCalendarPage } from './pages/owner/OwnerCalendarPage';
-import { OwnerAnalyticsPage } from './pages/owner/OwnerAnalyticsPage';
-import { OwnerAuditPage } from './pages/owner/OwnerAuditPage';
-import { OwnerSettingsPage } from './pages/owner/OwnerSettingsPage';
+// Lazy-Loaded Dashboard & Console Modules (Code-split for performance)
+const DashboardPage = lazy(() => import('./pages/DashboardPage').then((m) => ({ default: m.DashboardPage })));
+const ExploreResourcesPage = lazy(() => import('./pages/ExploreResourcesPage').then((m) => ({ default: m.ExploreResourcesPage })));
+const ResourceDetailPage = lazy(() => import('./pages/ResourceDetailPage').then((m) => ({ default: m.ResourceDetailPage })));
+const MyBookingsPage = lazy(() => import('./pages/MyBookingsPage').then((m) => ({ default: m.MyBookingsPage })));
+const WaitlistPage = lazy(() => import('./pages/WaitlistPage').then((m) => ({ default: m.WaitlistPage })));
+const ActivityPage = lazy(() => import('./pages/ActivityPage').then((m) => ({ default: m.ActivityPage })));
+const NotificationsPage = lazy(() => import('./pages/NotificationsPage').then((m) => ({ default: m.NotificationsPage })));
+const ProfilePage = lazy(() => import('./pages/ProfilePage').then((m) => ({ default: m.ProfilePage })));
+const HelpSupportPage = lazy(() => import('./pages/HelpSupportPage').then((m) => ({ default: m.HelpSupportPage })));
+const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 
-// Manager Pages
-import { ManagerDashboardPage } from './pages/manager/ManagerDashboardPage';
+// Owner Modules (Lazy Loaded)
+const OwnerOverviewPage = lazy(() => import('./pages/owner/OwnerOverviewPage').then((m) => ({ default: m.OwnerOverviewPage })));
+const MyResourcesPage = lazy(() => import('./pages/owner/MyResourcesPage').then((m) => ({ default: m.MyResourcesPage })));
+const AddResourcePage = lazy(() => import('./pages/owner/AddResourcePage').then((m) => ({ default: m.AddResourcePage })));
+const OwnerBookingsPage = lazy(() => import('./pages/owner/OwnerBookingsPage').then((m) => ({ default: m.OwnerBookingsPage })));
+const CheckInOutPage = lazy(() => import('./pages/owner/CheckInOutPage').then((m) => ({ default: m.CheckInOutPage })));
+const ConditionReportsPage = lazy(() => import('./pages/owner/ConditionReportsPage').then((m) => ({ default: m.ConditionReportsPage })));
+const OwnerIncidentsPage = lazy(() => import('./pages/owner/OwnerIncidentsPage').then((m) => ({ default: m.OwnerIncidentsPage })));
+const OwnerCalendarPage = lazy(() => import('./pages/owner/OwnerCalendarPage').then((m) => ({ default: m.OwnerCalendarPage })));
+const OwnerAnalyticsPage = lazy(() => import('./pages/owner/OwnerAnalyticsPage').then((m) => ({ default: m.OwnerAnalyticsPage })));
+const OwnerAuditPage = lazy(() => import('./pages/owner/OwnerAuditPage').then((m) => ({ default: m.OwnerAuditPage })));
+const OwnerSettingsPage = lazy(() => import('./pages/owner/OwnerSettingsPage').then((m) => ({ default: m.OwnerSettingsPage })));
 
-// Admin Pages
-import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
-import { ErrorBoundary } from './components/common/ErrorBoundary';
+// Manager & Admin Governance Consoles (Lazy Loaded)
+const ManagerDashboardPage = lazy(() => import('./pages/manager/ManagerDashboardPage').then((m) => ({ default: m.ManagerDashboardPage })));
+const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage').then((m) => ({ default: m.AdminDashboardPage })));
 
 const ProtectedRoute: React.FC<{
   children: React.ReactNode;
