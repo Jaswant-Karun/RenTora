@@ -15,6 +15,7 @@ import { WaitlistPage } from './pages/WaitlistPage';
 import { ActivityPage } from './pages/ActivityPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { HelpSupportPage } from './pages/HelpSupportPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { LoadingSpinner } from './components/common/LoadingSpinner';
@@ -217,6 +218,14 @@ export const App: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <ProfilePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/help"
+              element={
+                <ProtectedRoute>
+                  <HelpSupportPage />
                 </ProtectedRoute>
               }
             />

@@ -31,6 +31,7 @@ import {
   AlertCircle,
   Layers,
   Leaf,
+  HelpCircle,
 } from 'lucide-react';
 
 interface SidebarProps {
