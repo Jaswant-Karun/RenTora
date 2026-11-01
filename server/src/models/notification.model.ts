@@ -91,4 +91,9 @@ const notificationSchema = new Schema<INotification>(
   }
 );
 
+// High-speed compound indexes for user inbox and role-based feeds
+notificationSchema.index({ userId: 1, createdAt: -1 });
+notificationSchema.index({ userId: 1, isRead: 1 });
+notificationSchema.index({ targetRole: 1, createdAt: -1 });
+
 export const Notification = model<INotification>('Notification', notificationSchema);
