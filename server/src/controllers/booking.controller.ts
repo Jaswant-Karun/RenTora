@@ -1042,10 +1042,11 @@ export const approveBookingRequest = async (
       metadata: { bookingId: booking._id },
     });
 
-    res.status(200).json({
-      success: true,
-      message: 'Reservation approved and confirmed. User notified.',
-      data: booking,
+      res.status(200).json({
+        success: true,
+        message: 'Reservation approved and confirmed. User notified.',
+        data: booking,
+      });
     });
   } catch (error) {
     next(error);
@@ -1073,6 +1074,27 @@ export const rejectBookingRequest = async (
     const booking = await Booking.findById(id);
     if (!booking) {
       res.status(404).json({ success: false, message: 'Booking not found' });
+      return;
+    }
+
+    // Authorization Guard: Only resource custodian or staff may reject
+    const resource = await Resource.findById(booking.resourceId);
+    const isOwner = resource?.ownerId && resource.ownerId.toString() === req.user?._id.toString();
+    const isStaff = req.user?.role === 'manager' || req.user?.role === 'admin';
+    if (!isOwner && !isStaff) {
+      res.status(403).json({
+        success: false,
+        message: 'Forbidden: Only the resource custodian or manager can reject reservations.',
+      });
+      return;
+    }
+
+    // State Transition Guard
+    if (!['pending', 'under_review', 'waitlisted'].includes(booking.status)) {
+      res.status(400).json({
+        success: false,
+        message: `Invalid state transition: Cannot reject booking currently in status '${booking.status}'.`,
+      });
       return;
     }
 
@@ -1234,6 +1256,28 @@ export const checkInBooking = async (
     const booking = await Booking.findById(id);
     if (!booking) {
       res.status(404).json({ success: false, message: 'Booking not found' });
+      return;
+    }
+
+    // State Transition Guard
+    if (booking.status !== 'approved') {
+      res.status(400).json({
+        success: false,
+        message: `Invalid state transition: Cannot check in to reservation with status '${booking.status}'. Booking must be 'approved'.`,
+      });
+      return;
+    }
+
+    // Authorization Guard: Borrower, resource custodian, or staff
+    const resource = await Resource.findById(booking.resourceId);
+    const isBorrower = booking.userId.toString() === req.user?._id.toString();
+    const isOwner = resource?.ownerId && resource.ownerId.toString() === req.user?._id.toString();
+    const isStaff = req.user?.role === 'manager' || req.user?.role === 'admin';
+    if (!isBorrower && !isOwner && !isStaff) {
+      res.status(403).json({
+        success: false,
+        message: 'Forbidden: You are not authorized to perform check-in for this reservation.',
+      });
       return;
     }
 
