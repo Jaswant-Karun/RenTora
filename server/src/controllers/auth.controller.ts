@@ -178,6 +178,11 @@ export const getMe = async (req: AuthenticatedRequest, res: Response, next: Next
           department: req.user.department,
           phone: req.user.phone,
           avatar: req.user.avatar,
+          bio: req.user.bio || '',
+          academicQualification: req.user.academicQualification,
+          isVerified: req.user.isVerified,
+          institutionMembershipVerified: req.user.institutionMembershipVerified,
+          trainingCertifications: req.user.trainingCertifications,
           createdAt: req.user.createdAt,
         },
       },
@@ -238,7 +243,7 @@ export const updateProfile = async (
       return;
     }
 
-    const { name, phone, department, avatar, academicQualification } = req.body;
+    const { name, phone, department, avatar, academicQualification, bio } = req.body;
 
     const user = await User.findById(req.user._id);
     if (!user) {
@@ -250,6 +255,7 @@ export const updateProfile = async (
     if (phone && typeof phone === 'string') user.phone = phone.trim();
     if (department && typeof department === 'string') user.department = department.trim();
     if (avatar && typeof avatar === 'string') user.avatar = avatar.trim();
+    if (bio !== undefined && typeof bio === 'string') user.bio = bio.trim();
     if (academicQualification && typeof academicQualification === 'string') {
       user.academicQualification = academicQualification.trim();
     }
@@ -268,6 +274,7 @@ export const updateProfile = async (
         department: user.department,
         phone: user.phone,
         avatar: user.avatar,
+        bio: user.bio || '',
         academicQualification: user.academicQualification,
         isVerified: user.isVerified,
         institutionMembershipVerified: user.institutionMembershipVerified,
