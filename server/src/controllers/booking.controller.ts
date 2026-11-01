@@ -1877,7 +1877,14 @@ export const getTransparentWaitlist = async (
       query.userId = req.user._id;
     }
 
-    const waitlistedBookings = await Booking.find(query).sort({ waitlistPriority: -1, createdAt: 1 });
+    const pageNum = Math.max(1, parseInt(req.query.page as string, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(req.query.limit as string, 10) || 50));
+    const skip = (pageNum - 1) * limitNum;
+
+    const [waitlistedBookings, total] = await Promise.all([
+      Booking.find(query).sort({ waitlistPriority: -1, createdAt: 1 }).skip(skip).limit(limitNum),
+      Booking.countDocuments(query),
+    ]);
 
     // Dynamic queue position and release calculation
     const resourceQueues: Record<string, number> = {};
@@ -1905,6 +1912,12 @@ export const getTransparentWaitlist = async (
     res.status(200).json({
       success: true,
       data: enrichedWaitlist,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum),
+      },
     });
   } catch (error) {
     next(error);
