@@ -99,12 +99,10 @@ export const App: React.FC = () => {
           <ErrorBoundary>
             <AppLayout>
             <Routes>
-            {/* First Screen: Animated Introduction Screen */}
-            <Route path="/" element={<IntroScreen />} />
+            {/* Public Landing Page */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/landing" element={<LandingPage />} />
             <Route path="/intro" element={<IntroScreen />} />
-
-            {/* Platform Overview */}
-            <Route path="/explore" element={<LandingPage />} />
 
             {/* Authentication Gateway */}
             <Route

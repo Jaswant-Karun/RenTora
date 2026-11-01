@@ -204,5 +204,4 @@ const bookingSchema = new mongoose_1.Schema({
 // Compound index for high performance overlap checks and preventing concurrent double booking
 bookingSchema.index({ resourceId: 1, startTime: 1, endTime: 1, status: 1 });
 bookingSchema.index({ userId: 1, status: 1 });
-bookingSchema.index({ 'trustPassToken.token': 1 });
 exports.Booking = (0, mongoose_1.model)('Booking', bookingSchema);

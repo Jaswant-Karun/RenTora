@@ -15,14 +15,44 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const location = useLocation();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  const isIntroRoute = location.pathname === '/' || location.pathname === '/intro';
+  const isIntroRoute = location.pathname === '/intro';
   const isAuthRoute = location.pathname === '/login' || location.pathname === '/register';
+  const isLandingRoute = location.pathname === '/' || location.pathname === '/landing';
 
   // Standalone layout for Intro or Auth without sidebar
   if (isIntroRoute || isAuthRoute) {
     return (
       <div className="min-h-screen bg-[#F8FAFC] text-[#172033] antialiased">
         <main className="w-full">{children}</main>
+      </div>
+    );
+  }
+
+  // Standalone full-width layout for Landing Page when not in dashboard
+  if (isLandingRoute && !user) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-[#172033] antialiased">
+        <Navbar />
+        <main className="w-full flex-1">{children}</main>
+        <footer className="border-t border-[#E2E8F0] bg-white py-4 px-4 sm:px-6 lg:px-8 text-xs text-[#64748B]">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+            <div className="flex items-center space-x-2">
+              <span className="font-semibold text-[#172033]">RENTORA</span>
+              <span>—</span>
+              <span>Smart Institutional Resource Sharing & Management Platform</span>
+            </div>
+            <div className="flex items-center space-x-3 text-[11px]">
+              <span className="text-[#64748B]">Team: Storm Breakerz</span>
+              <span>•</span>
+              <span className="text-[#64748B]">Leader: Jaswant Karun S A</span>
+              <span>•</span>
+              <span className="inline-flex items-center gap-1 text-[#1769D2]">
+                <Shield className="w-3 h-3" />
+                Verified Federation
+              </span>
+            </div>
+          </div>
+        </footer>
       </div>
     );
   }
