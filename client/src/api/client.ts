@@ -9,6 +9,7 @@ const baseURL = rawBase.endsWith('/api') || rawBase.endsWith('/api/')
 export const apiClient = axios.create({
   baseURL,
   withCredentials: true, // Enables sending and receiving secure httpOnly session cookies
+  timeout: 35000, // 35 seconds to accommodate Render free tier cold-starts gracefully
   headers: {
     'Content-Type': 'application/json',
   },
@@ -26,7 +27,7 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor to handle token expiry / unauthenticated state
+// Response interceptor to handle token expiry / unauthenticated state and cold-start errors
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -41,6 +42,16 @@ apiClient.interceptors.response.use(
         localStorage.removeItem('rentora_auth_token');
       }
     }
+
+    // Enhance error message for Render cold-starts or network drops
+    if (error.code === 'ECONNABORTED' || error.message?.toLowerCase().includes('timeout')) {
+      error.message = 'The server took longer than expected to respond. On cloud free tiers (e.g., Render), the instance may be spinning up from sleep. Please try again.';
+    } else if (!error.response && (error.message?.includes('Network Error') || !navigator.onLine)) {
+      error.message = 'Unable to establish a connection with the server. Please check your network connection or verify that the server is online.';
+    } else if (error.response?.data?.message) {
+      error.message = error.response.data.message;
+    }
+
     return Promise.reject(error);
   }
 );
