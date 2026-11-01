@@ -881,7 +881,7 @@ export const seedDatabase = async () => {
     ]);
 
     console.log('[Seed] Generating institutional immutable audit logs...');
-    await AuditLog.deleteMany({});
+    await mongoose.connection.collection('auditlogs').drop().catch(() => {});
     await AuditLog.create([
       {
         action: 'RESOURCE_CREATION',

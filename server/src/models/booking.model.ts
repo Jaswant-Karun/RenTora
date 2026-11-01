@@ -342,6 +342,5 @@ const bookingSchema = new Schema<IBooking>(
 // Compound index for high performance overlap checks and preventing concurrent double booking
 bookingSchema.index({ resourceId: 1, startTime: 1, endTime: 1, status: 1 });
 bookingSchema.index({ userId: 1, status: 1 });
-bookingSchema.index({ 'trustPassToken.token': 1 });
 
 export const Booking = model<IBooking>('Booking', bookingSchema);
