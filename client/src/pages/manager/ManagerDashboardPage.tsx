@@ -883,74 +883,137 @@ export const ManagerDashboardPage: React.FC = () => {
 
             {/* Bookings Table */}
             <div className="rounded-2xl border border-[#E2E8F0] bg-white overflow-hidden shadow-sm">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 border-b border-[#E2E8F0] text-[#64748B] uppercase tracking-wider font-semibold">
-                  <tr>
-                    <th className="p-3.5">Asset / Equipment</th>
-                    <th className="p-3.5">Borrower</th>
-                    <th className="p-3.5">Schedule</th>
-                    <th className="p-3.5">Stated Purpose</th>
-                    <th className="p-3.5">Status</th>
-                    <th className="p-3.5 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#E2E8F0] text-[#172033]">
-                  {filteredBookings.map((b) => (
-                    <tr key={b._id} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="p-3.5">
-                        <p className="font-semibold text-[#172033]">{b.resourceName}</p>
-                        <p className="text-[11px] text-[#64748B]">{b.resourceCategory} • {b.resourceLocation}</p>
-                      </td>
-                      <td className="p-3.5">
-                        <p className="font-semibold text-[#172033]">{b.userName}</p>
-                        <p className="text-[11px] text-[#64748B]">{b.userDepartment || 'Faculty'} • {b.userEmail}</p>
-                      </td>
-                      <td className="p-3.5">
-                        <p className="font-semibold text-[#172033]">{b.date}</p>
-                        <p className="text-[11px] text-[#64748B]">{b.timeSlot}</p>
-                      </td>
-                      <td className="p-3.5 max-w-xs truncate">
-                        <span className="text-[#64748B]">{b.purpose}</span>
-                        {b.suggestedAlternative && (
-                          <span className="block text-[10px] text-[#1769D2] font-semibold mt-0.5">
-                            Alt: {b.suggestedAlternative.date} ({b.suggestedAlternative.timeSlot})
-                          </span>
-                        )}
-                      </td>
-                      <td className="p-3.5">
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                            b.status === 'approved' || b.status === 'active'
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                              : b.status === 'pending'
-                              ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                              : b.status === 'waitlisted'
-                              ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                              : 'bg-slate-100 text-[#64748B]'
-                          }`}
-                        >
-                          {b.status}
-                        </span>
-                      </td>
-                      <td className="p-3.5 text-right">
-                        <button
-                          onClick={() => setSelectedOverrideBooking(b)}
-                          className="px-2.5 py-1 rounded bg-[#EFF6FF] text-[#1769D2] hover:bg-blue-100 font-semibold text-[11px]"
-                        >
-                          Override
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {filteredBookings.length === 0 && (
+              {/* Desktop Table */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 border-b border-[#E2E8F0] text-[#64748B] uppercase tracking-wider font-semibold">
                     <tr>
-                      <td colSpan={6} className="p-8 text-center text-[#64748B]">
-                        No bookings match your oversight filter criteria.
-                      </td>
+                      <th className="p-3.5">Asset / Equipment</th>
+                      <th className="p-3.5">Borrower</th>
+                      <th className="p-3.5">Schedule</th>
+                      <th className="p-3.5">Stated Purpose</th>
+                      <th className="p-3.5">Status</th>
+                      <th className="p-3.5 text-right">Actions</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-[#E2E8F0] text-[#172033]">
+                    {filteredBookings.map((b) => (
+                      <tr key={b._id} className="hover:bg-slate-50/60 transition-colors">
+                        <td className="p-3.5">
+                          <p className="font-semibold text-[#172033]">{b.resourceName}</p>
+                          <p className="text-[11px] text-[#64748B]">{b.resourceCategory} • {b.resourceLocation}</p>
+                        </td>
+                        <td className="p-3.5">
+                          <p className="font-semibold text-[#172033]">{b.userName}</p>
+                          <p className="text-[11px] text-[#64748B]">{b.userDepartment || 'Faculty'} • {b.userEmail}</p>
+                        </td>
+                        <td className="p-3.5">
+                          <p className="font-semibold text-[#172033]">{b.date}</p>
+                          <p className="text-[11px] text-[#64748B]">{b.timeSlot}</p>
+                        </td>
+                        <td className="p-3.5 max-w-xs truncate">
+                          <span className="text-[#64748B]">{b.purpose}</span>
+                          {b.suggestedAlternative && (
+                            <span className="block text-[10px] text-[#1769D2] font-semibold mt-0.5">
+                              Alt: {b.suggestedAlternative.date} ({b.suggestedAlternative.timeSlot})
+                            </span>
+                          )}
+                        </td>
+                        <td className="p-3.5">
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                              b.status === 'approved' || b.status === 'active'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : b.status === 'pending'
+                                ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                : b.status === 'waitlisted'
+                                ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                                : 'bg-slate-100 text-[#64748B]'
+                            }`}
+                          >
+                            {b.status}
+                          </span>
+                        </td>
+                        <td className="p-3.5 text-right">
+                          <button
+                            onClick={() => setSelectedOverrideBooking(b)}
+                            className="px-2.5 py-1 rounded bg-[#EFF6FF] text-[#1769D2] hover:bg-blue-100 font-semibold text-[11px]"
+                          >
+                            Override
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {filteredBookings.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="p-8 text-center text-[#64748B]">
+                          No bookings match your oversight filter criteria.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Stacked Cards */}
+              <div className="block md:hidden divide-y divide-[#E2E8F0]">
+                {filteredBookings.map((b) => (
+                  <div key={b._id} className="p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-sm text-[#172033]">{b.resourceName}</p>
+                        <p className="text-xs text-[#64748B]">{b.resourceCategory} • {b.resourceLocation}</p>
+                      </div>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase shrink-0 ${
+                          b.status === 'approved' || b.status === 'active'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : b.status === 'pending'
+                            ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                            : b.status === 'waitlisted'
+                            ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                            : 'bg-slate-100 text-[#64748B]'
+                        }`}
+                      >
+                        {b.status}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs text-[#64748B] bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                      <div>
+                        <span className="text-[10px] uppercase font-bold text-slate-400 block">Borrower</span>
+                        <p className="font-medium text-[#172033] truncate">{b.userName}</p>
+                        <p className="text-[11px] truncate">{b.userDepartment || 'Faculty'}</p>
+                      </div>
+                      <div>
+                        <span className="text-[10px] uppercase font-bold text-slate-400 block">Schedule</span>
+                        <p className="font-medium text-[#172033]">{b.date}</p>
+                        <p className="text-[11px] text-slate-500">{b.timeSlot}</p>
+                      </div>
+                    </div>
+
+                    {b.purpose && (
+                      <p className="text-xs text-[#64748B] italic">
+                        "{b.purpose}"
+                      </p>
+                    )}
+
+                    <div className="pt-2 border-t border-slate-100 flex justify-end">
+                      <button
+                        onClick={() => setSelectedOverrideBooking(b)}
+                        className="w-full py-2 px-3 rounded-lg bg-[#EFF6FF] text-[#1769D2] hover:bg-blue-100 font-semibold text-xs border border-blue-200"
+                      >
+                        Manager Override
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {filteredBookings.length === 0 && (
+                  <div className="p-8 text-center text-[#64748B] text-xs">
+                    No bookings match your oversight filter criteria.
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         );
@@ -1495,7 +1558,8 @@ export const ManagerDashboardPage: React.FC = () => {
 
             {/* Decisions Table */}
             <div className="bg-white border border-[#E2E8F0] rounded-2xl overflow-hidden shadow-sm">
-              <div className="overflow-x-auto">
+              {/* Desktop View */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
                     <tr className="bg-slate-50 border-b border-[#E2E8F0] text-slate-500 font-semibold uppercase tracking-wider text-[11px]">
@@ -1536,12 +1600,12 @@ export const ManagerDashboardPage: React.FC = () => {
                             <td className="py-3 px-4 whitespace-nowrap">
                               <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
                                 item.finalDecision === 'APPROVED'
-                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                  : item.finalDecision === 'PENDING_REVIEW'
-                                  ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                                  : item.finalDecision === 'WAITLISTED'
-                                  ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                                  : 'bg-rose-50 text-rose-700 border border-rose-200'
+                                   ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                   : item.finalDecision === 'PENDING_REVIEW'
+                                   ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                                   : item.finalDecision === 'WAITLISTED'
+                                   ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                   : 'bg-rose-50 text-rose-700 border border-rose-200'
                               }`}>
                                 {item.finalDecision.replace('_', ' ')}
                               </span>
@@ -1574,6 +1638,72 @@ export const ManagerDashboardPage: React.FC = () => {
                     )}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile View */}
+              <div className="block md:hidden divide-y divide-[#E2E8F0]">
+                {fairShareDecisions.length === 0 ? (
+                  <div className="py-8 text-center text-slate-400 text-xs">
+                    No allocation decisions logged in this cycle yet.
+                  </div>
+                ) : (
+                  fairShareDecisions
+                    .filter((d) => fairShareDecisionFilter === 'all' || d.finalDecision.toLowerCase() === fairShareDecisionFilter)
+                    .map((item) => (
+                      <div key={item._id} className="p-4 space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="font-semibold text-sm text-[#172033]">{item.resourceName}</p>
+                            <p className="text-xs text-[#64748B]">{item.userName} ({item.userQualification || item.userRole})</p>
+                          </div>
+                          <div className="flex flex-col items-end gap-1 shrink-0">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                              item.finalDecision === 'APPROVED'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : item.finalDecision === 'PENDING_REVIEW'
+                                ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                                : item.finalDecision === 'WAITLISTED'
+                                ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                : 'bg-rose-50 text-rose-700 border border-rose-200'
+                            }`}>
+                              {item.finalDecision.replace('_', ' ')}
+                            </span>
+                            {item.isOverridden && (
+                              <span className="text-[9px] font-bold text-amber-800 bg-amber-100 border border-amber-300 px-1 py-0.5 rounded">
+                                Overridden
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-100 text-xs space-y-1">
+                          <div className="flex justify-between text-slate-500 text-[11px]">
+                            <span>Slot: {item.date} ({item.timeSlot})</span>
+                            <span>{new Date(item.createdAt).toLocaleDateString()}</span>
+                          </div>
+                          <p className="text-[#172033] font-medium text-xs pt-1 border-t border-slate-200/60">
+                            {item.reason}
+                          </p>
+                        </div>
+
+                        <div className="pt-2 border-t border-slate-100 flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedFairShareExplanation({
+                              explanation: item.explanation,
+                              resourceName: item.resourceName,
+                              isOverridden: item.isOverridden,
+                              overriddenBy: item.overriddenBy,
+                              overrideReason: item.overrideReason,
+                            })}
+                            className="w-full py-2 px-3 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold border border-indigo-200 transition-colors"
+                          >
+                            View Transparency Breakdown
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                )}
               </div>
             </div>
           </div>
