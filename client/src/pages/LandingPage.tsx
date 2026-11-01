@@ -612,11 +612,18 @@ export const LandingPage: React.FC = () => {
                 <p className="text-xs text-[#64748B] mt-2 leading-relaxed">
                   Discover apparatus across campus, verify training prerequisites, book conflict-free slots, check in with TrustPass, and view personal sustainability impact.
                 </p>
-                <div className="mt-3 p-2 bg-slate-50 rounded text-[11px] font-mono text-slate-600">
-                  student@rentora.edu
+                <div className="mt-4 p-3 bg-slate-100 rounded-lg text-xs space-y-1.5 border border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#64748B] text-[10px] uppercase font-bold">Email:</span>
+                    <span className="font-mono text-slate-900 font-bold select-all">student@rentora.edu</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#64748B] text-[10px] uppercase font-bold">Password:</span>
+                    <span className="font-mono text-slate-900 font-bold bg-white px-1.5 py-0.5 rounded border border-slate-300">Password123!</span>
+                  </div>
                 </div>
               </div>
-              <div className="mt-6 pt-4 border-t border-[#E2E8F0]">
+              <div className="mt-5 pt-4 border-t border-[#E2E8F0]">
                 <Button
                   variant="outline"
                   size="sm"
@@ -639,11 +646,18 @@ export const LandingPage: React.FC = () => {
                 <p className="text-xs text-[#64748B] mt-2 leading-relaxed">
                   Catalogue department assets, configure operating windows, review applicant research goals, execute physical check-in/out, and sign condition reports.
                 </p>
-                <div className="mt-3 p-2 bg-slate-50 rounded text-[11px] font-mono text-slate-600">
-                  owner@rentora.edu
+                <div className="mt-4 p-3 bg-slate-100 rounded-lg text-xs space-y-1.5 border border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#64748B] text-[10px] uppercase font-bold">Email:</span>
+                    <span className="font-mono text-slate-900 font-bold select-all">owner@rentora.edu</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#64748B] text-[10px] uppercase font-bold">Password:</span>
+                    <span className="font-mono text-slate-900 font-bold bg-white px-1.5 py-0.5 rounded border border-slate-300">Password123!</span>
+                  </div>
                 </div>
               </div>
-              <div className="mt-6 pt-4 border-t border-[#E2E8F0]">
+              <div className="mt-5 pt-4 border-t border-[#E2E8F0]">
                 <Button
                   variant="outline"
                   size="sm"
@@ -666,11 +680,18 @@ export const LandingPage: React.FC = () => {
                 <p className="text-xs text-[#64748B] mt-2 leading-relaxed">
                   Campus-wide governance, inter-departmental allocation policies, waitlist promotion overrides, incident resolution, and avoided procurement cost accounting.
                 </p>
-                <div className="mt-3 p-2 bg-slate-50 rounded text-[11px] font-mono text-slate-600">
-                  manager@rentora.edu
+                <div className="mt-4 p-3 bg-slate-100 rounded-lg text-xs space-y-1.5 border border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#64748B] text-[10px] uppercase font-bold">Email:</span>
+                    <span className="font-mono text-slate-900 font-bold select-all">manager@rentora.edu</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#64748B] text-[10px] uppercase font-bold">Password:</span>
+                    <span className="font-mono text-slate-900 font-bold bg-white px-1.5 py-0.5 rounded border border-slate-300">Password123!</span>
+                  </div>
                 </div>
               </div>
-              <div className="mt-6 pt-4 border-t border-[#E2E8F0]">
+              <div className="mt-5 pt-4 border-t border-[#E2E8F0]">
                 <Button
                   variant="outline"
                   size="sm"
@@ -693,11 +714,18 @@ export const LandingPage: React.FC = () => {
                 <p className="text-xs text-[#64748B] mt-2 leading-relaxed">
                   Multi-institution federation, enterprise security controls, immutable audit log verification, system health telemetry, and global data governance.
                 </p>
-                <div className="mt-3 p-2 bg-slate-50 rounded text-[11px] font-mono text-slate-600">
-                  admin@rentora.edu
+                <div className="mt-4 p-3 bg-slate-100 rounded-lg text-xs space-y-1.5 border border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#64748B] text-[10px] uppercase font-bold">Email:</span>
+                    <span className="font-mono text-slate-900 font-bold select-all">admin@rentora.edu</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#64748B] text-[10px] uppercase font-bold">Password:</span>
+                    <span className="font-mono text-slate-900 font-bold bg-white px-1.5 py-0.5 rounded border border-slate-300">Password123!</span>
+                  </div>
                 </div>
               </div>
-              <div className="mt-6 pt-4 border-t border-[#E2E8F0]">
+              <div className="mt-5 pt-4 border-t border-[#E2E8F0]">
                 <Button
                   variant="outline"
                   size="sm"
