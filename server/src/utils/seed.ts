@@ -758,6 +758,24 @@ export const seedDatabase = async () => {
         waitlistReason: 'Enqueued in transparent priority waitlist due to high-demand slot contention (FairShare Score: 86).',
         notes: '[DEMO DATA] Simulated waitlisted allocation with automated promotion queue.',
       },
+      {
+        userId: createdUsers['student']?._id,
+        userName: createdUsers['student']?.name,
+        userEmail: createdUsers['student']?.email,
+        userDepartment: createdUsers['student']?.department,
+        userInstitution: createdUsers['student']?.institution,
+        resourceId: createdResources[9]._id, // Rohde & Schwarz Oscilloscope
+        resourceName: createdResources[9].name,
+        resourceCategory: createdResources[9].category,
+        resourceLocation: createdResources[9].location,
+        resourceImage: createdResources[9].images[0],
+        date: '2026-11-06',
+        timeSlot: '02:00 PM - 04:00 PM',
+        purpose: 'High-frequency signal integrity analysis for RF frontend transceiver',
+        supervisorName: 'Dr. Meera Raman',
+        status: 'active',
+        notes: '[DEMO DATA] Pre-calibrated RF probe kit checked out and active.',
+      },
     ];
 
     const createdBookings: any[] = [];
