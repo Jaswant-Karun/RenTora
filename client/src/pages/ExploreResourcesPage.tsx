@@ -23,7 +23,9 @@ import {
   ChevronDown,
   X,
   ArrowUpDown,
+  Heart,
 } from 'lucide-react';
+import { getFavoriteResourceIds } from '../utils/favorites';
 
 export const ALL_CATEGORIES: ResourceCategory[] = [
   'Laboratories',
@@ -159,6 +161,23 @@ export const ExploreResourcesPage: React.FC = () => {
     setSearchParams({}, { replace: true });
   };
 
+  // Favorites state and synchronization
+  const [onlyFavorites, setOnlyFavorites] = useState(false);
+  const [favoriteIds, setFavoriteIds] = useState<string[]>(getFavoriteResourceIds());
+
+  useEffect(() => {
+    const handleFavoritesChanged = () => {
+      setFavoriteIds(getFavoriteResourceIds());
+    };
+    window.addEventListener('rentora_favorites_changed', handleFavoritesChanged);
+    return () => window.removeEventListener('rentora_favorites_changed', handleFavoritesChanged);
+  }, []);
+
+  const displayedResources = useMemo(() => {
+    if (!onlyFavorites) return resources;
+    return resources.filter((r) => favoriteIds.includes(r._id));
+  }, [resources, onlyFavorites, favoriteIds]);
+
   const activeAdvancedCount = useMemo(() => {
     let count = 0;
     if (selectedLocation !== 'All') count++;
@@ -178,7 +197,8 @@ export const ExploreResourcesPage: React.FC = () => {
     selectedEligibility !== 'All' ||
     selectedTraining !== 'All' ||
     Boolean(selectedDate) ||
-    Boolean(debouncedSearch);
+    Boolean(debouncedSearch) ||
+    onlyFavorites;
 
   return (
     <div className="space-y-6">
@@ -300,9 +320,24 @@ export const ExploreResourcesPage: React.FC = () => {
         <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none text-xs">
           <button
             type="button"
-            onClick={() => updateFilter('category', 'All')}
+            onClick={() => setOnlyFavorites(!onlyFavorites)}
+            className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer inline-flex items-center gap-1.5 ${
+              onlyFavorites
+                ? 'bg-rose-600 text-white shadow-xs'
+                : 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200'
+            }`}
+          >
+            <Heart className={`w-3.5 h-3.5 ${onlyFavorites ? 'fill-current' : ''}`} />
+            <span>Saved Favorites ({favoriteIds.length})</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setOnlyFavorites(false);
+              updateFilter('category', 'All');
+            }}
             className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
-              selectedCategory === 'All'
+              !onlyFavorites && selectedCategory === 'All'
                 ? 'bg-[#1769D2] text-white shadow-xs'
                 : 'bg-[#F8FAFC] text-[#64748B] hover:text-[#172033] border border-[#E2E8F0]'
             }`}
