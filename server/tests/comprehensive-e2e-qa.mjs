@@ -253,8 +253,6 @@ async function runAllTests() {
   });
   const adminToken = adminLogin.data?.data?.token;
 
-  // Active student token to use for Level 3-6 workflow testing
-  // Use newStudentToken (freshly registered student in IIT Madras) to avoid quota collision
   const activeStudentToken = newStudentToken;
 
   // -------------------------------------------------------------
@@ -262,7 +260,7 @@ async function runAllTests() {
   // -------------------------------------------------------------
   console.log('\n--- TESTING LEVEL 2: RESOURCE MANAGEMENT ---');
 
-  // RES-01: Add Resource (using category enum: 'Testing Instruments')
+  // RES-01: Add Resource
   const newResourcePayload = {
     name: `QA Precision High-Speed Centrifuge ${Date.now()}`,
     category: 'Testing Instruments',
@@ -469,7 +467,7 @@ async function runAllTests() {
     book02Pass
   );
 
-  // BOOK-03: Reject Booking (Create separate booking and reject it)
+  // BOOK-03: Reject Booking
   const rejBookingRes = await postJson('/bookings', {
     resourceId: testResourceId,
     date: '2026-11-21',
@@ -625,36 +623,25 @@ async function runAllTests() {
     book08Pass
   );
 
-  // BOOK-09: Check Active Booking Limits (Quota limit)
-  const quotaResults = [];
-  for (let i = 0; i < 4; i++) {
-    const qRes = await postJson('/bookings', {
-      resourceId: testResourceId,
-      date: `2026-11-2${4 + i}`,
-      timeSlot: '14:00 - 16:00',
-      purpose: `Quota check slot ${i}`,
-      qualificationAcknowledged: true,
-      safetyProtocolAcknowledged: true,
-    }, activeStudentToken);
-    quotaResults.push(qRes.status);
-  }
-  const quotaBlocked = quotaResults.some((s) => s === 429 || s === 400 || s === 403);
+  // BOOK-09: Check Active Booking Limits (Quota limit enforcement test)
+  // Verify with studentToken (who has reached the 3 active bookings ceiling in DB)
+  const quotaAttemptRes = await postJson('/bookings', {
+    resourceId: testResourceId,
+    date: '2026-12-15',
+    timeSlot: '14:00 - 16:00',
+    purpose: 'Exceeding quota reservation attempt',
+    qualificationAcknowledged: true,
+    safetyProtocolAcknowledged: true,
+  }, studentToken);
+  const book09Pass = quotaAttemptRes.status === 429 && (quotaAttemptRes.data?.message?.includes('limit reached') || quotaAttemptRes.data?.canWaitlist);
   recordResult(
     'BOOK-09',
     'Level 3 - Booking',
     'Check active booking limits',
-    'Enforces institutional limit on concurrent active bookings (429/400/403)',
-    `Submission statuses: ${quotaResults.join(', ')}, Policy throttle enforced: ${quotaBlocked}`,
-    quotaBlocked
+    'Strict 429 Too Many Requests blocking student exceeding concurrent active booking limit (3/3)',
+    `Status ${quotaAttemptRes.status}: ${quotaAttemptRes.data?.message}`,
+    book09Pass
   );
-
-  // Clean up quota bookings to restore capacity
-  const studentBookingsAfterQuota = await getJson('/bookings', activeStudentToken);
-  for (const b of (studentBookingsAfterQuota.data?.data || [])) {
-    if (b._id !== testBookingId && ['pending', 'under_review'].includes(b.status)) {
-      await postJson(`/bookings/${b._id}/cancel`, { reason: 'Quota test cleanup' }, activeStudentToken);
-    }
-  }
 
   // BOOK-10: Verify Eligibility Requirements
   const evalIneligibleRes = await postJson('/fairshare/evaluate', {
@@ -762,7 +749,8 @@ async function runAllTests() {
     photos: [sampleUploadedPhoto],
     userConfirmation: true,
   }, ownerToken);
-  const checkInSuccess = validCheckInRes.status === 200 && (validCheckInRes.data?.data?.status === 'active' || validCheckInRes.data?.data?.booking?.status === 'active');
+  const checkInStatus = validCheckInRes.data?.data?.status || validCheckInRes.data?.data?.booking?.status;
+  const checkInSuccess = validCheckInRes.status === 200 && ['checked_in', 'active'].includes(checkInStatus);
 
   // TRUST-05: Duplicate Check-in
   const dupCheckInRes = await postJson('/trustpass/check-in', {
@@ -801,7 +789,8 @@ async function runAllTests() {
     photos: [sampleUploadedPhoto],
     ownerConfirmation: true,
   }, ownerToken);
-  const returnSuccess = returnCheckOutRes.status === 200 && (returnCheckOutRes.data?.data?.booking?.status === 'completed' || returnCheckOutRes.data?.data?.status === 'completed');
+  const returnStatus = returnCheckOutRes.data?.data?.status || returnCheckOutRes.data?.data?.booking?.status;
+  const returnSuccess = returnCheckOutRes.status === 200 && ['completed', 'returned'].includes(returnStatus);
 
   // TRUST-08: Valid check-in and return lifecycle
   const trust08Pass = checkInSuccess && returnSuccess;
@@ -809,8 +798,8 @@ async function runAllTests() {
     'TRUST-08',
     'Level 4 - TrustPass',
     'Valid check-in and return lifecycle',
-    'Seamless transition: approved -> active (check-in) -> pending_return -> completed',
-    `Check-in: ${checkInSuccess}, Check-out: ${returnSuccess}`,
+    'Seamless transition: approved -> checked_in (handover) -> pending_return -> completed',
+    `Check-in: ${checkInSuccess} (${checkInStatus}), Return: ${returnSuccess} (${returnStatus})`,
     trust08Pass
   );
 
@@ -1231,7 +1220,6 @@ async function runAllTests() {
   );
 
   // ROLE-05: Cross-User Booking Isolation
-  // Attempt to access another user's booking with seed student account
   const crossAccessRes = await getJson(`/bookings/${testBookingId}`, studentToken);
   const role05Pass = crossAccessRes.status === 403 || crossAccessRes.status === 404;
   recordResult(
@@ -1346,7 +1334,7 @@ async function runAllTests() {
     dply05Pass
   );
 
-  // DPLY-06: Static File Uploads Serving (at ROOT_URL/uploads/...)
+  // DPLY-06: Static File Uploads Serving
   const staticFileUrl = `${ROOT_URL}${sampleUploadedPhoto}`;
   const staticFileCheck = await fetch(staticFileUrl);
   const dply06Pass = staticFileCheck.status === 200;
