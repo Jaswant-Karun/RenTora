@@ -148,6 +148,39 @@ export const MyBookingsPage: React.FC = () => {
     currentPage * itemsPerPage
   );
 
+  // Calendar computations
+  const currentYear = calendarDate.getFullYear();
+  const currentMonth = calendarDate.getMonth();
+  const monthName = calendarDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+  const firstDayOfWeek = new Date(currentYear, currentMonth, 1).getDay();
+  const totalDaysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+  const prevMonth = () => {
+    setCalendarDate(new Date(currentYear, currentMonth - 1, 1));
+  };
+  const nextMonth = () => {
+    setCalendarDate(new Date(currentYear, currentMonth + 1, 1));
+  };
+  const goToToday = () => {
+    setCalendarDate(new Date());
+  };
+
+  // Map bookings by date string YYYY-MM-DD
+  const bookingsByDate = useMemo(() => {
+    const map: Record<string, Booking[]> = {};
+    bookings.forEach((b) => {
+      let key = b.date;
+      if (key && key.includes('T')) {
+        key = key.split('T')[0];
+      }
+      if (!map[key]) map[key] = [];
+      map[key].push(b);
+    });
+    return map;
+  }, [bookings]);
+
+  const selectedDayBookings = selectedCalendarDay ? bookingsByDate[selectedCalendarDay] || [] : [];
+
   return (
     <div className="space-y-6">
       {/* 1. Header Section */}
@@ -157,17 +190,47 @@ export const MyBookingsPage: React.FC = () => {
             Booking Management
           </h1>
           <p className="text-xs text-[#64748B] mt-0.5">
-            Track reservation approvals, perform physical check-ins, document condition reports, and log returns.
+            Track reservation approvals, review scheduled dates, perform physical check-ins, and log returns.
           </p>
         </div>
 
-        <Link
-          to="/dashboard/explore"
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#1769D2] hover:bg-[#1256B0] text-white text-xs font-medium shadow-xs transition-colors shrink-0"
-        >
-          <Compass className="w-3.5 h-3.5" />
-          <span>New Reservation</span>
-        </Link>
+        <div className="flex items-center gap-2.5">
+          {/* View Mode Toggle: List vs Calendar */}
+          <div className="inline-flex rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] p-1 text-xs font-medium">
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md transition-colors ${
+                viewMode === 'list'
+                  ? 'bg-white text-[#1769D2] font-semibold shadow-xs'
+                  : 'text-[#64748B] hover:text-[#172033]'
+              }`}
+            >
+              <List className="w-3.5 h-3.5" />
+              <span>List View</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('calendar')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md transition-colors ${
+                viewMode === 'calendar'
+                  ? 'bg-white text-[#1769D2] font-semibold shadow-xs'
+                  : 'text-[#64748B] hover:text-[#172033]'
+              }`}
+            >
+              <Calendar className="w-3.5 h-3.5" />
+              <span>Calendar View</span>
+            </button>
+          </div>
+
+          <Link
+            to="/dashboard/explore"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#1769D2] hover:bg-[#1256B0] text-white text-xs font-medium shadow-xs transition-colors shrink-0"
+          >
+            <Compass className="w-3.5 h-3.5" />
+            <span>New Reservation</span>
+          </Link>
+        </div>
       </div>
 
       {/* 2. Search, Status Tabs & Table Toolbar */}
