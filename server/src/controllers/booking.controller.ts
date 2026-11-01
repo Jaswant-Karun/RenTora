@@ -315,6 +315,7 @@ export const createBooking = async (
       res.status(401).json({ success: false, message: 'Authentication required' });
       return;
     }
+    const currentUser = req.user;
 
     const {
       resourceId,
