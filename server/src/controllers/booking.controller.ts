@@ -583,8 +583,8 @@ export const createBooking = async (
       transition: finalStatus === 'waitlisted' ? 'ENQUEUED_IN_WAITLIST' : 'RESERVATION_REQUESTED',
       fromStatus: 'none',
       toStatus: finalStatus,
-      performedBy: req.user.name,
-      performedByRole: req.user.role,
+      performedBy: currentUser.name,
+      performedByRole: currentUser.role,
       timestamp: new Date(),
       note:
         finalStatus === 'waitlisted'
@@ -604,7 +604,7 @@ export const createBooking = async (
 
     // FairShare Transparent Resource Allocation Engine Evaluation
     const fairShareEval = await FairShareService.evaluateAllocation({
-      userId: req.user._id,
+      userId: currentUser._id,
       resourceId: resource._id,
       date: formattedDate,
       timeSlot: formattedTimeSlot,
@@ -642,12 +642,12 @@ export const createBooking = async (
     }
 
     const booking = await Booking.create({
-      userId: req.user._id,
-      userName: req.user.name,
-      userEmail: req.user.email,
-      userDepartment: req.user.department,
-      userInstitution: req.user.institution,
-      userEligibility: req.user.isVerified ? 'Verified Institutional Researcher' : 'Standard Student Account',
+      userId: currentUser._id,
+      userName: currentUser.name,
+      userEmail: currentUser.email,
+      userDepartment: currentUser.department,
+      userInstitution: currentUser.institution,
+      userEligibility: currentUser.isVerified ? 'Verified Institutional Researcher' : 'Standard Student Account',
       resourceId: resource._id,
       resourceName: resource.name,
       resourceCategory: resource.category,
@@ -675,7 +675,7 @@ export const createBooking = async (
     });
 
     // Record in permanent FairShare Decision Ledger
-    await FairShareService.recordDecision(booking, fairShareEval.explanation, req.user);
+    await FairShareService.recordDecision(booking, fairShareEval.explanation, currentUser);
 
     // Immutable Audit Log in Central Ledger
     await recordAuditLog({
@@ -683,10 +683,10 @@ export const createBooking = async (
       entityType: 'Booking',
       entityId: booking._id,
       entityTitle: resource.name,
-      actorId: req.user._id,
-      actorName: req.user.name,
-      actorEmail: req.user.email,
-      actorRole: req.user.role,
+      actorId: currentUser._id,
+      actorName: currentUser.name,
+      actorEmail: currentUser.email,
+      actorRole: currentUser.role,
       details: {
         resourceId: resource._id,
         durationHours,
@@ -704,7 +704,7 @@ export const createBooking = async (
       await Notification.create({
         userId: resource.ownerId,
         title: finalStatus === 'waitlisted' ? 'Waitlist Entry Queued' : 'New Booking Request Received',
-        message: `${req.user.name} submitted a reservation request for "${resource.name}" on ${formattedDate} (${formattedTimeSlot}). Status: ${finalStatus}.`,
+        message: `${currentUser.name} submitted a reservation request for "${resource.name}" on ${formattedDate} (${formattedTimeSlot}). Status: ${finalStatus}.`,
         type: 'booking',
         link: '/owner/requests',
         metadata: { bookingId: booking._id },
@@ -727,7 +727,7 @@ export const createBooking = async (
     }
 
     await Notification.create({
-      userId: req.user._id,
+      userId: currentUser._id,
       title: notifTitle,
       message: notifMessage,
       type: notifType,
