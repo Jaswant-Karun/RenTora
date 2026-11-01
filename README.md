@@ -307,97 +307,110 @@ RENTORA relies on normalized Mongoose models:
 
 ---
 
-## 🧪 Automated Testing Suite
+## 🧪 Automated Testing Suite (71 Tests, 100% Pass Rate)
 
-RENTORA includes a comprehensive end-to-end integration test suite verifying all 15 core lifecycle steps required by enterprise standards.
-
-### Running the Test Suite
-
-Ensure the backend server is running, then execute:
+RENTORA includes a comprehensive 9-level end-to-end integration test harness (`server/tests/comprehensive-e2e-qa.mjs`) that validates every layer of the live application:
 
 ```bash
 cd server
-node scratch/test-full-15-suite.mjs
+npm run test:qa
 ```
 
-### Verified Test Matrix
+### Verified Test Levels Summary
 
-| Step | Lifecycle Stage | Status | Verification Detail |
-| :---: | :--- | :---: | :--- |
-| **1** | **User Sign-Up** | `PASS` | Zod validation enforced; public admin registration blocked; student created. |
-| **2** | **User Sign-In** | `PASS` | Authenticated session established; JWT bearer token generated. |
-| **3** | **User Logout** | `PASS` | Session invalidated; subsequent protected queries rejected with HTTP 401. |
-| **4** | **Resource Creation** | `PASS` | Custodian creates Rigaku X-Ray Diffractometer with safety specifications. |
-| **5** | **Resource Discovery** | `PASS` | Full-text query matches asset across category, name, and institution. |
-| **6** | **Booking Requests** | `PASS` | Student requests timeslot; diagnostics confirm eligibility and active quota. |
-| **7** | **Owner Approvals** | `PASS` | Custodian reviews radiation certificate and approves reservation. |
-| **8** | **Rejections with Reason** | `PASS` | Rejection without reason fails; rejection with mandatory justification succeeds. |
-| **9** | **Double-Booking & Waitlists** | `PASS` | Conflicting slot returns 409 Conflict; `allowWaitlist: true` queues user with standing. |
-| **10** | **Check-In** | `PASS` | Pre-use condition inspection recorded with vacuum meter readings & confirmation. |
-| **11** | **Check-Out (Return)** | `PASS` | Borrower finishes scan, uploads beam shutter locked proof, initiates return. |
-| **12** | **Condition Documentation** | `PASS` | Custodian signs off return condition; booking transitions to `completed`. |
-| **13** | **Incident Reporting** | `PASS` | Safety interlock E-402 warning reported with severity `medium` and evidence. |
-| **14** | **Audit History & Immutability** | `PASS` | Chronological ledger verified; DELETE attempt rejected with HTTP 405. |
-| **15** | **Role Restrictions (RBAC)** | `PASS` | Student accessing `/api/admin/overview` receives 403 Forbidden; Admin receives 200 OK. |
+| Level | Subsystem & Verification Scope | Test Count | Pass Rate | Status |
+| :---: | :--- | :---: | :---: | :---: |
+| **Level 1** | **Authentication & RBAC:** Registration, duplicate email rejection, login/logout, JWT token verification, role permissions | 9 / 9 | 100% | `PASS` |
+| **Level 2** | **Resource Management:** CRUD, schedule updates, availability, search, category filters, photo uploads, validation errors | 9 / 9 | 100% | `PASS` |
+| **Level 3** | **Booking Lifecycle:** Request submission, approvals, rejections with reason, cancellations, waitlisting, overlap & double-booking prevention, quota limits | 10 / 10 | 100% | `PASS` |
+| **Level 4** | **TrustPass Handover:** Cryptographic QR token generation, token verification, invalid/expired token rejection, duplicate check-in/out guards | 8 / 8 | 100% | `PASS` |
+| **Level 5** | **ConditionGuard & Incidents:** Pre-use baseline inspection, post-return condition verification, photo evidence, incident reporting & status update | 7 / 7 | 100% | `PASS` |
+| **Level 6** | **FairShare Priority Engine:** Multi-user contention, transparent scoring, quota limits, waitlist ordering, next-user notification, manager override | 7 / 7 | 100% | `PASS` |
+| **Level 7** | **Analytics & Notifications:** Utilization percentages, timeline trends, event notifications, read receipts, date filters, ESG calculations | 7 / 7 | 100% | `PASS` |
+| **Level 8** | **Role Permissions & Boundaries:** Cross-user data isolation, custodian equipment boundaries, student restrictions, manager governance | 6 / 6 | 100% | `PASS` |
+| **Level 9** | **Cloud Deployment Verification:** Vercel SPA rewrites, Render start commands, MongoDB connectivity, dynamic API URLs, CORS policies, secret leaks scan | 8 / 8 | 100% | `PASS` |
+| **TOTAL** | **Comprehensive Full-System E2E QA** | **71 / 71** | **100%** | **`ALL PASS`** |
 
 ---
 
 ## 🔑 Demonstration Accounts & Roles
 
-The platform is pre-configured with 4 personas across different tiers:
+The application includes 4 pre-configured institutional personas with safe, fictional demonstration data. All passwords are `Password123!`:
 
 | Persona | Role | Email | Password | Institutional Permissions |
 | :--- | :--- | :--- | :--- | :--- |
-| **Student / Researcher** | `student` | `student@rentora.edu` | `Password123!` | Browse catalog, book assets, check-in, initiate returns, report incidents. |
-| **Lab Custodian / Owner** | `owner` | `owner@rentora.edu` | `Password123!` | List equipment, approve/reject requests, perform physical handover sign-offs. |
-| **Institution Manager** | `manager` | `manager@rentora.edu` | `Password123!` | Oversee campus analytics, fair usage rules, resolve incidents, manager overrides. |
-| **Platform Administrator** | `admin` | `admin@rentora.edu` | `Password123!` | Global dashboard, user role changes, institutional federations, system settings. |
+| **Student / Researcher** | `student` | `student@rentora.edu` | `Password123!` | Explore 10 categories, book slots, present TrustPass QR, check personal ESG impact. |
+| **Lab Custodian / Owner** | `owner` | `owner@rentora.edu` | `Password123!` | Catalogue assets, approve/reject requests, scan TrustPass QR, file condition reports. |
+| **Institution Manager** | `manager` | `manager@rentora.edu` | `Password123!` | Campus-wide utilization metrics, department quota overrides, waitlist promotion, ESG reporting. |
+| **Platform Administrator** | `admin` | `admin@rentora.edu` | `Password123!` | System health, multi-campus federation, user governance, audit ledger inspection. |
 
-*Quick Evaluation:* In the web application header, click **"Demo Logins"** to instantly switch between roles without re-typing passwords.
+> **Interactive Demo Switcher:** Visit the public landing page or login page and click any persona card in the **"Judge Demo Hub"** for 1-click authentication.
+
+---
+
+## 🎬 Official 14-Step Hackathon Demonstration Workflow (Flow A to N)
+
+Follow this exact sequence to evaluate the complete end-to-end functionality of RENTORA:
+
+1. **Step A — Login as Student:** Log in with `student@rentora.edu` / `Password123!`.
+2. **Step B — Discover a Resource:** Navigate to `/dashboard/explore` and filter across 10 categories (e.g. Nanotech Cleanroom, DGX A100 GPU, Haas CNC).
+3. **Step C — Check Eligibility:** Click asset card to view details; system validates student training prerequisites and department quotas.
+4. **Step D — Request a Booking:** Pick date/timeslot, specify research purpose and supervisor, submit booking request.
+5. **Step E — Login as Resource Owner:** Switch persona to Dr. Meera Raman (`owner@rentora.edu`) at `/owner/bookings`.
+6. **Step F — Review & Approve:** Review applicant research goals; confirm approval (status transitions to `active`, cryptographic TrustPass QR generated).
+7. **Step G — Login as Student:** Switch back to student at `/dashboard/bookings`; reservation displays `active` with green TrustPass action.
+8. **Step H — Complete Physical Check-In:** Present TrustPass QR code; custodian scans/verifies QR to record physical handover (`status: checked_in`).
+9. **Step I — Show Pre-Session Condition Report:** View ConditionGuard record at `/owner/condition-reports` showing pre-session chamber pressures and baseline cleanliness.
+10. **Step J — Complete Check-Out (Return):** Complete post-session return verification at `/owner/check-in-out` (`status: completed`).
+11. **Step K — Show Final Condition Report:** Review post-session inspection sign-off comparing pre-session and post-session condition.
+12. **Step L — Show Booking History & Audit Trail:** Inspect non-repudiation chronological audit logs at `/owner/audit` and `/manager`.
+13. **Step M — Demonstrate FairShare & Waiting List:** Open `/dashboard/waitlist` and view waitlisted Bio-Molecular Lab request with FairShare priority score explanation.
+14. **Step N — Show ResourcePulse & EcoShare Analytics:** Open `/dashboard/activity` to inspect live apparatus utilization, avoided CAPEX expenditure (INR), and carbon offset metrics.
 
 ---
 
 ## 🌐 Deployment Guide
 
 ### 1. MongoDB Atlas Setup
+- Create an M0 free tier cluster on [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).
+- Set network access to `0.0.0.0/0` (allow all cloud providers).
+- Set `MONGODB_URI` connection string in your backend environment.
 
-1. Create a free M0 cluster on [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).
-2. Under **Database Access**, create a user with `readWriteAnyDatabase` privileges.
-3. Under **Network Access**, add IP `0.0.0.0/0` (allow access from anywhere) or specific server IPs.
-4. Obtain your connection URI: `mongodb+srv://<user>:<password>@cluster0.mongodb.net/rentora?retryWrites=true&w=majority`.
-5. Set `MONGODB_URI` in your production environment variables.
+### 2. Backend Deployment (Render)
+- **Root Directory:** `server`
+- **Build Command:** `npm install --include=dev && npm run build`
+- **Start Command:** `npm start`
+- **Health Check Path:** `/health`
+- **Environment Variables:** `NODE_ENV=production`, `PORT=5000`, `MONGODB_URI`, `JWT_SECRET`, `CLIENT_URL=https://your-frontend.vercel.app`.
 
-### 2. Backend Deployment (Render / Railway / AWS / DigitalOcean)
-
-* **Build Command:** `npm run build` (runs `tsc` into `dist/`)
-* **Start Command:** `npm start` (runs `node dist/server.js`)
-* **Environment Variables:**
-  * `NODE_ENV=production`
-  * `PORT=5000` (or dynamically assigned `$PORT`)
-  * `MONGODB_URI=<your-atlas-uri>`
-  * `JWT_SECRET=<strong-random-secret>`
-  * `CLIENT_URL=https://your-frontend-domain.vercel.app`
-  * `ALLOWED_ORIGINS=https://your-frontend-domain.vercel.app`
-
-### 3. Frontend Deployment (Vercel / Netlify / Cloudflare Pages)
-
-* **Framework Preset:** Vite
-* **Build Command:** `npm run build`
-* **Output Directory:** `dist`
-* **Environment Variables:**
-  * `VITE_API_URL=https://your-backend-api.onrender.com/api`
+### 3. Frontend Deployment (Vercel)
+- **Root Directory:** `client`
+- **Framework Preset:** `Vite`
+- **Build Command:** `npm run build`
+- **Output Directory:** `dist`
+- **Rewrite Rules:** Covered by `client/vercel.json` for single-page application routing.
+- **Environment Variables:** `VITE_API_URL=https://your-backend.onrender.com/api`.
 
 ---
 
 ## ⚠️ Known Limitations & Production Roadmap
 
-1. **Physical RFID / QR Scanner Hardware:** Check-in condition inspection currently accepts manual confirmation and photo uploads. Integration with physical barcode/RFID scanners at lab entrance doors is planned for v2.0.
-2. **Third-Party Email / SMS Notifications:** In-app notification feeds and toasts are fully functional; integration with SendGrid/Twilio SMTP credentials requires production API keys.
-3. **Payment Gateways:** RENTORA currently operates on academic institutional allocation quotas and departmental chargebacks rather than commercial credit cards. Stripe integration can be enabled if commercial fee-per-hour booking is required.
-4. **Cloud Object Storage (AWS S3):** Uploaded condition photos and incident logs are stored as secure URL references. In high-volume production, direct S3 signed presigned URLs should be attached to the Multer upload pipeline.
+1. **Hardware Barcode Scanners:** TrustPass QR is verified on-screen in the web client; physical gate/turnstile barcode hardware integrations are slated for v2.0.
+2. **Third-Party Email/SMS Gateways:** In-app notification feeds, badge alerts, and browser toasts are fully functional; production SMTP keys can be plugged into `nodemailer` config.
+3. **Institutional Chargebacks vs Commercial Cards:** RENTORA utilizes academic allocation quotas and departmental grant accounts rather than commercial payment gateways. Stripe/Razorpay can be enabled for commercial university science parks.
+4. **Cloud Object Storage (AWS S3):** Uploaded condition photos and incident logs are stored on disk and served securely under `/uploads`. AWS S3 pre-signed URLs are architecturally prepared for multi-terabyte production deployments.
+
+---
+
+## 👥 Team Contributions & Hackathon Declaration
+
+* **Team Name:** Storm Breakerz
+* **Team Leader & Lead Architect:** Jaswant Karun S A
+* **Declaration:** I hereby certify that **RENTORA** is an original, fully working full-stack project conceived, designed, and engineered by **Jaswant Karun S A** representing Team **Storm Breakerz**. All 71 automated QA tests, 14-step booking lifecycle states, cryptographic TrustPass tokens, and ConditionGuard inspections are verified and 100% operational in the deployed application.
 
 ---
 
 ## 📄 License
 
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+
