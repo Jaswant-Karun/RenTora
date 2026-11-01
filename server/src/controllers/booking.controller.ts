@@ -1696,6 +1696,26 @@ export const cancelBooking = async (
       return;
     }
 
+    // Authorization Guard: Only the reservation owner or staff may cancel
+    const isOwner = booking.userId.toString() === req.user?._id.toString();
+    const isStaff = req.user?.role === 'manager' || req.user?.role === 'admin';
+    if (!isOwner && !isStaff) {
+      res.status(403).json({
+        success: false,
+        message: 'Forbidden: You are only permitted to cancel your own reservations.',
+      });
+      return;
+    }
+
+    // State Transition Guard
+    if (!['pending', 'under_review', 'approved', 'waitlisted'].includes(booking.status)) {
+      res.status(400).json({
+        success: false,
+        message: `Invalid state transition: Cannot cancel a reservation currently in status '${booking.status}'. Active or completed sessions cannot be cancelled.`,
+      });
+      return;
+    }
+
     const previousStatus = booking.status;
     booking.status = 'cancelled';
     booking.cancellationReason = reason.trim();
