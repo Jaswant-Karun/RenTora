@@ -193,14 +193,36 @@ export const getMe = async (req: AuthenticatedRequest, res: Response, next: Next
 };
 
 export const getDemoAccounts = (_req: Request, res: Response): void => {
+  // Demo mode is environment-controlled:
+  // Disabled by default in production unless ENABLE_DEMO_MODE === 'true'
+  const isProd = process.env.NODE_ENV === 'production';
+  const isDemoEnabled = isProd
+    ? process.env.ENABLE_DEMO_MODE === 'true'
+    : process.env.ENABLE_DEMO_MODE !== 'false';
+
+  if (!isDemoEnabled) {
+    res.status(200).json({
+      success: true,
+      enabled: false,
+      message: 'Demo mode is disabled in this environment.',
+      data: [],
+    });
+    return;
+  }
+
+  // When demo mode is explicitly enabled for evaluators:
+  // 1. NEVER expose administrator credentials publicly.
+  // 2. Only provide safe non-admin evaluator personas (Student, Owner, Manager).
   res.status(200).json({
     success: true,
+    enabled: true,
+    message: 'Evaluator sandbox demo mode is active.',
     data: [
       {
         role: 'student',
         roleLabel: 'Student / Researcher',
         email: 'student@rentora.edu',
-        password: 'Password123!',
+        password: process.env.DEMO_USER_PASSWORD || 'Password123!',
         name: 'Arun Kumar',
         institution: 'National Institute of Technology',
       },
@@ -208,7 +230,7 @@ export const getDemoAccounts = (_req: Request, res: Response): void => {
         role: 'owner',
         roleLabel: 'Lab / Resource Owner',
         email: 'owner@rentora.edu',
-        password: 'Password123!',
+        password: process.env.DEMO_USER_PASSWORD || 'Password123!',
         name: 'Dr. Meera Raman',
         institution: 'National Institute of Technology',
       },
@@ -216,17 +238,9 @@ export const getDemoAccounts = (_req: Request, res: Response): void => {
         role: 'manager',
         roleLabel: 'Institution Manager',
         email: 'manager@rentora.edu',
-        password: 'Password123!',
+        password: process.env.DEMO_USER_PASSWORD || 'Password123!',
         name: 'Prof. Suresh Nair',
         institution: 'National Institute of Technology',
-      },
-      {
-        role: 'admin',
-        roleLabel: 'Platform Administrator',
-        email: 'admin@rentora.edu',
-        password: 'Password123!',
-        name: 'Central Platform Administrator',
-        institution: 'RENTORA Central Network',
       },
     ],
   });
