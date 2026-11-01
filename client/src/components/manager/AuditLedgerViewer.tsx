@@ -179,64 +179,124 @@ export const AuditLedgerViewer: React.FC = () => {
           <p className="text-[11px] text-[#64748B]">All institutional actions are indexed in real time.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-[#E2E8F0] bg-white shadow-sm">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[#64748B] font-semibold text-[11px] uppercase tracking-wider">
-                <th className="py-3 px-4">Timestamp</th>
-                <th className="py-3 px-4">Action Type</th>
-                <th className="py-3 px-4">Entity / Asset</th>
-                <th className="py-3 px-4">Actor</th>
-                <th className="py-3 px-4">Mandatory Justification / Notes</th>
-                <th className="py-3 px-4 text-right">Immutability</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#E2E8F0]">
-              {filteredLogs.map((log) => {
-                const badge = getActionBadge(log.action);
-                return (
-                  <tr key={log._id} className="hover:bg-slate-50 transition-colors">
-                    <td className="py-3 px-4 font-mono text-[11px] text-[#64748B] whitespace-nowrap">
-                      {new Date(log.timestamp).toLocaleString()}
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex flex-col gap-0.5">
-                        <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold border ${badge.color}`}>
-                          {log.action}
+        <>
+          {/* Mobile Stacked Card View (Screens < 768px: Prevents horizontal overflow) */}
+          <div className="block md:hidden space-y-3">
+            {filteredLogs.map((log) => {
+              const badge = getActionBadge(log.action);
+              return (
+                <div
+                  key={log._id}
+                  className="p-4 rounded-xl bg-white border border-[#E2E8F0] shadow-sm space-y-2.5 text-xs"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-0.5">
+                      <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold border ${badge.color}`}>
+                        {badge.label}
+                      </span>
+                      <span className="block text-[10px] text-[#64748B] font-mono">
+                        {log.action}
+                      </span>
+                    </div>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-[#16834A] border border-emerald-200 shrink-0">
+                      <Lock className="w-3 h-3" /> WORM
+                    </span>
+                  </div>
+
+                  <div className="pt-1 border-t border-[#F1F5F9]">
+                    <div className="font-semibold text-[#172033] text-sm">
+                      {log.entityTitle || log.entityType}
+                    </div>
+                    <span className="text-[10px] text-[#64748B] uppercase font-mono">
+                      {log.entityType} • #{log.entityId ? log.entityId.slice(-6) : 'N/A'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 py-1.5 px-2.5 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[11px]">
+                    <div>
+                      <span className="text-[#64748B] text-[10px] block uppercase font-medium">Actor</span>
+                      <span className="font-semibold text-[#172033]">{log.actorName}</span>
+                      <span className="block text-[10px] text-[#1769D2] font-semibold uppercase">{log.actorRole}</span>
+                    </div>
+                    <div>
+                      <span className="text-[#64748B] text-[10px] block uppercase font-medium">Timestamp</span>
+                      <span className="font-mono text-[#64748B] text-[10px]">
+                        {new Date(log.timestamp).toLocaleDateString()} {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  </div>
+
+                  {log.reason && (
+                    <div className="text-[11px] text-[#172033] bg-amber-50/50 p-2 rounded-lg border border-amber-100">
+                      <span className="text-[10px] uppercase font-bold text-amber-800 block">Justification</span>
+                      <p className="mt-0.5 text-[#172033] leading-relaxed">{log.reason}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop Table View (Screens >= 768px: Preserves standard tabular format) */}
+          <div className="hidden md:block overflow-x-auto rounded-xl border border-[#E2E8F0] bg-white shadow-sm">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[#64748B] font-semibold text-[11px] uppercase tracking-wider">
+                  <th className="py-3 px-4">Timestamp</th>
+                  <th className="py-3 px-4">Action Type</th>
+                  <th className="py-3 px-4">Entity / Asset</th>
+                  <th className="py-3 px-4">Actor</th>
+                  <th className="py-3 px-4">Mandatory Justification / Notes</th>
+                  <th className="py-3 px-4 text-right">Immutability</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#E2E8F0]">
+                {filteredLogs.map((log) => {
+                  const badge = getActionBadge(log.action);
+                  return (
+                    <tr key={log._id} className="hover:bg-slate-50 transition-colors">
+                      <td className="py-3 px-4 font-mono text-[11px] text-[#64748B] whitespace-nowrap">
+                        {new Date(log.timestamp).toLocaleString()}
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex flex-col gap-0.5">
+                          <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold border ${badge.color}`}>
+                            {log.action}
+                          </span>
+                          <span className="text-[10px] text-[#64748B]">{badge.label}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="font-semibold text-[#172033] max-w-xs truncate">
+                          {log.entityTitle || log.entityType}
+                        </div>
+                        <span className="text-[10px] text-[#64748B] uppercase font-mono">
+                          {log.entityType} • #{log.entityId ? log.entityId.slice(-6) : 'N/A'}
                         </span>
-                        <span className="text-[10px] text-[#64748B]">{badge.label}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="font-semibold text-[#172033] max-w-xs truncate">
-                        {log.entityTitle || log.entityType}
-                      </div>
-                      <span className="text-[10px] text-[#64748B] uppercase font-mono">
-                        {log.entityType} • #{log.entityId ? log.entityId.slice(-6) : 'N/A'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="font-medium text-[#172033]">{log.actorName}</div>
-                      <span className="text-[10px] text-[#1769D2] uppercase font-semibold">
-                        {log.actorRole}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 max-w-md">
-                      <p className="text-[#172033] text-[11px] leading-relaxed line-clamp-2">
-                        {log.reason || 'Standard system verified workflow transition.'}
-                      </p>
-                    </td>
-                    <td className="py-3 px-4 text-right whitespace-nowrap">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-[#16834A] border border-emerald-200">
-                        <Lock className="w-3 h-3" /> WORM
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="font-medium text-[#172033]">{log.actorName}</div>
+                        <span className="text-[10px] text-[#1769D2] uppercase font-semibold">
+                          {log.actorRole}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 max-w-md">
+                        <p className="text-[#172033] text-[11px] leading-relaxed line-clamp-2">
+                          {log.reason || 'Standard system verified workflow transition.'}
+                        </p>
+                      </td>
+                      <td className="py-3 px-4 text-right whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-[#16834A] border border-emerald-200">
+                          <Lock className="w-3 h-3" /> WORM
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   );
