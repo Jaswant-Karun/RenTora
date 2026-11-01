@@ -141,50 +141,35 @@ export const LoginPage: React.FC = () => {
 
   return (
     <div className="min-h-screen w-full flex flex-col bg-white text-[#172033]">
-      {/* Top Persistent Hackathon Demo Banner */}
-      <div className="w-full bg-[#172033] text-white px-4 sm:px-6 py-2.5 text-xs border-b border-slate-700">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-2.5">
-          <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded bg-[#1769D2] font-bold text-[10px] uppercase tracking-wider text-white">
-              Judge Evaluation Mode
-            </span>
-            <span className="text-slate-300 font-medium">
-              Demo Credentials: All Accounts Use Password{' '}
-              <code className="bg-slate-800 text-amber-300 font-mono px-2 py-0.5 rounded border border-slate-700 font-bold">
-                Password123!
-              </code>
-            </span>
-          </div>
+      {/* Top Evaluator Sandbox Banner (Rendered only when server-controlled demo mode is enabled) */}
+      {demoModeEnabled && activeDemoAccounts.length > 0 && (
+        <div className="w-full bg-[#172033] text-white px-4 sm:px-6 py-2.5 text-xs border-b border-slate-700">
+          <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded bg-[#1769D2] font-bold text-[10px] uppercase tracking-wider text-white">
+                Evaluator Sandbox
+              </span>
+              <span className="text-slate-300 font-medium">
+                Demonstration Environment Active • Safe Fictional Institutional Data
+              </span>
+            </div>
 
-          <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
-            <span className="text-slate-400 hidden lg:inline">Instant 1-Click:</span>
-            <button
-              onClick={() => handleInstantLogin('student')}
-              className="px-2.5 py-1 rounded bg-emerald-950/80 hover:bg-emerald-800 border border-emerald-600/50 text-emerald-200 font-semibold transition-colors"
-            >
-              Student (Arun)
-            </button>
-            <button
-              onClick={() => handleInstantLogin('owner')}
-              className="px-2.5 py-1 rounded bg-blue-950/80 hover:bg-blue-800 border border-blue-600/50 text-blue-200 font-semibold transition-colors"
-            >
-              Owner (Dr. Meera)
-            </button>
-            <button
-              onClick={() => handleInstantLogin('manager')}
-              className="px-2.5 py-1 rounded bg-amber-950/80 hover:bg-amber-800 border border-amber-600/50 text-amber-200 font-semibold transition-colors"
-            >
-              Manager (Prof. Suresh)
-            </button>
-            <button
-              onClick={() => handleInstantLogin('admin')}
-              className="px-2.5 py-1 rounded bg-indigo-950/80 hover:bg-indigo-800 border border-indigo-600/50 text-indigo-200 font-semibold transition-colors"
-            >
-              Admin (Platform)
-            </button>
+            <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+              <span className="text-slate-400 hidden lg:inline">Quick Launch:</span>
+              {activeDemoAccounts.map((demo) => (
+                <button
+                  key={demo.role}
+                  onClick={() => handleInstantLogin(demo.role)}
+                  disabled={instantLoggingIn !== null}
+                  className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-semibold transition-colors disabled:opacity-50"
+                >
+                  {demo.roleLabel.split('/')[0].trim()} ({demo.name.split(' ')[0]})
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="flex-1 w-full flex">
         {/* Left Form Column */}
@@ -206,103 +191,85 @@ export const LoginPage: React.FC = () => {
                 Sign in to your account
               </h1>
               <p className="text-xs text-[#64748B] mt-1">
-                Enter your verified institutional credentials or select a pre-configured judge account below
+                Enter your verified institutional credentials{demoModeEnabled && activeDemoAccounts.length > 0 ? ' or select an evaluator account below' : ''}
               </p>
             </div>
 
-            {/* Prominent Demo Credentials Card for Hackathon Judges */}
-            <div className="mt-5 p-4 rounded-xl bg-gradient-to-br from-blue-50/70 to-indigo-50/50 border border-[#1769D2]/25 shadow-2xs">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-[#1769D2]" />
-                  <span className="text-xs font-bold text-[#172033]">
-                    Hackathon Demo Accounts
+            {/* Evaluator Demo Credentials Card (Only if server demo mode is enabled) */}
+            {demoModeEnabled && activeDemoAccounts.length > 0 && (
+              <div className="mt-5 p-4 rounded-xl bg-gradient-to-br from-blue-50/70 to-indigo-50/50 border border-[#1769D2]/25 shadow-2xs">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-[#1769D2]" />
+                    <span className="text-xs font-bold text-[#172033]">
+                      Evaluator Demo Accounts
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-[#64748B] bg-white px-2 py-0.5 rounded border border-[#E2E8F0] font-medium">
+                    Sandbox Active
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] text-[#64748B]">Universal Pass:</span>
-                  <button
-                    type="button"
-                    onClick={(e) => handleCopy('Password123!', 'universal-pass', e)}
-                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white border border-[#E2E8F0] font-mono text-[10px] font-bold text-[#1769D2] hover:bg-slate-50 transition-colors"
-                    title="Click to copy password"
-                  >
-                    <span>Password123!</span>
-                    {copiedKey === 'universal-pass' ? (
-                      <Check className="w-3 h-3 text-[#16834A]" />
-                    ) : (
-                      <Copy className="w-3 h-3 text-[#64748B]" />
-                    )}
-                  </button>
+
+                {/* Persona Cards with Auto-Fill & 1-Click Action */}
+                <div className="space-y-2">
+                  {activeDemoAccounts.map((demo) => {
+                    const pass = demo.password || '';
+                    const isBusy = instantLoggingIn === demo.role;
+
+                    return (
+                      <div
+                        key={demo.role}
+                        className="p-2.5 rounded-lg bg-white border border-[#E2E8F0] hover:border-[#1769D2]/40 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-bold text-[#172033]">{demo.name}</span>
+                            <Badge role={demo.role as any} size="sm" />
+                          </div>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-[11px] font-mono text-[#64748B]">
+                            <span className="flex items-center gap-1">
+                              <span className="text-slate-400">Email:</span>
+                              <span className="text-slate-800 font-semibold select-all">{demo.email}</span>
+                              <button
+                                type="button"
+                                onClick={(e) => handleCopy(demo.email, `email-${demo.role}`, e)}
+                                className="text-[#64748B] hover:text-[#1769D2] p-0.5"
+                                title="Copy email"
+                              >
+                                {copiedKey === `email-${demo.role}` ? (
+                                  <Check className="w-3 h-3 text-[#16834A]" />
+                                ) : (
+                                  <Copy className="w-3 h-3" />
+                                )}
+                              </button>
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+                          <button
+                            type="button"
+                            onClick={() => handleSelectDemo(demo.email, pass)}
+                            className="px-2.5 py-1 text-[11px] font-semibold text-[#1769D2] bg-blue-50/80 hover:bg-blue-100/80 rounded-md border border-blue-200 transition-colors"
+                            title="Fill credentials into form"
+                          >
+                            Auto-Fill
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleInstantLogin(demo.role)}
+                            disabled={instantLoggingIn !== null}
+                            className="px-2.5 py-1 text-[11px] font-semibold text-white bg-[#1769D2] hover:bg-[#1256B0] rounded-md shadow-2xs transition-colors disabled:opacity-50 flex items-center gap-1"
+                          >
+                            {isBusy ? 'Authenticating...' : '1-Click Login'}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-
-              {/* 4 Persona Cards with Explicit Credentials and 1-Click Action */}
-              <div className="space-y-2">
-                {activeDemoAccounts.map((demo) => {
-                  const pass = demo.password || 'Password123!';
-                  const isBusy = instantLoggingIn === demo.role;
-
-                  return (
-                    <div
-                      key={demo.role}
-                      className="p-2.5 rounded-lg bg-white border border-[#E2E8F0] hover:border-[#1769D2]/40 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-bold text-[#172033]">{demo.name}</span>
-                          <Badge role={demo.role as any} size="sm" />
-                        </div>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-[11px] font-mono text-[#64748B]">
-                          <span className="flex items-center gap-1">
-                            <span className="text-slate-400">Email:</span>
-                            <span className="text-slate-800 font-semibold select-all">{demo.email}</span>
-                            <button
-                              type="button"
-                              onClick={(e) => handleCopy(demo.email, `email-${demo.role}`, e)}
-                              className="text-slate-400 hover:text-[#1769D2] p-0.5"
-                              title="Copy email"
-                            >
-                              {copiedKey === `email-${demo.role}` ? (
-                                <Check className="w-3 h-3 text-[#16834A]" />
-                              ) : (
-                                <Copy className="w-3 h-3" />
-                              )}
-                            </button>
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <span className="text-slate-400">Pass:</span>
-                            <span className="text-slate-800 font-semibold">{pass}</span>
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
-                        <button
-                          type="button"
-                          onClick={() => handleSelectDemo(demo.email, pass)}
-                          className="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-[#172033] text-[11px] font-medium transition-colors"
-                          title="Pre-fill form inputs"
-                        >
-                          Auto-Fill
-                        </button>
-
-                        <button
-                          type="button"
-                          disabled={isBusy}
-                          onClick={() => handleInstantLogin(demo.role)}
-                          className="px-2.5 py-1 rounded bg-[#1769D2] hover:bg-[#1256B0] text-white text-[11px] font-semibold transition-colors flex items-center gap-1 disabled:opacity-50 shadow-2xs"
-                          title="Direct 1-click sign in"
-                        >
-                          <span>{isBusy ? 'Loading...' : '1-Click Login'}</span>
-                          <ArrowRight className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            )}
 
             {/* Error Notice */}
             {serverError && (
