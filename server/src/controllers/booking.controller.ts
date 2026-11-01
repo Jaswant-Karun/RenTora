@@ -471,13 +471,14 @@ export const createBooking = async (
       return;
     }
 
-    // 1. ATOMIC DOUBLE-BOOKING CHECK
-    const conflict = await Booking.findOne({
-      resourceId: resource._id,
-      status: { $in: ['approved', 'checked_in', 'return_pending', 'active'] },
-      startTime: { $lt: parsedEnd },
-      endTime: { $gt: parsedStart },
-    });
+    await resourceLock.withLock(resource._id.toString(), async () => {
+      // 1. ATOMIC DOUBLE-BOOKING CHECK
+      const conflict = await Booking.findOne({
+        resourceId: resource._id,
+        status: { $in: ['approved', 'checked_in', 'return_pending', 'active'] },
+        startTime: { $lt: parsedEnd },
+        endTime: { $gt: parsedStart },
+      });
 
     const fairPolicy = (await FairAllocation.findOne()) || {
       maxActiveBookingsPerStudent: 3,
@@ -733,15 +734,16 @@ export const createBooking = async (
       metadata: { bookingId: booking._id, queuePosition: assignedQueuePos },
     });
 
-    res.status(201).json({
-      success: true,
-      message:
-        finalStatus === 'approved'
-          ? 'Reservation confirmed instantly.'
-          : finalStatus === 'waitlisted'
-          ? `Queued on transparent waiting list (#${assignedQueuePos} in line).`
-          : 'Booking request submitted. Awaiting custodian verification.',
-      data: booking,
+      res.status(201).json({
+        success: true,
+        message:
+          finalStatus === 'approved'
+            ? 'Reservation confirmed instantly.'
+            : finalStatus === 'waitlisted'
+            ? `Queued on transparent waiting list (#${assignedQueuePos} in line).`
+            : 'Booking request submitted. Awaiting custodian verification.',
+        data: booking,
+      });
     });
   } catch (error) {
     next(error);
