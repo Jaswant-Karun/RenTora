@@ -9,6 +9,7 @@ import { ConditionReport } from '../models/conditionReport.model.js';
 import { Incident } from '../models/incident.model.js';
 import { Dispute } from '../models/dispute.model.js';
 import { FairAllocation } from '../models/fairAllocation.model.js';
+import { AuditLog } from '../models/auditLog.model.js';
 
 dotenv.config();
 
@@ -734,7 +735,28 @@ export const seedDatabase = async () => {
         purpose: 'Robotic end-effector gripper housing prototyping',
         supervisorName: 'Dr. Meera Raman',
         status: 'completed',
-        notes: 'Print inspected and validated by lab supervisor',
+        notes: '[DEMO DATA] Print inspected and validated by lab supervisor.',
+      },
+      {
+        userId: createdUsers['student']?._id,
+        userName: createdUsers['student']?.name,
+        userEmail: createdUsers['student']?.email,
+        userDepartment: createdUsers['student']?.department,
+        userInstitution: createdUsers['student']?.institution,
+        resourceId: createdResources[1]._id, // Bio-Molecular Synthesis Lab
+        resourceName: createdResources[1].name,
+        resourceCategory: createdResources[1].category,
+        resourceLocation: createdResources[1].location,
+        resourceImage: createdResources[1].images[0],
+        date: '2026-11-05',
+        timeSlot: '09:00 AM - 01:00 PM',
+        purpose: 'High-throughput DNA sequencing library preparation (FairShare queue demo)',
+        supervisorName: 'Dr. Sunita Deshmukh',
+        status: 'waitlisted',
+        queuePosition: 1,
+        waitlistPriority: 86,
+        waitlistReason: 'Enqueued in transparent priority waitlist due to high-demand slot contention (FairShare Score: 86).',
+        notes: '[DEMO DATA] Simulated waitlisted allocation with automated promotion queue.',
       },
     ];
 
@@ -759,7 +781,7 @@ export const seedDatabase = async () => {
       });
       createdBookings.push(b);
     }
-    console.log(` -> Created ${sampleBookings.length} representative user bookings`);
+    console.log(` -> Created ${sampleBookings.length} representative user bookings (active, pending, completed, waitlisted)`);
 
     console.log('[Seed] Generating system notifications...');
     const sampleNotifications = [
@@ -801,11 +823,22 @@ export const seedDatabase = async () => {
         resourceName: createdResources[0].name,
         bookingId: createdBookings[0]?._id,
         inspectorName: 'Dr. Meera Raman',
+        type: 'check_in',
+        operationalStatus: 'optimal',
+        cleanliness: 'passed',
+        meterReading: '120 hrs',
+        observations: '[DEMO DATA] Pre-checkin safety walk-through completed. Chamber seals intact and cleanroom garments inspected.',
+      },
+      {
+        resourceId: createdResources[0]._id,
+        resourceName: createdResources[0].name,
+        bookingId: createdBookings[0]?._id,
+        inspectorName: 'Dr. Meera Raman',
         type: 'check_out',
         operationalStatus: 'optimal',
         cleanliness: 'passed',
         meterReading: '124 hrs',
-        observations: 'Sputter chamber base pressure reached 1.2e-6 Torr. Nitrogen lines purged and secured.',
+        observations: '[DEMO DATA] Sputter chamber base pressure reached 1.2e-6 Torr. Nitrogen lines purged and secured post-session.',
       },
       {
         resourceId: createdResources[4]._id,
@@ -815,7 +848,7 @@ export const seedDatabase = async () => {
         operationalStatus: 'optimal',
         cleanliness: 'passed',
         meterReading: '2,450 GPU-hrs',
-        observations: 'All 8x A100 GPU nodes thermal telemetry normal at 42°C under Slurm idle load.',
+        observations: '[DEMO DATA] All 8x A100 GPU nodes thermal telemetry normal at 42°C under Slurm idle load.',
       },
     ]);
 
@@ -828,7 +861,7 @@ export const seedDatabase = async () => {
         userEmail: 'student@rentora.edu',
         severity: 'medium',
         title: 'Emergency E-Stop Activated during High-Feed Aluminum Cut',
-        description: 'Workpiece clamp loosened slightly causing minor tool chatter. Operator hit emergency stop immediately. No structural damage.',
+        description: '[DEMO DATA] Workpiece clamp loosened slightly causing minor tool chatter. Operator hit emergency stop immediately. No structural damage.',
         status: 'investigating',
         resolutionNotes: 'Spindle runout inspected with dial indicator. Operator cleared for re-machining with mandatory technician supervision.',
       },
@@ -841,9 +874,77 @@ export const seedDatabase = async () => {
         userName: 'Arun Kumar',
         userEmail: 'student@rentora.edu',
         ownerName: 'Dr. Meera Raman',
-        reason: 'Timeslot delayed by 30 mins due to previous user late cleanout. Requested 30-min compensatory extension.',
+        reason: '[DEMO DATA] Timeslot delayed by 30 mins due to previous user late cleanout. Requested 30-min compensatory extension.',
         status: 'open',
         resolution: '',
+      },
+    ]);
+
+    console.log('[Seed] Generating institutional immutable audit logs...');
+    await AuditLog.deleteMany({});
+    await AuditLog.create([
+      {
+        action: 'RESOURCE_CREATION',
+        entityType: 'Resource',
+        entityId: createdResources[0]._id.toString(),
+        entityTitle: createdResources[0].name,
+        actorId: createdUsers['owner']?._id,
+        actorName: createdUsers['owner']?.name,
+        actorEmail: createdUsers['owner']?.email,
+        actorRole: 'owner',
+        details: { category: createdResources[0].category, location: createdResources[0].location },
+        reason: 'Catalogued cleanroom apparatus for institutional federation',
+        timestamp: new Date('2026-10-25T10:00:00Z'),
+      },
+      {
+        action: 'BOOKING_REQUEST',
+        entityType: 'Booking',
+        entityId: createdBookings[0]?._id.toString(),
+        entityTitle: createdBookings[0]?.resourceName,
+        actorId: createdUsers['student']?._id,
+        actorName: createdUsers['student']?.name,
+        actorEmail: createdUsers['student']?.email,
+        actorRole: 'student',
+        details: { date: createdBookings[0]?.date, timeSlot: createdBookings[0]?.timeSlot },
+        reason: 'Requested slot for semiconductor capstone project',
+        timestamp: new Date('2026-10-26T14:30:00Z'),
+      },
+      {
+        action: 'BOOKING_APPROVAL',
+        entityType: 'Booking',
+        entityId: createdBookings[0]?._id.toString(),
+        entityTitle: createdBookings[0]?.resourceName,
+        actorId: createdUsers['owner']?._id,
+        actorName: createdUsers['owner']?.name,
+        actorEmail: createdUsers['owner']?.email,
+        actorRole: 'owner',
+        details: { previousStatus: 'pending', newStatus: 'active' },
+        reason: 'Prerequisite cleanroom training verified',
+        timestamp: new Date('2026-10-26T16:00:00Z'),
+      },
+      {
+        action: 'WAITLIST_ENQUEUE',
+        entityType: 'Booking',
+        entityTitle: createdResources[1].name,
+        actorId: createdUsers['student']?._id,
+        actorName: createdUsers['student']?.name,
+        actorEmail: createdUsers['student']?.email,
+        actorRole: 'student',
+        details: { queuePosition: 1, waitlistPriority: 86 },
+        reason: 'Enqueued in transparent priority waitlist (FairShare Score: 86)',
+        timestamp: new Date('2026-10-27T09:15:00Z'),
+      },
+      {
+        action: 'INCIDENT_REPORT',
+        entityType: 'Incident',
+        entityTitle: 'Emergency E-Stop Activated during High-Feed Aluminum Cut',
+        actorId: createdUsers['student']?._id,
+        actorName: createdUsers['student']?.name,
+        actorEmail: createdUsers['student']?.email,
+        actorRole: 'student',
+        details: { severity: 'medium', resourceName: createdResources[8]?.name },
+        reason: 'Tool chatter detected on Haas Mini Mill',
+        timestamp: new Date('2026-10-27T11:45:00Z'),
       },
     ]);
 
