@@ -37,6 +37,7 @@ import {
   Download,
   ClipboardCheck,
   ShieldCheck,
+  List,
 } from 'lucide-react';
 import { FairShareExplanationModal } from '../components/fairshare/FairShareExplanationModal';
 
@@ -51,6 +52,11 @@ export const MyBookingsPage: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
+
+  // View Mode: 'list' | 'calendar'
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [calendarDate, setCalendarDate] = useState<Date>(new Date());
+  const [selectedCalendarDay, setSelectedCalendarDay] = useState<string | null>(null);
 
   // Selected booking for drawer / modal
   const [selectedBookingDetails, setSelectedBookingDetails] = useState<Booking | null>(null);
