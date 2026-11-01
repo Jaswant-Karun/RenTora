@@ -505,7 +505,78 @@ export const AdminDashboardPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-[#E2E8F0] overflow-hidden bg-white shadow-sm">
+          {/* Mobile Stacked Cards View (< 768px) */}
+          <div className="block md:hidden space-y-3">
+            {userLoading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="p-4 rounded-xl bg-white border border-[#E2E8F0] animate-pulse space-y-2">
+                  <div className="h-4 bg-slate-200 rounded w-1/2" />
+                  <div className="h-3 bg-slate-100 rounded w-3/4" />
+                </div>
+              ))
+            ) : users.length === 0 ? (
+              <div className="p-8 text-center bg-white rounded-xl border border-[#E2E8F0] text-xs text-[#64748B]">
+                No users match the search criteria.
+              </div>
+            ) : (
+              users.map((u) => (
+                <div key={u._id} className="p-4 rounded-xl bg-white border border-[#E2E8F0] shadow-sm space-y-3 text-xs">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="font-bold text-sm text-[#172033]">{u.name}</p>
+                      <p className="text-[11px] text-[#64748B] font-mono">{u.email}</p>
+                    </div>
+                    <button
+                      onClick={() => setDeleteUserModal({ isOpen: true, user: u })}
+                      className="p-1.5 text-[#64748B] hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors"
+                      title="Delete User Account"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 p-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[11px]">
+                    <div>
+                      <span className="text-[#64748B] text-[10px] block uppercase font-medium">Institution</span>
+                      <span className="font-semibold text-[#172033] truncate block">{u.institution}</span>
+                      <span className="text-[10px] text-[#64748B]">{u.department || 'General'}</span>
+                    </div>
+                    <div>
+                      <span className="text-[#64748B] text-[10px] block uppercase font-medium">Status</span>
+                      <button
+                        onClick={() => handleToggleUserVerification(u._id, u.isVerified)}
+                        className={`mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase transition-all ${
+                          u.isVerified
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : 'bg-amber-50 text-amber-700 border border-amber-200'
+                        }`}
+                      >
+                        {u.isVerified ? 'Verified' : 'Pending'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1 border-t border-[#F1F5F9]">
+                    <span className="text-[#64748B] text-[11px]">Assigned Role:</span>
+                    <select
+                      value={u.role}
+                      onChange={(e) => handleRoleChange(u._id, e.target.value)}
+                      className="px-2 py-1 bg-white border border-[#E2E8F0] rounded-lg text-xs font-semibold text-[#1769D2] focus:outline-none"
+                    >
+                      <option value="student">Student</option>
+                      <option value="faculty">Faculty</option>
+                      <option value="owner">Owner</option>
+                      <option value="manager">Manager</option>
+                      <option value="admin">Administrator</option>
+                    </select>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Desktop Tabular View (>= 768px) */}
+          <div className="hidden md:block rounded-2xl border border-[#E2E8F0] overflow-hidden bg-white shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
