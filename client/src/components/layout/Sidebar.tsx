@@ -30,6 +30,7 @@ import {
   Sparkles,
   AlertCircle,
   Layers,
+  Leaf,
 } from 'lucide-react';
 
 interface SidebarProps {
