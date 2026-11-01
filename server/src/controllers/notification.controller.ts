@@ -15,14 +15,27 @@ export const getNotifications = async (
     if (user) {
       query.$or = [{ userId: user._id }, { targetRole: 'all' }, { targetRole: user.role }];
     }
-    const notifications = await Notification.find(query).sort({ createdAt: -1 });
 
-    const unreadCount = notifications.filter((n) => !n.isRead).length;
+    const pageNum = Math.max(1, parseInt(req.query.page as string, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(req.query.limit as string, 10) || 50));
+    const skip = (pageNum - 1) * limitNum;
+
+    const [notifications, total, unreadCount] = await Promise.all([
+      Notification.find(query).sort({ createdAt: -1 }).skip(skip).limit(limitNum),
+      Notification.countDocuments(query),
+      Notification.countDocuments({ ...query, isRead: false }),
+    ]);
 
     res.status(200).json({
       success: true,
       unreadCount,
       data: notifications,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum),
+      },
     });
   } catch (error) {
     next(error);
@@ -37,7 +50,14 @@ export const markNotificationRead = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const notification = await Notification.findByIdAndUpdate(id, { isRead: true }, { new: true });
+    const notification = await Notification.findOneAndUpdate(
+      {
+        _id: id,
+        $or: [{ userId: req.user?._id }, { targetRole: 'all' }, { targetRole: req.user?.role }],
+      },
+      { isRead: true },
+      { new: true }
+    );
     res.status(200).json({
       success: true,
       data: notification,
@@ -195,7 +215,10 @@ export const deleteNotification = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    await Notification.findByIdAndDelete(id);
+    await Notification.findOneAndDelete({
+      _id: id,
+      $or: [{ userId: req.user?._id }, { targetRole: 'all' }, { targetRole: req.user?.role }],
+    });
     res.status(200).json({
       success: true,
       message: 'Notification removed successfully.',

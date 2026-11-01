@@ -24,10 +24,12 @@ export const getAuditLogs = async (
       query.$or = [{ actorId: req.user._id }, { 'details.userId': req.user._id }];
     }
 
-    const skip = (Number(page) - 1) * Number(limit);
+    const pageNum = Math.max(1, Number(page) || 1);
+    const limitNum = Math.min(200, Math.max(1, Number(limit) || 50));
+    const skip = (pageNum - 1) * limitNum;
 
     const [logs, total] = await Promise.all([
-      AuditLog.find(query).sort({ timestamp: -1 }).skip(skip).limit(Number(limit)),
+      AuditLog.find(query).sort({ timestamp: -1 }).skip(skip).limit(limitNum),
       AuditLog.countDocuments(query),
     ]);
 
@@ -36,9 +38,9 @@ export const getAuditLogs = async (
       data: logs,
       pagination: {
         total,
-        page: Number(page),
-        limit: Number(limit),
-        totalPages: Math.ceil(total / Number(limit)),
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum),
       },
       ledgerNotice: 'RENTORA Centralized Trust & Safety Ledger (Immutable WORM Record)',
     });

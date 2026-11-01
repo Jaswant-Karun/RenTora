@@ -19,7 +19,7 @@ export const getResources = async (req: Request, res: Response, next: NextFuncti
       limit = '12',
     } = req.query;
 
-    const query: any = {};
+    const query: any = { isArchived: { $ne: true } };
 
     // Search query across name, description, tags, location, institution, owner
     if (search && typeof search === 'string' && search.trim() !== '') {
@@ -103,7 +103,7 @@ export const getResources = async (req: Request, res: Response, next: NextFuncti
     }
 
     const pageNum = Math.max(1, parseInt(page as string, 10) || 1);
-    const limitNum = Math.max(1, parseInt(limit as string, 10) || 12);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit as string, 10) || 12));
     const skip = (pageNum - 1) * limitNum;
 
     const [resources, total] = await Promise.all([
@@ -166,14 +166,20 @@ export const getResourceById = async (req: Request, res: Response, next: NextFun
 
 export const createResource = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const payload = req.body;
-    if (req.user) {
-      payload.ownerId = req.user._id;
-      payload.ownerName = req.user.name;
-      payload.ownerEmail = req.user.email;
-      payload.ownerDepartment = req.user.department || 'General';
-      payload.ownerAvatar = req.user.avatar || '';
+    if (!req.user || (req.user.role !== 'owner' && req.user.role !== 'manager' && req.user.role !== 'admin')) {
+      res.status(403).json({
+        success: false,
+        message: 'Forbidden: Only verified equipment custodians, institution managers, and administrators can register resources.',
+      });
+      return;
     }
+
+    const payload = req.body;
+    payload.ownerId = req.user._id;
+    payload.ownerName = req.user.name;
+    payload.ownerEmail = req.user.email;
+    payload.ownerDepartment = req.user.department || 'General';
+    payload.ownerAvatar = req.user.avatar || '';
 
     const resource = await Resource.create(payload);
     res.status(201).json({
