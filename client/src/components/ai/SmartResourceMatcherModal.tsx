@@ -360,11 +360,9 @@ export const SmartResourceMatcherModal: React.FC<SmartResourceMatcherModalProps>
                         <div className="flex items-start gap-3">
                           <div className="w-14 h-14 rounded-lg overflow-hidden border border-[#E2E8F0] shrink-0 bg-slate-100">
                             <img
-                              src={
-                                res.images?.[0] ||
-                                'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=300'
-                              }
+                              src={getResourceImage(res.images, res.category)}
                               alt={res.name}
+                              onError={(e) => handleImageFallback(e, res.category)}
                               className="w-full h-full object-cover"
                             />
                           </div>

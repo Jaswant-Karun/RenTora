@@ -5,6 +5,7 @@ import { preCheckBookingApi, createBookingApi, PreCheckResult } from '../../api/
 import { detectSchedulingConflictsApi, ConflictDetectionResponse } from '../../api/ai.api';
 import { SchedulingConflictAlert } from '../ai/SchedulingConflictAlert';
 import { LoadingSpinner } from '../common/LoadingSpinner';
+import { getResourceImage, handleImageFallback } from '../../utils/resourceImages';
 import {
   Calendar,
   Clock,
@@ -245,11 +246,9 @@ export const BookingWizardModal: React.FC<BookingWizardModalProps> = ({
             <div className="space-y-4">
               <div className="h-44 rounded-xl overflow-hidden relative border border-[#E2E8F0]">
                 <img
-                  src={
-                    resource.images?.[0] ||
-                    'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop'
-                  }
+                  src={getResourceImage(resource.images, resource.category)}
                   alt={resource.name}
+                  onError={(e) => handleImageFallback(e, resource.category)}
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#172033]/80 via-transparent to-transparent" />
