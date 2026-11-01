@@ -233,8 +233,258 @@ export const MyBookingsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. Search, Status Tabs & Table Toolbar */}
-      <div className="bg-white border border-[#E2E8F0] rounded-xl shadow-sm overflow-hidden space-y-3 p-4">
+      {/* 2. CALENDAR VIEW */}
+      {viewMode === 'calendar' && (
+        <div className="space-y-4">
+          <div className="bg-white border border-[#E2E8F0] rounded-xl shadow-sm p-5 space-y-4">
+            {/* Calendar Controls */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#E2E8F0]">
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-bold text-[#172033]">{monthName}</h2>
+                <button
+                  type="button"
+                  onClick={goToToday}
+                  className="px-2 py-0.5 rounded text-[11px] font-medium bg-[#F8FAFC] hover:bg-slate-100 text-[#1769D2] border border-[#E2E8F0] transition-colors"
+                >
+                  Today
+                </button>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={prevMonth}
+                  className="p-1.5 text-[#64748B] hover:text-[#172033] hover:bg-slate-100 rounded-md border border-[#E2E8F0] transition-colors"
+                  title="Previous month"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={nextMonth}
+                  className="p-1.5 text-[#64748B] hover:text-[#172033] hover:bg-slate-100 rounded-md border border-[#E2E8F0] transition-colors"
+                  title="Next month"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Days of week */}
+            <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-[#64748B]">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
+                <div key={d} className="py-1">
+                  {d}
+                </div>
+              ))}
+            </div>
+
+            {/* Calendar Month Grid */}
+            <div className="grid grid-cols-7 gap-1.5">
+              {/* Empty leading days */}
+              {Array.from({ length: firstDayOfWeek }).map((_, i) => (
+                <div
+                  key={`empty-${i}`}
+                  className="min-h-[90px] p-1.5 bg-slate-50/50 rounded-lg border border-transparent opacity-40"
+                />
+              ))}
+
+              {/* Month days */}
+              {Array.from({ length: totalDaysInMonth }).map((_, i) => {
+                const dayNum = i + 1;
+                const monthStr = String(currentMonth + 1).padStart(2, '0');
+                const dayStr = String(dayNum).padStart(2, '0');
+                const dateKey = `${currentYear}-${monthStr}-${dayStr}`;
+                const dayBookings = bookingsByDate[dateKey] || [];
+                const isSelected = selectedCalendarDay === dateKey;
+                const isToday =
+                  new Date().getFullYear() === currentYear &&
+                  new Date().getMonth() === currentMonth &&
+                  new Date().getDate() === dayNum;
+
+                return (
+                  <div
+                    key={dateKey}
+                    onClick={() => setSelectedCalendarDay(dateKey)}
+                    className={`min-h-[90px] p-2 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
+                      isSelected
+                        ? 'border-[#1769D2] bg-[#EFF6FF]/60 ring-2 ring-blue-300'
+                        : isToday
+                        ? 'border-blue-300 bg-white shadow-2xs font-bold'
+                        : dayBookings.length > 0
+                        ? 'border-slate-200 bg-white hover:border-blue-200 hover:bg-slate-50/80 shadow-2xs'
+                        : 'border-[#E2E8F0] bg-white hover:bg-[#F8FAFC]'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span
+                        className={`text-xs ${
+                          isToday
+                            ? 'w-5 h-5 rounded-full bg-[#1769D2] text-white flex items-center justify-center font-bold text-[11px]'
+                            : isSelected
+                            ? 'font-bold text-[#1769D2]'
+                            : 'font-medium text-[#172033]'
+                        }`}
+                      >
+                        {dayNum}
+                      </span>
+                      {dayBookings.length > 0 && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#1769D2]" />
+                      )}
+                    </div>
+
+                    {/* Booking Chips on the Day */}
+                    <div className="space-y-1 mt-1">
+                      {dayBookings.slice(0, 2).map((b) => (
+                        <div
+                          key={b._id}
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-medium truncate ${
+                            b.status === 'approved'
+                              ? 'bg-emerald-50 text-[#16834A] border border-emerald-200'
+                              : b.status === 'checked_in'
+                              ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                              : b.status === 'waitlisted'
+                              ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                              : 'bg-slate-100 text-[#172033] border border-slate-200'
+                          }`}
+                          title={`${b.resourceName} (${b.timeSlot}) - ${b.status}`}
+                        >
+                          {b.resourceName}
+                        </div>
+                      ))}
+                      {dayBookings.length > 2 && (
+                        <span className="text-[9px] text-[#64748B] font-medium block">
+                          +{dayBookings.length - 2} more
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Calendar Legend */}
+            <div className="flex flex-wrap items-center gap-4 pt-3 border-t border-[#E2E8F0] text-[11px] text-[#64748B]">
+              <span className="font-semibold text-[#172033]">Status Legend:</span>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                <span>Approved</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-purple-600" />
+                <span>Active Handover (Checked In)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                <span>Waitlisted / Pending</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-slate-400" />
+                <span>Completed / Other</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Selected Day Reservations Details Card */}
+          {selectedCalendarDay && (
+            <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm space-y-3">
+              <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-2">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-[#1769D2]" />
+                  <h3 className="text-sm font-bold text-[#172033]">
+                    Bookings for {new Date(selectedCalendarDay + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                  </h3>
+                  <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#EFF6FF] text-[#1769D2]">
+                    {selectedDayBookings.length} {selectedDayBookings.length === 1 ? 'reservation' : 'reservations'}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedCalendarDay(null)}
+                  className="text-xs text-[#64748B] hover:text-[#172033]"
+                >
+                  Close
+                </button>
+              </div>
+
+              {selectedDayBookings.length === 0 ? (
+                <p className="text-xs text-[#64748B] py-3 text-center">
+                  No reservations scheduled on this date. Click another day to inspect.
+                </p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                  {selectedDayBookings.map((b) => (
+                    <div
+                      key={b._id}
+                      className="p-3.5 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] hover:bg-white transition-all space-y-2.5"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <h4 className="text-xs font-bold text-[#172033]">{b.resourceName}</h4>
+                          <p className="text-[11px] text-[#64748B]">
+                            {b.institution} • {b.timeSlot}
+                          </p>
+                        </div>
+                        <StatusBadge status={b.status} />
+                      </div>
+
+                      <div className="flex items-center justify-between pt-2 border-t border-[#E2E8F0] text-xs">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedBookingDetails(b)}
+                          className="text-[#1769D2] hover:underline font-medium inline-flex items-center gap-1 text-[11px]"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>View Details</span>
+                        </button>
+
+                        <div className="flex items-center gap-1.5">
+                          {b.status === 'approved' && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedBookingForHandover(b);
+                                setHandoverMode('check_in');
+                              }}
+                              className="px-2.5 py-1 bg-[#1769D2] hover:bg-[#1256B0] text-white text-[11px] font-medium rounded-md shadow-xs transition-colors"
+                            >
+                              Check-In Pass
+                            </button>
+                          )}
+                          {b.status === 'checked_in' && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedBookingForHandover(b);
+                                setHandoverMode('return');
+                              }}
+                              className="px-2.5 py-1 bg-white hover:bg-slate-50 text-[#172033] border border-[#E2E8F0] text-[11px] font-medium rounded-md shadow-xs transition-colors"
+                            >
+                              Handback
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => setReceiptBooking(b)}
+                            className="p-1 text-[#64748B] hover:text-[#172033] rounded"
+                            title="Receipt"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 3. LIST VIEW (TABLE) */}
+      {viewMode === 'list' && (
+        <div className="bg-white border border-[#E2E8F0] rounded-xl shadow-sm overflow-hidden space-y-3 p-4">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           {/* Status Filter Tabs */}
           <div className="flex items-center space-x-1 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none text-xs">
@@ -488,6 +738,7 @@ export const MyBookingsPage: React.FC = () => {
           </div>
         </div>
       </div>
+      )}
 
       {/* Booking Details Drawer / Modal */}
       {selectedBookingDetails && (
