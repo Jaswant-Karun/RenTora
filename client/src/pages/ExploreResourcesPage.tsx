@@ -525,16 +525,35 @@ export const ExploreResourcesPage: React.FC = () => {
             <CardSkeleton key={i} />
           ))}
         </div>
-      ) : resources.length === 0 ? (
-        <EmptyState
-          title="No resources matched your filter parameters"
-          description="Try broadening your category filters, clearing the target date, or searching for a different apparatus."
-          actionLabel="Clear all filters"
-          onAction={handleResetFilters}
-        />
+      ) : displayedResources.length === 0 ? (
+        onlyFavorites ? (
+          <div className="bg-white border border-[#E2E8F0] rounded-xl p-10 text-center space-y-3">
+            <Heart className="w-10 h-10 text-rose-300 mx-auto" />
+            <h3 className="text-base font-bold text-[#172033]">No Saved Favorite Resources</h3>
+            <p className="text-xs text-[#64748B] max-w-md mx-auto">
+              You haven't bookmarked any research apparatus yet. Click the heart icon on any resource card to save equipment to your favorites list.
+            </p>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setOnlyFavorites(false)}
+                className="px-4 py-2 bg-[#1769D2] hover:bg-[#1256B0] text-white text-xs font-medium rounded-lg shadow-xs"
+              >
+                Browse All Equipment
+              </button>
+            </div>
+          </div>
+        ) : (
+          <EmptyState
+            title="No resources matched your filter parameters"
+            description="Try broadening your category filters, clearing the target date, or searching for a different apparatus."
+            actionLabel="Clear all filters"
+            onAction={handleResetFilters}
+          />
+        )
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {resources.map((resource) => (
+          {displayedResources.map((resource) => (
             <ResourceCard
               key={resource._id}
               resource={resource}
