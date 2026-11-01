@@ -1463,7 +1463,6 @@ export const initiateReturn = async (
     });
 
     // Alert owner to perform final sign-off inspection
-    const resource = await Resource.findById(booking.resourceId);
     if (resource?.ownerId) {
       await Notification.create({
         userId: resource.ownerId,
