@@ -199,7 +199,7 @@ export const ExploreResourcesPage: React.FC = () => {
           className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#EFF6FF] hover:bg-blue-100 text-[#1769D2] text-xs font-semibold border border-blue-200 shadow-xs transition-colors shrink-0 cursor-pointer"
         >
           <Sparkles className="w-3.5 h-3.5" />
-          <span>AI Smart Matcher</span>
+          <span>SmartMatch AI Discovery</span>
         </button>
       </div>
 

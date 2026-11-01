@@ -1,6 +1,32 @@
 import apiClient from './client';
 import { Resource } from '../types/resource';
 
+export interface SmartMatchAlternative {
+  resourceId: string;
+  name: string;
+  category: string;
+  location: string;
+  institution: string;
+  status: string;
+  reason: string;
+}
+
+export interface SmartMatchTimeSlot {
+  timeSlot: string;
+  isAvailable: boolean;
+  conflictReason?: string;
+}
+
+export interface ParsedSearchIntent {
+  rawQuery: string;
+  detectedCategory?: string;
+  detectedKeywords: string[];
+  detectedDate?: string;
+  detectedTimeSlot?: string;
+  detectedSpecs: string[];
+  confidence: number;
+}
+
 export interface SmartMatchItem {
   resource: Resource;
   matchScore: number;
@@ -12,18 +38,22 @@ export interface SmartMatchItem {
     certificationsCovered: boolean;
     missingCertifications?: string[];
     isRestricted: boolean;
+    actionRequired?: string;
   };
   availabilityStatus: {
     availableOnDate: boolean;
     operatingHoursMatch: boolean;
     reason?: string;
+    recommendedTimeSlots?: SmartMatchTimeSlot[];
   };
   specificationsMatched: string[];
+  alternatives?: SmartMatchAlternative[];
 }
 
 export interface SmartMatchResponse {
   results: SmartMatchItem[];
   totalMatched: number;
+  parsedIntent?: ParsedSearchIntent;
   aiProvider: string;
   disclosure: string;
 }
