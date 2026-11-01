@@ -75,6 +75,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
     { label: 'Safety Incidents', to: '/owner/incidents', icon: AlertTriangle },
     { label: 'Availability Calendar', to: '/owner/calendar', icon: Calendar },
     { label: 'Analytics', to: '/owner/analytics', icon: BarChart3 },
+    { label: 'EcoShare Insights', to: '/dashboard/activity', icon: Leaf },
     { label: 'Audit History', to: '/owner/audit', icon: History },
     { label: 'Settings', to: '/owner/settings', icon: Settings },
   ];
@@ -110,7 +111,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
     { label: 'Explore Resources', to: '/dashboard/explore', icon: Compass },
     { label: 'My Bookings', to: '/dashboard/bookings', icon: CalendarCheck },
     { label: 'Waiting List', to: '/dashboard/waitlist', icon: Clock },
-    { label: 'Resource Activity', to: '/dashboard/activity', icon: Activity },
+    { label: 'EcoShare Insights', to: '/dashboard/activity', icon: Leaf },
     { label: 'Notifications', to: '/dashboard/notifications', icon: Bell },
     { label: 'Profile', to: '/dashboard/profile', icon: User },
     { label: 'Settings', to: '/dashboard/settings', icon: Settings },

@@ -189,6 +189,22 @@ export const App: React.FC = () => {
               }
             />
             <Route
+              path="/dashboard/ecoshare"
+              element={
+                <ProtectedRoute>
+                  <ActivityPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/sustainability"
+              element={
+                <ProtectedRoute>
+                  <ActivityPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/dashboard/notifications"
               element={
                 <ProtectedRoute>

@@ -76,7 +76,7 @@ export const ActivityPage: React.FC = () => {
       }
     } catch (err: any) {
       console.error('Failed to load EcoShare telemetry:', err);
-      showToast('error', 'Unable to aggregate institutional sustainability insights');
+      showToast('Unable to aggregate institutional sustainability insights', 'error');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -94,7 +94,7 @@ export const ActivityPage: React.FC = () => {
 
   const handleDownloadCSV = async () => {
     try {
-      showToast('info', 'Generating verified sustainability impact report...');
+      showToast('Generating verified sustainability impact report...', 'info');
       const blob = await downloadSustainabilityReportApi();
       const url = window.URL.createObjectURL(new Blob([blob], { type: 'text/csv' }));
       const link = document.createElement('a');
@@ -107,10 +107,10 @@ export const ActivityPage: React.FC = () => {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-      showToast('success', 'Sustainability report downloaded successfully');
+      showToast('Sustainability report downloaded successfully', 'success');
     } catch (err: any) {
       console.error('Report export failed:', err);
-      showToast('error', 'Failed to generate downloadable impact report');
+      showToast('Failed to generate downloadable impact report', 'error');
     }
   };
 
@@ -120,13 +120,13 @@ export const ActivityPage: React.FC = () => {
     try {
       const res = await updateSustainabilityAssumptionsApi(configForm);
       if (res.success) {
-        showToast('success', 'Institutional calculation assumptions updated successfully');
+        showToast('Institutional calculation assumptions updated successfully', 'success');
         setIsConfigOpen(false);
         fetchData();
       }
     } catch (err: any) {
       console.error('Failed to update sustainability configuration:', err);
-      showToast('error', err.response?.data?.message || 'Failed to update assumptions');
+      showToast(err.response?.data?.message || 'Failed to update assumptions', 'error');
     } finally {
       setSavingConfig(false);
     }
@@ -264,7 +264,7 @@ export const ActivityPage: React.FC = () => {
               {summary.totalSharedHours} <span className="text-sm font-semibold text-[#64748B]">hrs</span>
             </div>
             <p className="text-[11px] text-[#64748B] mt-0.5">
-              Across {summary.categoryBreakdown?.length || 0} apparatus categories
+              Across {data?.categoryBreakdown?.length || 0} apparatus categories
             </p>
           </div>
           <div className="text-[11px] text-[#64748B] border-t border-[#F1F5F9] pt-2 flex items-center justify-between">
