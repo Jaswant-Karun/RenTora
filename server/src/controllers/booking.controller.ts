@@ -1507,6 +1507,27 @@ export const confirmReturnAndComplete = async (
       return;
     }
 
+    // State Transition Guard
+    if (!['return_pending', 'checked_in', 'overdue'].includes(booking.status)) {
+      res.status(400).json({
+        success: false,
+        message: `Invalid state transition: Cannot sign off or complete booking with status '${booking.status}'.`,
+      });
+      return;
+    }
+
+    // Authorization Guard: Only resource custodian or staff may sign off return
+    const resource = await Resource.findById(booking.resourceId);
+    const isOwner = resource?.ownerId && resource.ownerId.toString() === req.user?._id.toString();
+    const isStaff = req.user?.role === 'manager' || req.user?.role === 'admin';
+    if (!isOwner && !isStaff) {
+      res.status(403).json({
+        success: false,
+        message: 'Forbidden: Only the resource custodian or manager can sign off return inspections.',
+      });
+      return;
+    }
+
     const previousStatus = booking.status;
     const completeTime = new Date();
     booking.checkedOut = true;
