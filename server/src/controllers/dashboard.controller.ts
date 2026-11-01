@@ -2,6 +2,7 @@ import { Response, NextFunction } from 'express';
 import { Resource } from '../models/resource.model.js';
 import { Booking } from '../models/booking.model.js';
 import { Notification } from '../models/notification.model.js';
+import { Incident } from '../models/incident.model.js';
 import { AuthenticatedRequest } from '../middleware/auth.middleware.js';
 
 export const getDashboardData = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
@@ -167,6 +168,151 @@ export const getDashboardData = async (req: AuthenticatedRequest, res: Response,
           availableCount: cat.availableCount,
         })),
         notifications,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const globalSearch = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const q = ((req.query.q as string) || '').trim();
+    if (!q || q.length < 2) {
+      res.status(200).json({
+        success: true,
+        data: {
+          resources: [],
+          bookings: [],
+          incidents: [],
+          totalCount: 0,
+        },
+      });
+      return;
+    }
+
+    const regex = new RegExp(q, 'i');
+    const user = req.user;
+
+    // 1. Search Resources
+    const resources = await Resource.find({
+      $or: [
+        { name: regex },
+        { category: regex },
+        { location: regex },
+        { tags: regex },
+        { description: regex },
+      ],
+      approvalStatus: 'approved',
+      isArchived: { $ne: true },
+    })
+      .select('name category location institution status images hourlyValueEstimated')
+      .limit(6)
+      .lean();
+
+    // 2. Search Bookings (Filtered to permitted scope)
+    let bookingFilter: any = {
+      $or: [
+        { resourceName: regex },
+        { userName: regex },
+        { purpose: regex },
+        { timeSlot: regex },
+        { date: regex },
+        { status: regex },
+      ],
+    };
+
+    if (user) {
+      if (user.role === 'student') {
+        bookingFilter.userId = user._id;
+      } else if (user.role === 'owner') {
+        const ownerResourceIds = await Resource.find({ ownerId: user._id }).distinct('_id');
+        bookingFilter.$and = [
+          { $or: [{ userId: user._id }, { resourceId: { $in: ownerResourceIds } }] },
+        ];
+      }
+    } else {
+      bookingFilter = null;
+    }
+
+    const bookings = bookingFilter
+      ? await Booking.find(bookingFilter)
+          .select('resourceName resourceCategory userName date timeSlot status durationHours')
+          .sort({ date: -1 })
+          .limit(6)
+          .lean()
+      : [];
+
+    // 3. Search Incidents (Permitted scope)
+    let incidentFilter: any = {
+      $or: [
+        { incidentReference: regex },
+        { resourceName: regex },
+        { description: regex },
+        { category: regex },
+      ],
+    };
+
+    if (user) {
+      if (user.role === 'student') {
+        incidentFilter['reportedBy.id'] = user._id;
+      }
+    } else {
+      incidentFilter = null;
+    }
+
+    const incidents = incidentFilter
+      ? await Incident.find(incidentFilter)
+          .select('incidentReference resourceName category severity status createdAt')
+          .sort({ createdAt: -1 })
+          .limit(4)
+          .lean()
+      : [];
+
+    const totalCount = resources.length + bookings.length + incidents.length;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        resources: resources.map((r) => ({
+          id: r._id,
+          title: r.name,
+          category: r.category,
+          location: r.location,
+          institution: r.institution,
+          status: r.status,
+          image: r.images?.[0] || '',
+          type: 'resource',
+          link: `/dashboard/resources/${r._id}`,
+        })),
+        bookings: bookings.map((b) => ({
+          id: b._id,
+          title: b.resourceName,
+          category: b.resourceCategory,
+          user: b.userName,
+          date: b.date,
+          timeSlot: b.timeSlot,
+          status: b.status,
+          type: 'booking',
+          link: `/dashboard/bookings?bookingId=${b._id}`,
+        })),
+        incidents: incidents.map((i) => ({
+          id: i._id,
+          title: `${i.incidentReference} - ${i.resourceName}`,
+          category: i.category,
+          severity: i.severity,
+          status: i.status,
+          type: 'incident',
+          link:
+            user?.role === 'owner' || user?.role === 'manager' || user?.role === 'admin'
+              ? '/owner/incidents'
+              : '/dashboard/bookings',
+        })),
+        totalCount,
       },
     });
   } catch (error) {
