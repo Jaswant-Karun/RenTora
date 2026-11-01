@@ -901,6 +901,27 @@ export const putBookingUnderReview = async (
       return;
     }
 
+    // Authorization Guard: Only resource owner or staff may put under review
+    const resource = await Resource.findById(booking.resourceId);
+    const isOwner = resource?.ownerId && resource.ownerId.toString() === req.user?._id.toString();
+    const isStaff = req.user?.role === 'manager' || req.user?.role === 'admin';
+    if (!isOwner && !isStaff) {
+      res.status(403).json({
+        success: false,
+        message: 'Forbidden: Only the resource custodian or manager can review bookings.',
+      });
+      return;
+    }
+
+    // State Transition Guard
+    if (booking.status !== 'pending') {
+      res.status(400).json({
+        success: false,
+        message: `Invalid state transition: Cannot place booking in status '${booking.status}' under review.`,
+      });
+      return;
+    }
+
     const previousStatus = booking.status;
     booking.status = 'under_review';
     booking.auditTrail.push({
@@ -940,36 +961,58 @@ export const approveBookingRequest = async (
       return;
     }
 
-    // Double check conflict before approving
-    const conflict = await Booking.findOne({
-      _id: { $ne: booking._id },
-      resourceId: booking.resourceId,
-      status: { $in: ['approved', 'checked_in', 'return_pending', 'active'] },
-      startTime: { $lt: booking.endTime },
-      endTime: { $gt: booking.startTime },
-    });
-
-    if (conflict) {
-      res.status(409).json({
+    // Authorization Guard: Only resource custodian or staff may approve
+    const resource = await Resource.findById(booking.resourceId);
+    const isOwner = resource?.ownerId && resource.ownerId.toString() === req.user?._id.toString();
+    const isStaff = req.user?.role === 'manager' || req.user?.role === 'admin';
+    if (!isOwner && !isStaff) {
+      res.status(403).json({
         success: false,
-        message: `Collision alert: Another reservation was already confirmed for this timeslot (${conflict.timeSlot}).`,
+        message: 'Forbidden: Only the resource custodian or manager can approve reservations.',
       });
       return;
     }
 
-    const previousStatus = booking.status;
-    booking.status = 'approved';
-    booking.auditTrail.push({
-      transition: 'RESERVATION_APPROVED',
-      fromStatus: previousStatus,
-      toStatus: 'approved',
-      performedBy: req.user?.name || 'Lab Custodian',
-      performedByRole: req.user?.role || 'owner',
-      timestamp: new Date(),
-      note: 'Custodian verified eligibility and approved session reservation.',
-    });
+    // State Transition Guard
+    if (!['pending', 'under_review', 'waitlisted'].includes(booking.status)) {
+      res.status(400).json({
+        success: false,
+        message: `Invalid state transition: Cannot approve booking currently in status '${booking.status}'.`,
+      });
+      return;
+    }
 
-    await booking.save();
+    await resourceLock.withLock(booking.resourceId.toString(), async () => {
+      // Double check conflict before approving
+      const conflict = await Booking.findOne({
+        _id: { $ne: booking._id },
+        resourceId: booking.resourceId,
+        status: { $in: ['approved', 'checked_in', 'return_pending', 'active'] },
+        startTime: { $lt: booking.endTime },
+        endTime: { $gt: booking.startTime },
+      });
+
+      if (conflict) {
+        res.status(409).json({
+          success: false,
+          message: `Collision alert: Another reservation was already confirmed for this timeslot (${conflict.timeSlot}).`,
+        });
+        return;
+      }
+
+      const previousStatus = booking.status;
+      booking.status = 'approved';
+      booking.auditTrail.push({
+        transition: 'RESERVATION_APPROVED',
+        fromStatus: previousStatus,
+        toStatus: 'approved',
+        performedBy: req.user?.name || 'Lab Custodian',
+        performedByRole: req.user?.role || 'owner',
+        timestamp: new Date(),
+        note: 'Custodian verified eligibility and approved session reservation.',
+      });
+
+      await booking.save();
 
     // Immutable Audit Log
     await recordAuditLog({
