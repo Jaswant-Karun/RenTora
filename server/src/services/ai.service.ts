@@ -578,7 +578,7 @@ export class AiAssistanceService {
       const missingCerts: string[] = [];
       for (const rc of reqCerts) {
         const normalizedRc = rc.toLowerCase().trim();
-        const hasCert = userCertNames.some((uc) => uc.includes(normalizedRc) || normalizedRc.includes(uc));
+        const hasCert = userCertNames.some((uc: string) => uc.includes(normalizedRc) || normalizedRc.includes(uc));
         if (!hasCert) {
           missingCerts.push(rc);
         }
