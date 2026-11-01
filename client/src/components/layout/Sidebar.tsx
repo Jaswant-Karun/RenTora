@@ -115,6 +115,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
     { label: 'EcoShare Insights', to: '/dashboard/activity', icon: Leaf },
     { label: 'Notifications', to: '/dashboard/notifications', icon: Bell },
     { label: 'Profile', to: '/dashboard/profile', icon: User },
+    { label: 'Help & Support', to: '/dashboard/help', icon: HelpCircle },
     { label: 'Settings', to: '/dashboard/settings', icon: Settings },
   ];
 
