@@ -8,6 +8,7 @@ import { FairAllocation } from '../models/fairAllocation.model.js';
 import { AuthenticatedRequest } from '../middleware/auth.middleware.js';
 import { recordAuditLog } from '../utils/auditLogger.js';
 import { FairShareService } from '../services/fairShare.service.js';
+import { resourceLock } from '../utils/resourceLock.js';
 
 // Helper: Check if two time intervals overlap
 export const hasOverlap = (s1: Date, e1: Date, s2: Date, e2: Date): boolean => {
