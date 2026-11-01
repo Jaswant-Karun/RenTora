@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Resource } from '../../types/resource';
 import { StatusBadge } from '../common/StatusBadge';
+import { isFavoriteResource, toggleFavoriteResource } from '../../utils/favorites';
 import {
   MapPin,
   Building,
@@ -9,6 +10,7 @@ import {
   ShieldCheck,
   Clock,
   ArrowRight,
+  Heart,
 } from 'lucide-react';
 
 interface ResourceCardProps {
@@ -18,6 +20,21 @@ interface ResourceCardProps {
 }
 
 export const ResourceCard: React.FC<ResourceCardProps> = ({ resource, onQuickBook, className = '' }) => {
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  useEffect(() => {
+    setIsFavorite(isFavoriteResource(resource._id));
+
+    const handleFavChange = (e: any) => {
+      if (e.detail?.resourceId === resource._id) {
+        setIsFavorite(e.detail.isNowFavorite);
+      }
+    };
+
+    window.addEventListener('rentora_favorites_changed', handleFavChange);
+    return () => window.removeEventListener('rentora_favorites_changed', handleFavChange);
+  }, [resource._id]);
+
   const handleCardClick = () => {
     try {
       const raw = localStorage.getItem('rentora_recently_viewed');
@@ -27,6 +44,13 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({ resource, onQuickBoo
     } catch {
       // Ignore storage errors
     }
+  };
+
+  const handleToggleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const nowFav = toggleFavoriteResource(resource._id);
+    setIsFavorite(nowFav);
   };
 
   return (
@@ -45,12 +69,23 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({ resource, onQuickBoo
             />
           </Link>
 
-          {/* Top Badges */}
-          <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1.5 pointer-events-none">
-            <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-white/95 text-[#1769D2] border border-[#E2E8F0] shadow-xs">
+          {/* Top Badges & Favorite button */}
+          <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1.5">
+            <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-white/95 text-[#1769D2] border border-[#E2E8F0] shadow-xs pointer-events-none">
               {resource.category}
             </span>
-            <StatusBadge status={resource.status} size="sm" className="bg-white/95 shadow-xs" />
+            <div className="flex items-center gap-1.5">
+              <StatusBadge status={resource.status} size="sm" className="bg-white/95 shadow-xs pointer-events-none" />
+              <button
+                type="button"
+                onClick={handleToggleFavorite}
+                className="w-7 h-7 rounded-full bg-white/90 hover:bg-white text-slate-400 hover:text-red-500 flex items-center justify-center shadow-xs transition-colors"
+                title={isFavorite ? 'Remove from saved favorites' : 'Save to favorites'}
+                aria-label={isFavorite ? 'Remove from saved favorites' : 'Save to favorites'}
+              >
+                <Heart className={`w-3.5 h-3.5 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
+              </button>
+            </div>
           </div>
 
           {/* Availability schedule badge */}
