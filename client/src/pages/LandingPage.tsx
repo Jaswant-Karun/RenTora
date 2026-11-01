@@ -223,11 +223,11 @@ export const LandingPage: React.FC = () => {
               className="text-[#60A5FA] hover:text-white font-medium underline flex items-center gap-1"
             >
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Open Judge Demo Hub (14-Step Flow)</span>
+              <span>Explore Evaluator Tour</span>
             </button>
             <span className="text-slate-600 hidden sm:inline">•</span>
             <span className="text-slate-400 text-[11px] hidden sm:inline">
-              All Passwords: <code className="text-white font-mono bg-slate-800 px-1 rounded">Password123!</code>
+              Role-Based Multi-Tenant Architecture
             </span>
           </div>
         </div>
