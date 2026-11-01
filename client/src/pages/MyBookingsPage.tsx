@@ -13,6 +13,7 @@ import { EmptyState } from '../components/common/EmptyState';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { useToast } from '../context/ToastContext';
+import { handleImageFallback } from '../utils/resourceImages';
 import {
   CalendarCheck,
   Clock,
@@ -569,6 +570,7 @@ export const MyBookingsPage: React.FC = () => {
                         <img
                           src={b.resourceImage || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=400&q=80'}
                           alt={b.resourceName}
+                          onError={(e) => handleImageFallback(e, b.resourceCategory)}
                           className="w-9 h-9 rounded-lg object-cover shrink-0 border border-[#E2E8F0]"
                         />
                         <div className="min-w-0">
@@ -749,6 +751,7 @@ export const MyBookingsPage: React.FC = () => {
                 <img
                   src={selectedBookingDetails.resourceImage || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=400&q=80'}
                   alt={selectedBookingDetails.resourceName}
+                  onError={(e) => handleImageFallback(e, selectedBookingDetails.resourceCategory)}
                   className="w-12 h-12 rounded-lg object-cover border border-[#E2E8F0]"
                 />
                 <div>

@@ -392,7 +392,7 @@ const seedResources = [
       'Industrial metal 3D printing system equipped with a 400W Yb-fiber laser, argon inert gas circulation, and build volume of 250 x 250 x 325 mm for titanium (Ti64), aluminum (AlSi10Mg), and 316L stainless steel components.',
     images: [
       'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1631557559471-a47781b0a827?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80',
     ],
     ownerName: 'Dr. Meera Raman',
     ownerEmail: 'owner@rentora.edu',
@@ -437,8 +437,8 @@ const seedResources = [
     description:
       'High-precision SLA resin printer with 25-micron laser spot, automated resin cartridge feed, Form Wash, and Form Cure stations for high-detail biomedical models and microfluidic molds.',
     images: [
-      'https://images.unsplash.com/photo-1631557559471-a47781b0a827?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80',
     ],
     ownerName: 'Dr. Meera Raman',
     ownerEmail: 'owner@rentora.edu',
@@ -478,8 +478,8 @@ const seedResources = [
     description:
       'High-bandwidth 4 GHz oscilloscope featuring 20 GSample/s sampling rate, 16 digital logic channels, ultra-low noise front end, and hardware-accelerated FFT for high-speed digital bus and radar prototyping.',
     images: [
-      'https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80',
     ],
     ownerName: 'Dr. Rajesh Pillai',
     ownerEmail: 'rajesh.pillai@rentora.edu',
@@ -561,8 +561,8 @@ const seedResources = [
     description:
       'Rigid 3-axis CNC vertical milling machine with 406 x 305 x 254 mm travels, 10,000 RPM spindle, 10-station automatic tool changer, and Renishaw wireless intuitive probing system for aluminum, brass, and Delrin machining.',
     images: [
-      'https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1581092334651-ddf26d9a09d0?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?auto=format&fit=crop&w=800&q=80',
     ],
     ownerName: 'Prof. Suresh Nair',
     ownerEmail: 'manager@rentora.edu',

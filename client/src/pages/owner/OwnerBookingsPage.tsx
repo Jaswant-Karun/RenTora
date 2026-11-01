@@ -13,6 +13,7 @@ import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { Button } from '../../components/common/Button';
 import { BookingTimeline } from '../../components/booking/BookingTimeline';
 import { useToast } from '../../context/ToastContext';
+import { handleImageFallback } from '../../utils/resourceImages';
 import {
   Inbox,
   CheckCircle2,
@@ -319,6 +320,7 @@ export const OwnerBookingsPage: React.FC<{ initialTab?: string }> = ({ initialTa
                   <img
                     src={b.resourceImage || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=400&q=80'}
                     alt={b.resourceName}
+                    onError={(e) => handleImageFallback(e, b.resourceCategory)}
                     className="w-16 h-16 rounded-lg object-cover shrink-0 border border-[#E2E8F0]"
                   />
                   <div className="space-y-1 text-xs">

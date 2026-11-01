@@ -5,6 +5,7 @@ import { getOwnerResourcesApi, deleteOwnerResourceApi, updateOwnerResourceApi } 
 import { Resource } from '../../types/resource';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { useToast } from '../../context/ToastContext';
+import { getResourceImage, handleImageFallback } from '../../utils/resourceImages';
 import {
   Cpu,
   PlusCircle,
@@ -237,11 +238,9 @@ export const MyResourcesPage: React.FC = () => {
               {/* Image banner */}
               <div className="h-44 relative overflow-hidden bg-slate-100">
                 <img
-                  src={
-                    res.images?.[0] ||
-                    'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop'
-                  }
+                  src={getResourceImage(res.images, res.category)}
                   alt={res.name}
+                  onError={(e) => handleImageFallback(e, res.category)}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 <div className="absolute top-3 left-3">

@@ -27,6 +27,7 @@ import {
 } from '../../api/ai.api';
 import { Resource } from '../../types/resource';
 import { ALL_CATEGORIES } from '../../pages/ExploreResourcesPage';
+import { getResourceImage, handleImageFallback } from '../../utils/resourceImages';
 
 interface SmartResourceMatcherModalProps {
   isOpen: boolean;

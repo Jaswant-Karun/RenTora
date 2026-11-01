@@ -4,6 +4,7 @@ import { getOwnerOverviewApi, deleteOwnerResourceApi } from '../../api/owner.api
 import { OwnerOverviewData } from '../../api/owner.api';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { useToast } from '../../context/ToastContext';
+import { getResourceImage, handleImageFallback } from '../../utils/resourceImages';
 import {
   Cpu,
   Inbox,
@@ -290,8 +291,9 @@ export const OwnerOverviewPage: React.FC = () => {
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <img
-                      src={res.images?.[0] || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=400&q=80'}
+                      src={getResourceImage(res.images, res.category)}
                       alt={res.name}
+                      onError={(e) => handleImageFallback(e, res.category)}
                       className="w-12 h-12 rounded-lg object-cover shrink-0 border border-[#E2E8F0]"
                     />
                     <div className="min-w-0">

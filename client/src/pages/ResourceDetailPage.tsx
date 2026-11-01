@@ -5,6 +5,7 @@ import { getResourceByIdApi } from '../api/resource.api';
 import { Resource } from '../types/resource';
 import { BookingModal } from '../components/resources/BookingModal';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
+import { getResourceImage, handleImageFallback } from '../utils/resourceImages';
 import {
   ArrowLeft,
   Building,
@@ -90,7 +91,7 @@ export const ResourceDetailPage: React.FC = () => {
   }
 
   const galleryImages = resource.images?.length > 0 ? resource.images : [
-    'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80',
+    getResourceImage(resource.images, resource.category),
   ];
 
   const calendarDays = [
@@ -145,6 +146,7 @@ export const ResourceDetailPage: React.FC = () => {
               transition={{ duration: 0.2 }}
               src={galleryImages[selectedImageIndex]}
               alt={resource.name}
+              onError={(e) => handleImageFallback(e, resource.category)}
               className="w-full h-full object-cover"
             />
             <div className="absolute top-4 left-4 flex items-center gap-2">
@@ -170,7 +172,12 @@ export const ResourceDetailPage: React.FC = () => {
                       : 'border-[#E2E8F0] opacity-70 hover:opacity-100'
                   }`}
                 >
-                  <img src={img} alt="Thumbnail" className="w-full h-full object-cover" />
+                  <img
+                    src={img}
+                    alt="Thumbnail"
+                    onError={(e) => handleImageFallback(e, resource.category)}
+                    className="w-full h-full object-cover"
+                  />
                 </button>
               ))}
             </div>

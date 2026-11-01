@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Resource } from '../../types/resource';
 import { StatusBadge } from '../common/StatusBadge';
 import { isFavoriteResource, toggleFavoriteResource } from '../../utils/favorites';
+import { getResourceImage, handleImageFallback } from '../../utils/resourceImages';
 import {
   MapPin,
   Building,
@@ -62,8 +63,9 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({ resource, onQuickBoo
         <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100">
           <Link to={`/dashboard/resources/${resource._id}`} onClick={handleCardClick} className="block w-full h-full">
             <img
-              src={resource.images?.[0] || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80'}
+              src={getResourceImage(resource.images, resource.category)}
               alt={resource.name}
+              onError={(e) => handleImageFallback(e, resource.category)}
               className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
               loading="lazy"
             />
