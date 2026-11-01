@@ -11,6 +11,7 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const db_js_1 = require("./config/db.js");
 const index_js_1 = __importDefault(require("./routes/index.js"));
 const error_middleware_js_1 = require("./middleware/error.middleware.js");
+const rateLimit_middleware_js_1 = require("./middleware/rateLimit.middleware.js");
 // Load environment variables
 dotenv_1.default.config();
 const app = (0, express_1.default)();
@@ -46,6 +47,17 @@ app.use((0, cors_1.default)({
 app.use((0, cookie_parser_1.default)());
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
+// Standard Security Headers for OWASP Compliance
+app.use((_req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    if (process.env.NODE_ENV === 'production') {
+        res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    }
+    next();
+});
 // Static uploads serving for condition reports & evidence images
 app.use('/uploads', express_1.default.static(path_1.default.resolve(process.cwd(), 'uploads')));
 // Top-level /health check for cloud load-balancers & container orchestrators
@@ -64,8 +76,8 @@ if (process.env.NODE_ENV !== 'production') {
         next();
     });
 }
-// API Routes
-app.use('/api', index_js_1.default);
+// API Routes with General Rate Limiting
+app.use('/api', rateLimit_middleware_js_1.generalApiLimiter, index_js_1.default);
 // 404 Handler
 app.use('*', (req, res) => {
     res.status(404).json({

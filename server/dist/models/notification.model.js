@@ -60,4 +60,8 @@ const notificationSchema = new mongoose_1.Schema({
 }, {
     timestamps: true,
 });
+// High-speed compound indexes for user inbox and role-based feeds
+notificationSchema.index({ userId: 1, createdAt: -1 });
+notificationSchema.index({ userId: 1, isRead: 1 });
+notificationSchema.index({ targetRole: 1, createdAt: -1 });
 exports.Notification = (0, mongoose_1.model)('Notification', notificationSchema);

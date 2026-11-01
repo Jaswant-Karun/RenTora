@@ -5,7 +5,7 @@ const resource_model_js_1 = require("../models/resource.model.js");
 const getResources = async (req, res, next) => {
     try {
         const { search, category, institution, location, availability, resourceType, eligibility, training, date, sort, page = '1', limit = '12', } = req.query;
-        const query = {};
+        const query = { isArchived: { $ne: true } };
         // Search query across name, description, tags, location, institution, owner
         if (search && typeof search === 'string' && search.trim() !== '') {
             const searchRegex = new RegExp(search.trim(), 'i');
@@ -86,7 +86,7 @@ const getResources = async (req, res, next) => {
             sortOptions = { createdAt: -1 };
         }
         const pageNum = Math.max(1, parseInt(page, 10) || 1);
-        const limitNum = Math.max(1, parseInt(limit, 10) || 12);
+        const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 12));
         const skip = (pageNum - 1) * limitNum;
         const [resources, total] = await Promise.all([
             resource_model_js_1.Resource.find(query).sort(sortOptions).skip(skip).limit(limitNum),
@@ -146,14 +146,19 @@ const getResourceById = async (req, res, next) => {
 exports.getResourceById = getResourceById;
 const createResource = async (req, res, next) => {
     try {
-        const payload = req.body;
-        if (req.user) {
-            payload.ownerId = req.user._id;
-            payload.ownerName = req.user.name;
-            payload.ownerEmail = req.user.email;
-            payload.ownerDepartment = req.user.department || 'General';
-            payload.ownerAvatar = req.user.avatar || '';
+        if (!req.user || (req.user.role !== 'owner' && req.user.role !== 'manager' && req.user.role !== 'admin')) {
+            res.status(403).json({
+                success: false,
+                message: 'Forbidden: Only verified equipment custodians, institution managers, and administrators can register resources.',
+            });
+            return;
         }
+        const payload = req.body;
+        payload.ownerId = req.user._id;
+        payload.ownerName = req.user.name;
+        payload.ownerEmail = req.user.email;
+        payload.ownerDepartment = req.user.department || 'General';
+        payload.ownerAvatar = req.user.avatar || '';
         const resource = await resource_model_js_1.Resource.create(payload);
         res.status(201).json({
             success: true,

@@ -20,9 +20,11 @@ const getAuditLogs = async (req, res, next) => {
         if (req.user?.role === 'student') {
             query.$or = [{ actorId: req.user._id }, { 'details.userId': req.user._id }];
         }
-        const skip = (Number(page) - 1) * Number(limit);
+        const pageNum = Math.max(1, Number(page) || 1);
+        const limitNum = Math.min(200, Math.max(1, Number(limit) || 50));
+        const skip = (pageNum - 1) * limitNum;
         const [logs, total] = await Promise.all([
-            auditLog_model_js_1.AuditLog.find(query).sort({ timestamp: -1 }).skip(skip).limit(Number(limit)),
+            auditLog_model_js_1.AuditLog.find(query).sort({ timestamp: -1 }).skip(skip).limit(limitNum),
             auditLog_model_js_1.AuditLog.countDocuments(query),
         ]);
         res.status(200).json({
@@ -30,9 +32,9 @@ const getAuditLogs = async (req, res, next) => {
             data: logs,
             pagination: {
                 total,
-                page: Number(page),
-                limit: Number(limit),
-                totalPages: Math.ceil(total / Number(limit)),
+                page: pageNum,
+                limit: limitNum,
+                totalPages: Math.ceil(total / limitNum),
             },
             ledgerNotice: 'RENTORA Centralized Trust & Safety Ledger (Immutable WORM Record)',
         });

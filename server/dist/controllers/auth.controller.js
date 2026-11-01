@@ -163,6 +163,11 @@ const getMe = async (req, res, next) => {
                     department: req.user.department,
                     phone: req.user.phone,
                     avatar: req.user.avatar,
+                    bio: req.user.bio || '',
+                    academicQualification: req.user.academicQualification,
+                    isVerified: req.user.isVerified,
+                    institutionMembershipVerified: req.user.institutionMembershipVerified,
+                    trainingCertifications: req.user.trainingCertifications,
                     createdAt: req.user.createdAt,
                 },
             },
@@ -219,7 +224,7 @@ const updateProfile = async (req, res, next) => {
             res.status(401).json({ success: false, message: 'Authentication required' });
             return;
         }
-        const { name, phone, department, avatar, academicQualification } = req.body;
+        const { name, phone, department, avatar, academicQualification, bio } = req.body;
         const user = await user_model_js_1.User.findById(req.user._id);
         if (!user) {
             res.status(404).json({ success: false, message: 'User not found' });
@@ -233,6 +238,8 @@ const updateProfile = async (req, res, next) => {
             user.department = department.trim();
         if (avatar && typeof avatar === 'string')
             user.avatar = avatar.trim();
+        if (bio !== undefined && typeof bio === 'string')
+            user.bio = bio.trim();
         if (academicQualification && typeof academicQualification === 'string') {
             user.academicQualification = academicQualification.trim();
         }
@@ -249,6 +256,7 @@ const updateProfile = async (req, res, next) => {
                 department: user.department,
                 phone: user.phone,
                 avatar: user.avatar,
+                bio: user.bio || '',
                 academicQualification: user.academicQualification,
                 isVerified: user.isVerified,
                 institutionMembershipVerified: user.institutionMembershipVerified,

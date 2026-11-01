@@ -94,8 +94,28 @@ const userSchema = new mongoose_1.Schema({
         penaltyPoints: { type: Number, default: 0 },
         monopolisationCooldownUntil: { type: Date },
     },
+    bio: {
+        type: String,
+        trim: true,
+        maxlength: 300,
+        default: '',
+    },
 }, {
     timestamps: true,
+    toJSON: {
+        transform(_doc, ret) {
+            delete ret.password;
+            delete ret.__v;
+            return ret;
+        },
+    },
+    toObject: {
+        transform(_doc, ret) {
+            delete ret.password;
+            delete ret.__v;
+            return ret;
+        },
+    },
 });
 userSchema.index({ role: 1, institution: 1 });
 // Hash password before saving

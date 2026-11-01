@@ -163,7 +163,7 @@ exports.reportIncident = reportIncident;
 // 2. Get Incidents List
 const getIncidents = async (req, res, next) => {
     try {
-        const { category, status, severity, resourceId, bookingId, limit = 50 } = req.query;
+        const { category, status, severity, resourceId, bookingId, page = '1', limit = '50' } = req.query;
         const query = {};
         if (category)
             query.category = category;
@@ -179,12 +179,22 @@ const getIncidents = async (req, res, next) => {
         if (req.user?.role === 'student') {
             query.reportedByUserId = req.user._id;
         }
-        const incidents = await incident_model_js_1.Incident.find(query)
-            .sort({ createdAt: -1 })
-            .limit(Number(limit));
+        const pageNum = Math.max(1, parseInt(page, 10) || 1);
+        const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 50));
+        const skip = (pageNum - 1) * limitNum;
+        const [incidents, total] = await Promise.all([
+            incident_model_js_1.Incident.find(query).sort({ createdAt: -1 }).skip(skip).limit(limitNum),
+            incident_model_js_1.Incident.countDocuments(query),
+        ]);
         res.status(200).json({
             success: true,
             data: incidents,
+            pagination: {
+                total,
+                page: pageNum,
+                limit: limitNum,
+                totalPages: Math.ceil(total / limitNum),
+            },
         });
     }
     catch (error) {
@@ -199,6 +209,16 @@ const getIncidentById = async (req, res, next) => {
         const incident = await incident_model_js_1.Incident.findById(id);
         if (!incident) {
             res.status(404).json({ success: false, message: 'Incident record not found.' });
+            return;
+        }
+        // Authorization Guard: Students may only inspect incidents they reported
+        if (req.user?.role === 'student' &&
+            incident.reportedByUserId?.toString() !== req.user._id.toString() &&
+            incident.userEmail !== req.user.email) {
+            res.status(403).json({
+                success: false,
+                message: 'Forbidden: You do not have authorization to view this incident record.',
+            });
             return;
         }
         // Fetch linked condition reports if available
