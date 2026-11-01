@@ -55,6 +55,7 @@ export const updateProfileApi = async (data: {
   phone?: string;
   department?: string;
   avatar?: string;
+  bio?: string;
   academicQualification?: string;
 }): Promise<{ success: boolean; message: string; data: User }> => {
   const response = await apiClient.put('/auth/profile', data);

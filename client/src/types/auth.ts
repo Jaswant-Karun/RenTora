@@ -9,6 +9,7 @@ export interface User {
   department?: string;
   phone?: string;
   avatar?: string;
+  bio?: string;
   createdAt?: string;
 }
 
