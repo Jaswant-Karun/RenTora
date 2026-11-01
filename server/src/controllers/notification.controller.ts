@@ -186,3 +186,46 @@ export const triggerNotificationCheck = async (
     next(error);
   }
 };
+
+// 5. Delete Single Notification
+export const deleteNotification = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    await Notification.findByIdAndDelete(id);
+    res.status(200).json({
+      success: true,
+      message: 'Notification removed successfully.',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 6. Clear All Notifications for Current User
+export const clearAllNotifications = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ success: false, message: 'Authentication required' });
+      return;
+    }
+
+    await Notification.deleteMany({
+      $or: [{ userId: req.user._id }, { targetRole: 'all' }, { targetRole: req.user.role }],
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'All notifications cleared.',
+    });
+  } catch (error) {
+    next(error);
+  }
+};

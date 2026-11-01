@@ -1,14 +1,17 @@
 import { Schema, model, Document, Types } from 'mongoose';
 
 export type NotificationType =
+  | 'booking_submitted'
   | 'booking_confirmed'
   | 'approval'
   | 'rejection'
   | 'waitlist_update'
   | 'upcoming_booking'
+  | 'checkin_ready'
   | 'return_reminder'
   | 'overdue_alert'
   | 'incident_update'
+  | 'resource_availability'
   | 'booking'
   | 'maintenance'
   | 'system';
@@ -51,14 +54,17 @@ const notificationSchema = new Schema<INotification>(
     type: {
       type: String,
       enum: [
+        'booking_submitted',
         'booking_confirmed',
         'approval',
         'rejection',
         'waitlist_update',
         'upcoming_booking',
+        'checkin_ready',
         'return_reminder',
         'overdue_alert',
         'incident_update',
+        'resource_availability',
         'booking',
         'maintenance',
         'system',
